@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "autibile",
+    "slug": "autibile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "autibile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-screen.jpg",
+      "resizeMode": "cover",
+      "backgroundColor": "#fff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.achib.autibile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#99DBFD"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.achib.autibile"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f4bfd0d7-9ff4-4075-9f99-643188f0fb2a"
+      }
+    }
+  }
+}
