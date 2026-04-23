@@ -912,82 +912,99 @@ export default function QuestionnaireForm() {
         onRequestClose={() => setShowResult(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Screening Result</Text>
-
-            {/* Show MCHAT-R status if available */}
-            {id === '1' && questionnaire.mchatr_eligibility && (
-              <View style={styles.resultItem}>
-                <Text style={styles.modalLabel}>MCHAT-R Status:</Text>
-                {(() => {
-                  const status = questionnaire.mchatr_eligibility.mchatr_status;
-                  const isEnabled = status === 'Enable' || status === null;
-                  
-                  return (
-                    <Text style={[
-                      styles.modalValue,
-                      { color: isEnabled ? '#4CAF50' : '#F44336' }
-                    ]}>
-                      {isEnabled ? 'Enabled' : 'Disabled'}
-                    </Text>
-                  );
-                })()}
-              </View>
-            )}
-            
-            <View style={styles.resultContainer}>
-              <View style={styles.resultItem}>
-                <Text style={styles.modalLabel}>Score:</Text>
-                <Text style={styles.modalScore}>{result.score}</Text>
-              </View>
-
-              <View style={styles.resultItem}>
-                <Text style={styles.modalLabel}>Prediction:</Text>
-                <Text style={styles.modalValue}>{result.interpretation}</Text>
-              </View>
-
-              <View style={styles.resultItem}>
-                <Text style={styles.modalLabel}>Recommendation:</Text>
-                <Text style={styles.modalValue}>{result.recommendation}</Text>
-              </View>
+          <View style={styles.resultModalContent}>
+            {/* Header with icon and title */}
+            <View style={styles.resultHeader}>
+              <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+              <Text style={styles.resultModalTitle}>Screening Complete!</Text>
+              <Text style={styles.resultSubtitle}>Here are your results</Text>
             </View>
 
-                         {/* Show message for intermediate score (3-7) instead of redirecting to questionnaire 2 */}
-                         {(() => {
-                           const eligibility = questionnaire?.mchatr_eligibility;
-                           const canTakeFollowUp = eligibility?.is_eligible_for_questionnaire_2 || 
-                                                 (id === '1' && result.score >= 3 && result.score <= 7);
-                           
-                           if (id === '1' && canTakeFollowUp) {
-                             return (
-                               <View>
-                                 <Text style={styles.intermediateScoreText}>
-                                   Based on your score, the patient needs to take the next level questionnaire (MCHATRF).{'\n\n'}
-                                   Please contact our administrator for the next process.
-                                 </Text>
-                                 <TouchableOpacity
-                                   style={styles.modalButton}
-                                   onPress={() => {
-                                     setShowResult(false);
-                                   }}
-                                 >
-                                   <Text style={styles.modalButtonText}>Close</Text>
-                                 </TouchableOpacity>
-                               </View>
-                             );
-                           } else {
-                             return (
-                               <TouchableOpacity
-                                 style={styles.modalButton}
-                                 onPress={() => {
-                                   setShowResult(false);
-                                 }}
-                               >
-                                 <Text style={styles.modalButtonText}>Close</Text>
-                               </TouchableOpacity>
-                             );
-                           }
-                         })()}
+            <ScrollView style={styles.resultScrollContainer}>
+              {/* Show MCHAT-R status if available */}
+              {id === '1' && questionnaire.mchatr_eligibility && (
+                <View style={styles.statusBoxResult}>
+                  <Text style={styles.statusLabel}>MCHAT-R Status:</Text>
+                  {(() => {
+                    const status = questionnaire.mchatr_eligibility.mchatr_status;
+                    const isEnabled = status === 'Enable' || status === null;
+
+                    return (
+                      <Text style={[
+                        styles.statusValueLarge,
+                        { color: isEnabled ? '#4CAF50' : '#F44336' }
+                      ]}>
+                        {isEnabled ? '✓ Enabled' : '✗ Disabled'}
+                      </Text>
+                    );
+                  })()}
+                </View>
+              )}
+
+              {/* Score Box */}
+              <View style={styles.scoreBoxContainer}>
+                <Text style={styles.scoreLabel}>Your Score</Text>
+                <View style={styles.scoreBox}>
+                  <Text style={styles.scoreValue}>{result.score}</Text>
+                </View>
+              </View>
+
+              {/* Prediction Box */}
+              <View style={styles.predictionBoxContainer}>
+                <View style={styles.predictionHeader}>
+                  <Ionicons name="bulb" size={24} color="#FFA500" />
+                  <Text style={styles.predictionLabel}>Prediction</Text>
+                </View>
+                <View style={styles.predictionBox}>
+                  <Text style={styles.predictionText}>{result.interpretation}</Text>
+                </View>
+              </View>
+
+              {/* Recommendation Box */}
+              <View style={styles.recommendationBoxContainer}>
+                <View style={styles.recommendationHeader}>
+                  <Ionicons name="star" size={24} color="#FFD700" />
+                  <Text style={styles.recommendationLabel}>Recommendation</Text>
+                </View>
+                <View style={styles.recommendationBox}>
+                  <Text style={styles.recommendationText}>{result.recommendation}</Text>
+                </View>
+              </View>
+
+              {/* Show message for intermediate score (3-7) */}
+              {(() => {
+                const eligibility = questionnaire?.mchatr_eligibility;
+                const canTakeFollowUp = eligibility?.is_eligible_for_questionnaire_2 ||
+                                       (id === '1' && result.score >= 3 && result.score <= 7);
+
+                if (id === '1' && canTakeFollowUp) {
+                  return (
+                    <View style={styles.nextStepsBox}>
+                      <View style={styles.nextStepsHeader}>
+                        <Ionicons name="arrow-forward" size={24} color="#0B8FAC" />
+                        <Text style={styles.nextStepsLabel}>Next Steps</Text>
+                      </View>
+                      <Text style={styles.nextStepsText}>
+                        Based on your score, the patient needs to take the next level questionnaire (MCHATRF).{'\n\n'}
+                        Please contact our administrator for the next process.
+                      </Text>
+                    </View>
+                  );
+                }
+                return null;
+              })()}
+            </ScrollView>
+
+            {/* Close Button */}
+            <TouchableOpacity
+              style={styles.resultModalButton}
+              onPress={() => {
+                setShowResult(false);
+                router.replace('/questionnaire');
+              }}
+            >
+              <Text style={styles.resultModalButtonText}>Done</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1515,5 +1532,170 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  /* Enhanced Result Modal Styles */
+  resultModalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    width: '95%',
+    maxHeight: '85%',
+    alignItems: 'center',
+  },
+  resultHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    width: '100%',
+  },
+  resultModalTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#0B8FAC',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  resultSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 8,
+  },
+  resultScrollContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  scoreBoxContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  scoreLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  scoreBox: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#4db5ff',
+  },
+  scoreValue: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#D32F2F',
+  },
+  predictionBoxContainer: {
+    marginBottom: 20,
+  },
+  predictionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  predictionLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 8,
+  },
+  predictionBox: {
+    backgroundColor: '#FFF8E1',
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFA500',
+    padding: 14,
+    borderRadius: 8,
+  },
+  predictionText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
+  recommendationBoxContainer: {
+    marginBottom: 20,
+  },
+  recommendationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  recommendationLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 8,
+  },
+  recommendationBox: {
+    backgroundColor: '#F0F4FF',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4db5ff',
+    padding: 14,
+    borderRadius: 8,
+  },
+  recommendationText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
+  nextStepsBox: {
+    backgroundColor: '#E0F2F1',
+    borderLeftWidth: 4,
+    borderLeftColor: '#0B8FAC',
+    padding: 14,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  nextStepsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  nextStepsLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0B8FAC',
+    marginLeft: 8,
+  },
+  nextStepsText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
+  statusBoxResult: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  statusLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  statusValueLarge: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  resultModalButton: {
+    backgroundColor: '#4db5ff',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  resultModalButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   });

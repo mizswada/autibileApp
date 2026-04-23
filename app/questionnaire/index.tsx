@@ -195,19 +195,24 @@ export default function QuestionnaireIndex() {
                   .map((q: any) => {
                     const questionnaireId = Number(q.questionnaire_id);
                     let isDisabled = false;
-                    
+
                     if (questionnaireId === 1) {
                       // For MCHAT-R: only disable if explicitly disabled in backend
                       // If status is null/undefined, treat as "Enable" (default behavior)
                       isDisabled = eligibility?.mchatr_status === 'Disable';
                     }
-                    
+
                     return {
                       ...q,
                       isDisabled
                     };
+                  })
+                  .sort((a: any, b: any) => {
+                    if (Number(a.questionnaire_id) === 1) return -1;
+                    if (Number(b.questionnaire_id) === 1) return 1;
+                    return 0;
                   });
-                
+
                 setQuestionnaires(questionnairesWithStatus);
                 return; // Exit early since we handled the logic
               }
@@ -270,18 +275,22 @@ export default function QuestionnaireIndex() {
             .map((q: any) => {
               const questionnaireId = Number(q.questionnaire_id);
               let isDisabled = false;
-              
+
               if (questionnaireId === 1) {
                 // Only disable questionnaire ID = 1 if it has been completed for the currently selected child
                 isDisabled = completedQuestionnaireIds.includes(1);
               }
-             
+
               return {
                 ...q,
                 isDisabled
               };
+            })
+            .sort((a: any, b: any) => {
+              if (Number(a.questionnaire_id) === 1) return -1;
+              if (Number(b.questionnaire_id) === 1) return 1;
+              return 0;
             });
-        
 
         setQuestionnaires(questionnairesWithStatus);
         } else {

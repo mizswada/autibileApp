@@ -19,6 +19,7 @@ import {
 export default function LoginDoctor() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -31,7 +32,7 @@ export default function LoginDoctor() {
     setLoading(true);
   
     try {
-      const result = await API("apps/auth/loginDoctor", { username: email, password }, "POST", false);
+      const result = await API("apps/auth/loginDoctor", { username: email, password, rememberMe }, "POST", false);
   
       // Adjust based on your API response structure
       if (result.statusCode !== 200) {
@@ -114,6 +115,13 @@ export default function LoginDoctor() {
 
       <TouchableOpacity style={styles.forgotPassword} onPress={handleForgotPassword}>
         <Text style={styles.forgotPasswordText}>Forget Password</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.rememberMeContainer} onPress={() => setRememberMe(!rememberMe)}>
+        <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+          {rememberMe && <Ionicons name="checkmark" size={16} color="#4db5ff" />}
+        </View>
+        <Text style={styles.checkboxText}>Remember me for 30 days</Text>
       </TouchableOpacity>
 
       {/* <TouchableOpacity style={styles.homePage} onPress={handleHomePage}>
@@ -235,6 +243,31 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 14,
     fontWeight: '500'
+  },
+  rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    borderColor: '#4db5ff',
+    backgroundColor: '#e6f2ff',
+  },
+  checkboxText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
   homePage: {
     alignSelf: 'center', // center horizontally
