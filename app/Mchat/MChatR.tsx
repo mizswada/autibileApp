@@ -1,3 +1,4 @@
+import { MchatImportanceNoteModal } from '@/components/MchatImportanceNoteModal';
 import { Ionicons } from '@expo/vector-icons'; // ✅ use icons
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -30,6 +31,7 @@ export default function MChatR() {
   const router = useRouter();
   const [answers, setAnswers] = useState<(null | 'yes' | 'no')[]>(Array(questions.length).fill(null));
   const [showScore, setShowScore] = useState(false);
+  const [showMchatImportanceNote, setShowMchatImportanceNote] = useState(true);
 
   const handleAnswer = (idx: number, ans: 'yes' | 'no') => {
     setAnswers(prev => prev.map((a, i) => (i === idx ? ans : a)));
@@ -49,6 +51,10 @@ export default function MChatR() {
 
   return (
     <View style={styles.container}>
+      <MchatImportanceNoteModal
+        visible={showMchatImportanceNote}
+        onContinue={() => setShowMchatImportanceNote(false)}
+      />
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/parentsPage')}>

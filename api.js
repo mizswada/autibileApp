@@ -1,4 +1,7 @@
-export default async function API(API_NAME = "", DATA = {}, METHOD = "POST", AUTH = true, token = null) {
+/**
+ * @param {number} [timeoutMs] - Abort after this many ms (default 10000). Use a large value for slow server work (e.g. questionnaire + AI).
+ */
+export default async function API(API_NAME = "", DATA = {}, METHOD = "POST", AUTH = true, token = null, timeoutMs = 10000) {
   let result = { statusCode: null, status: null, message: null, data: null };
   let BASE_URL = "https://autibile.my/api/";
 
@@ -37,7 +40,7 @@ export default async function API(API_NAME = "", DATA = {}, METHOD = "POST", AUT
     
     // Add timeout to the fetch request
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
     const response = await fetch(url, {
       ...requestOptions,

@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { MchatImportanceNoteModal } from '../../components/MchatImportanceNoteModal';
 import API from '../../api';
 
 export default function QuestionnaireForm() {
@@ -21,11 +22,17 @@ export default function QuestionnaireForm() {
   const [showChildSelector, setShowChildSelector] = useState(false);
   const [selectedChild, setSelectedChild] = useState<any>(null);
   const [children, setChildren] = useState<any[]>([]);
-  const [result, setResult] = useState<{ score: number; interpretation: string; recommendation: string }>({
+  const [result, setResult] = useState<{ score: number; interpretation: string; recommendation: string; aiAnalysis: { result: string; explanation: string } | null }>({
     score: 0,
     interpretation: '',
     recommendation: '',
+    aiAnalysis: null,
   });
+  const [showMchatImportanceNote, setShowMchatImportanceNote] = useState(true);
+
+  useEffect(() => {
+    setShowMchatImportanceNote(id === '1');
+  }, [id]);
 
   useEffect(() => {
     // Initialize child selection when component mounts
@@ -524,11 +531,12 @@ export default function QuestionnaireForm() {
       while (retryCount < maxRetries) {
         try {
           // Use the API function instead of hardcoded fetch
+          // Server may run AI (OpenRouter etc.) after saving answers — allow up to 90s
           const apiResponse = await API('apps/questionnaire/submit', {
             questionnaireId: id,
             patientId: selectedChild ? selectedChild.patientId : null,
             answers: formattedAnswers
-          }, 'POST', false);
+          }, 'POST', false, null, 90000);
           
           if (apiResponse.statusCode === 200) {
             response = apiResponse;
@@ -558,11 +566,12 @@ export default function QuestionnaireForm() {
       if (response && response.statusCode === 200) {
         const resultData = response.data as any;
         const score = resultData?.total_score || 0;
-        
-        setResult({ 
-          score: score, 
+
+        setResult({
+          score: score,
           interpretation: resultData?.threshold?.interpretation || 'No prediction available',
-          recommendation: resultData?.threshold?.recommendation || 'No recommendation available'
+          recommendation: resultData?.threshold?.recommendation || 'No recommendation available',
+          aiAnalysis: resultData?.ai_analysis ?? null
         });
         
                  // Check if this is questionnaire ID = 1 and score is between 3-7
@@ -956,20 +965,61 @@ export default function QuestionnaireForm() {
                   <Text style={styles.predictionLabel}>Prediction</Text>
                 </View>
                 <View style={styles.predictionBox}>
+                  {/* Doctor's prediction (M-CHAT-R) or main prediction (other questionnaires) */}
                   <Text style={styles.predictionText}>{result.interpretation}</Text>
+
+                  {/* AI Analysis - varies by questionnaire type */}
+                  {result.aiAnalysis && (
+                    <>
+                      {id === '1' ? (
+                        // M-CHAT-R: AI is supplementary
+                        <>
+                          <View style={{ height: 1, backgroundColor: '#ddd', marginVertical: 12 }} />
+                          <View style={{ marginTop: 8 }}>
+                            <Text style={{ fontSize: 12, color: '#666', fontWeight: '600', marginBottom: 4 }}>
+                              AI Prediction: {result.aiAnalysis.result}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: '#999', lineHeight: 16 }}>
+                              {result.aiAnalysis.explanation}
+                            </Text>
+                          </View>
+                        </>
+                      ) : (
+                        // Other questionnaires: AI is primary (replaces the interpretation)
+                        <>
+                          <Text style={{ fontSize: 11, color: '#666', lineHeight: 16, marginTop: 8 }}>
+                            {result.aiAnalysis.explanation}
+                          </Text>
+                        </>
+                      )}
+                    </>
+                  )}
                 </View>
               </View>
 
               {/* Recommendation Box */}
-              <View style={styles.recommendationBoxContainer}>
-                <View style={styles.recommendationHeader}>
-                  <Ionicons name="star" size={24} color="#FFD700" />
-                  <Text style={styles.recommendationLabel}>Recommendation</Text>
+              {/* For non-M-CHAT-R questionnaires with AI, recommendation comes from AI */}
+              {id !== '1' && result.aiAnalysis ? (
+                <View style={styles.recommendationBoxContainer}>
+                  <View style={styles.recommendationHeader}>
+                    <Ionicons name="star" size={24} color="#FFD700" />
+                    <Text style={styles.recommendationLabel}>Recommendation</Text>
+                  </View>
+                  <View style={styles.recommendationBox}>
+                    <Text style={styles.recommendationText}>{result.aiAnalysis.explanation}</Text>
+                  </View>
                 </View>
-                <View style={styles.recommendationBox}>
-                  <Text style={styles.recommendationText}>{result.recommendation}</Text>
+              ) : (
+                <View style={styles.recommendationBoxContainer}>
+                  <View style={styles.recommendationHeader}>
+                    <Ionicons name="star" size={24} color="#FFD700" />
+                    <Text style={styles.recommendationLabel}>Recommendation</Text>
+                  </View>
+                  <View style={styles.recommendationBox}>
+                    <Text style={styles.recommendationText}>{result.recommendation}</Text>
+                  </View>
                 </View>
-              </View>
+              )}
 
               {/* Show message for intermediate score (3-7) */}
               {(() => {
@@ -1104,6 +1154,17 @@ export default function QuestionnaireForm() {
           </View>
         </View>
       </Modal>
+
+      <MchatImportanceNoteModal
+        visible={
+          id === '1' &&
+          showMchatImportanceNote &&
+          !showChildSelector &&
+          !!questionnaire &&
+          !loadingQuestionnaire
+        }
+        onContinue={() => setShowMchatImportanceNote(false)}
+      />
     </View>
   );
 }
