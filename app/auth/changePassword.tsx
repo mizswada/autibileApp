@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#E1F5FF',
   },
   passwordContainer: {
     width: '100%',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#E1F5FF',
     marginBottom: 16,
   },
   passwordInput: {

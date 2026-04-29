@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   headerContainer: { position: 'relative', width: '100%', alignItems: 'center', marginBottom: 8 },
   backButton: { position: 'absolute', left: 0 },
   create: { fontSize: 26, fontWeight: 'bold', color: '#0B8FAC', marginBottom: 20 },
-  input: { width: '100%', height: 52, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, marginBottom: 16, fontSize: 16, backgroundColor: '#f9f9f9' },
+  input: { width: '100%', height: 52, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, marginBottom: 16, fontSize: 16, backgroundColor: '#E1F5FF' },
   termsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, width: '100%' },
   termsText: { marginLeft: 8, fontSize: 14, color: '#555' },
   button: { width: '100%', height: 48, backgroundColor: '#4db5ff', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },

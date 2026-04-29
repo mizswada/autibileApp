@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons'; // for back icon and eye icon
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { Ionicons } from "@expo/vector-icons"; // for back icon and eye icon
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,66 +12,72 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import API from '../../api';
+} from "react-native";
+import API from "../../api";
 
 export default function LoginParents() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      const result = await API("apps/auth/loginParents", { username: email, password, rememberMe }, "POST", false);
-  
+      const result = await API(
+        "apps/auth/loginParents",
+        { username: email, password, rememberMe },
+        "POST",
+        false,
+      );
+
       // Adjust based on your API response structure
       if (result.statusCode !== 200) {
-        Alert.alert('Login Failed', result.message || 'Invalid credentials');
+        Alert.alert("Login Failed", result.message || "Invalid credentials");
       } else {
         const { data } = result as any;
         //console.log('data', data);
 
-        await AsyncStorage.setItem('userData', JSON.stringify(data));
-  
-        Alert.alert('Success', 'Login successful', [
+        await AsyncStorage.setItem("userData", JSON.stringify(data));
+
+        Alert.alert("Success", "Login successful", [
           {
-            text: 'OK',
+            text: "OK",
             onPress: () => {
               if (data.hasParentInfo) {
-                router.push('/parentsPage'); // existing user
+                router.push("/parentsPage"); // existing user
               } else {
-                router.push('/manageDetails/parentsInformation'); // first time user
+                router.push("/manageDetails/parentsInformation"); // first time user
               }
             },
           },
         ]);
       }
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-  
+
   const handleForgotPassword = () => {
-    router.push('/auth/ForgotPassword');
+    router.push("/auth/ForgotPassword");
   };
 
   const handleHomePage = () => {
-    router.push('/parentsPage');
+    router.push("/parentsPage");
   };
 
   const handleSignUp = () => {
-    router.push('/auth/Register');
+    router.push("/auth/Register");
   };
 
   const isButtonDisabled = !email || !password;
@@ -80,7 +86,10 @@ export default function LoginParents() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Back Icon */}
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.replace("/")}
+        >
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.welcome}>Welcome</Text>
@@ -104,20 +113,34 @@ export default function LoginParents() {
         <TextInput
           style={styles.passwordInput}
           placeholder="Enter Your Password"
-          secureTextEntry
+          secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
         />
-        <Ionicons name="eye-outline" size={20} color="#888" />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye" : "eye-off"}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.forgotPassword} onPress={handleForgotPassword}>
+      <TouchableOpacity
+        style={styles.forgotPassword}
+        onPress={handleForgotPassword}
+      >
         <Text style={styles.forgotPasswordText}>Forget Password</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.rememberMeContainer} onPress={() => setRememberMe(!rememberMe)}>
+      <TouchableOpacity
+        style={styles.rememberMeContainer}
+        onPress={() => setRememberMe(!rememberMe)}
+      >
         <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-          {rememberMe && <Ionicons name="checkmark" size={16} color="#4db5ff" />}
+          {rememberMe && (
+            <Ionicons name="checkmark" size={16} color="#4db5ff" />
+          )}
         </View>
         <Text style={styles.checkboxText}>Remember me for 30 days</Text>
       </TouchableOpacity>
@@ -149,7 +172,9 @@ export default function LoginParents() {
         </TouchableOpacity> */}
         <TouchableOpacity style={styles.socialButton}>
           <Image
-            source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
+            source={{
+              uri: "https://developers.google.com/identity/images/g-logo.png",
+            }}
             style={styles.socialIcon}
           />
         </TouchableOpacity>
@@ -157,7 +182,8 @@ export default function LoginParents() {
 
       <TouchableOpacity onPress={handleSignUp}>
         <Text style={styles.signUpLink}>
-          Don't have an account? <Text style={styles.signUpText}>Sign Up</Text>
+          Don&apos;t have an account?{" "}
+          <Text style={styles.signUpText}>Sign Up</Text>
         </Text>
       </TouchableOpacity>
     </ScrollView>
@@ -169,161 +195,183 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 24,
     paddingTop: 80,
-    backgroundColor: '#fff',
+    backgroundColor: "#E1F5FF",
   },
   headerContainer: {
-    position: 'relative',
-    width: '100%',
-    alignItems: 'center',
+    position: "relative",
+    width: "100%",
+    alignItems: "center",
     marginBottom: 8,
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
   },
   welcome: {
     fontSize: 26,
-    fontWeight: 'bold',
-    color: '#0B8FAC',
+    fontWeight: "bold",
+    color: "#4db5ff",
   },
   subtitle: {
     fontSize: 26,
-    fontWeight: 700,
-    color: '#000000',
+    fontWeight: "700",
+    color: "#1E293B",
     paddingTop: 20,
     marginBottom: 4,
   },
   userType: {
-    fontSize: 18,
-    color: '#858585',
+    fontSize: 16,
+    color: "#9CA3AF",
     marginBottom: 30,
+    fontWeight: "500",
   },
   label: {
-    alignSelf: 'flex-start',
-    fontSize: 18,
-    color: '#000000',
-    marginBottom: 4,
+    alignSelf: "flex-start",
+    fontSize: 16,
+    color: "#1E293B",
+    marginBottom: 6,
     marginTop: 5,
-    fontWeight: '500',
+    fontWeight: "600",
   },
   input: {
-    width: '100%',
-    height: 48,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    width: "100%",
+    height: 52,
+    borderColor: "#E1F5FF",
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingHorizontal: 16,
     marginBottom: 16,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#fff",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
   passwordContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#E1F5FF",
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingHorizontal: 16,
     marginBottom: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#fff",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
   passwordInput: {
     flex: 1,
-    height: 48,
+    height: 52,
     fontSize: 16,
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: 60,
   },
   forgotPasswordText: {
-    color: '#000000',
+    color: "#4db5ff",
     fontSize: 14,
-    fontWeight: '500'
+    fontWeight: "600",
   },
   rememberMeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 24,
   },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 2,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#E1F5FF",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   checkboxChecked: {
-    borderColor: '#4db5ff',
-    backgroundColor: '#e6f2ff',
+    borderColor: "#4db5ff",
+    backgroundColor: "#E1F5FF",
   },
   checkboxText: {
     fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
+    color: "#1E293B",
+    fontWeight: "500",
   },
   homePage: {
-    alignSelf: 'center', // center horizontally
+    alignSelf: "center",
     marginBottom: 60,
   },
   homePageText: {
-    color: '#000000',
+    color: "#4db5ff",
     fontSize: 14,
-    fontWeight: '500',
-    textDecorationLine: 'underline', // adds underline
-    textAlign: 'center', // centers the text inside its container
-  },  
+    fontWeight: "500",
+    textDecorationLine: "underline",
+    textAlign: "center",
+  },
   button: {
-    width: '100%',
-    height: 48,
-    backgroundColor: '#4db5ff',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: 52,
+    backgroundColor: "#4db5ff",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   buttonDisabled: {
-    backgroundColor: '#cceaff',
+    backgroundColor: "#8ccffe",
+    shadowOpacity: 0.1,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   orText: {
     fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
+    color: "#9CA3AF",
+    textAlign: "center",
     marginBottom: 8,
   },
   socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 16,
   },
   socialButton: {
     marginHorizontal: 12,
-    padding: 8,
-    borderRadius: 50,
-    backgroundColor: '#f1f1f1',
+    padding: 10,
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   socialIcon: {
     width: 32,
     height: 32,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   signUpLink: {
     fontSize: 14,
-    color: '#555',
-    textAlign: 'center',
+    color: "#9CA3AF",
+    textAlign: "center",
   },
   signUpText: {
-    color: '#0B8FAC',
-    fontWeight: 'bold',
+    color: "#4db5ff",
+    fontWeight: "bold",
   },
 });

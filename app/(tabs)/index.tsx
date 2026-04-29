@@ -75,7 +75,7 @@ export default function HomeScreen() {
         {features.map((f) => (
           <TouchableOpacity
             key={f.key}
-            style={styles.featureBtn}
+            style={[styles.featureBtn, f.key === 'mchat' && styles.mchatBtn]}
             onPress={
               f.key === 'appointment'
                 ? () => router.push('/Home/Appoinment' as any)
@@ -88,7 +88,7 @@ export default function HomeScreen() {
                 : undefined
             }
           >
-            <Image source={f.icon} style={styles.featureIcon} />
+            <Image source={f.icon} style={[styles.featureIcon, f.key === 'mchat' && styles.mchatIcon]} />
             <Text style={styles.featureLabel}>{f.label}</Text>
           </TouchableOpacity>
         ))}
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E1F5FF',
   } as ViewStyle,
   headerBg: {
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     height: 220,
     alignItems: 'center',
     justifyContent: 'center',
@@ -223,5 +223,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#2A2A2A',
+  },
+  mchatBtn: {
+    backgroundColor: '#20B2AA',
+  },
+  mchatIcon: {
+    tintColor: '#fff',
   },
 });

@@ -38,7 +38,7 @@ export default function TherapyPlanDetail() {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Therapy Plan Details</Text>
         </View>
@@ -55,7 +55,7 @@ export default function TherapyPlanDetail() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Therapy Plan Details</Text>
       </View>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#4db5ff',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#fff',
   },
   errorContainer: {
     flex: 1,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#F44336',
+    color: '#F16742',
     marginTop: 16,
   },
   scrollContainer: {
@@ -128,12 +128,13 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 28,
     padding: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowColor: '#4db5ff',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
     alignItems: 'center',
   },
   imageContainer: {
@@ -143,18 +144,18 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E1F5FF',
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#222',
+    color: '#1E293B',
     textAlign: 'center',
     marginBottom: 16,
   },
   description: {
     fontSize: 16,
-    color: '#666',
+    color: '#9CA3AF',
     lineHeight: 24,
     textAlign: 'center',
     marginBottom: 24,
@@ -166,21 +167,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#222',
+    color: '#1E293B',
     marginBottom: 12,
   },
   centreInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#E1F5FF',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 16,
   },
   centreName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#4db5ff',
     marginLeft: 8,
   },
 }); 

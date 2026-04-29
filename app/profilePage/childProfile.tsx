@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
   childCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#E1F5FF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,

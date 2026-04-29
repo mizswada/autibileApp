@@ -79,22 +79,21 @@ export default function UserTypeSelect() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 24 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 32, color: '#222' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E1F5FF', padding: 24 },
+  title: { fontSize: 28, fontWeight: '700', marginBottom: 32, color: '#1E293B', letterSpacing: 0.5 },
   card: {
     width: '90%',
     backgroundColor: '#fff',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    borderRadius: 24,
     alignItems: 'center',
     padding: 24,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    marginBottom: 20,
+    shadowColor: '#4db5ff',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 5,
   },
   image: { width: 120, height: 100, resizeMode: 'contain', marginBottom: 12 },
-  label: { fontSize: 18, fontWeight: '500', color: '#222' },
+  label: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
 });

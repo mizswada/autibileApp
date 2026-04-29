@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   contactCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#E1F5FF',
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,

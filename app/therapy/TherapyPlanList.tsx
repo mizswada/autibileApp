@@ -66,7 +66,7 @@ export default function TherapyPlanList() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Therapy Plans</Text>
       </View>
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#4db5ff',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#fff',
   },
   scrollContainer: {
     padding: 16,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: '#9CA3AF',
   },
   emptyContainer: {
     flex: 1,
@@ -171,23 +171,24 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 14,
-    color: '#666',
+    color: '#9CA3AF',
     textAlign: 'center',
   },
   planBox: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 24,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: '#4db5ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   planContent: {
     flexDirection: 'row',
@@ -199,8 +200,8 @@ const styles = StyleSheet.create({
   planImage: {
     width: 80,
     height: 80,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 16,
+    backgroundColor: '#E1F5FF',
   },
   planDetails: {
     flex: 1,
@@ -214,13 +215,13 @@ const styles = StyleSheet.create({
   planTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#222',
+    color: '#1E293B',
     flex: 1,
     marginRight: 12,
   },
   planDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#9CA3AF',
     lineHeight: 20,
     marginBottom: 8,
   },
@@ -233,7 +234,8 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: '#666',
+    color: '#4db5ff',
     marginLeft: 8,
+    fontWeight: '500',
   },
 }); 

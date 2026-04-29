@@ -144,7 +144,7 @@ export default function CommunityFeed() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={{backgroundColor: '#99DBFD', justifyContent: 'flex-end'}}>
+      <View style={{backgroundColor: '#4db5ff', justifyContent: 'flex-end'}}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerRow}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
@@ -163,7 +163,7 @@ export default function CommunityFeed() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#48B2E8" />
+          <ActivityIndicator size="large" color="#4db5ff" />
           <Text style={styles.loadingText}>Loading community posts...</Text>
         </View>
       ) : (
@@ -229,7 +229,7 @@ export default function CommunityFeed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e3f3fc',
+    backgroundColor: '#E1F5FF',
   },
   headerRow: {
     flexDirection: 'row',
@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: '700',
+    color: '#1E293B',
   },
   feedContainer: {
     paddingHorizontal: 18,
@@ -251,15 +251,14 @@ const styles = StyleSheet.create({
   },
   postBox: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 24,
     padding: 16,
     marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
+    shadowColor: '#4db5ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   postHeader: {
     flexDirection: 'row',
@@ -270,28 +269,28 @@ const styles = StyleSheet.create({
   author: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#222',
+    color: '#4db5ff',
   },
   menuBtn: {
     fontSize: 22,
-    color: '#888',
+    color: '#9CA3AF',
     fontWeight: 'bold',
   },
   content: {
     fontSize: 15,
-    color: '#222',
+    color: '#1E293B',
     marginBottom: 2,
     fontWeight: '600',
   },
   details: {
     fontSize: 14,
-    color: '#444',
+    color: '#9CA3AF',
     marginBottom: 6,
     lineHeight: 20,
   },
   url: {
     fontSize: 12,
-    color: '#48B2E8',
+    color: '#4db5ff',
     marginTop: 4,
     textDecorationLine: 'underline',
   },
@@ -299,11 +298,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#e3f3fc',
+    backgroundColor: '#E1F5FF',
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
+    color: '#9CA3AF',
     marginTop: 12,
   },
   emptyContainer: {
@@ -314,21 +313,26 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: '#666',
+    color: '#1E293B',
     marginTop: 16,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#9CA3AF',
     marginTop: 8,
     textAlign: 'center',
   },
-  sectionBottomSheet:{
-    paddingVertical:8,
-    borderRadius:16,
-    backgroundColor:'#fff',
-    width:'100%',
-    alignItems:'center',
+  sectionBottomSheet: {
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#4db5ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
 }); 

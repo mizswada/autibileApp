@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   inputDisabled: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#E1F5FF',
     color: '#666',
   },
   saveButton: {
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
     height: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E1F5FF',
     borderRadius: 4,
   },
   signatureErrorText: {

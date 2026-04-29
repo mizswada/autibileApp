@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   appointmentListItem: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#E1F5FF',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   appointmentItemTime: { fontSize: 12, color: '#555', marginBottom: 2 },
   appointmentItemPatient: { fontSize: 11, color: '#666' },
   cancelButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#E1F5FF',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

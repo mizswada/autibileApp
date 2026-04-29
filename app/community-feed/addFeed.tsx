@@ -72,7 +72,7 @@ export default function addFeed() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={{backgroundColor: '#99DBFD', justifyContent: 'flex-end'}}>
+      <View style={{backgroundColor: '#E1F5FF', justifyContent: 'flex-end'}}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerRow}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   headerWrapper: {
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
     shadowColor: '#000',

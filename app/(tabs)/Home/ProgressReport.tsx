@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#24A8FF',
   },
   saveBtnDisabled: {
-    backgroundColor: '#B3E3FF',
+    backgroundColor: '#E1F5FF',
   },
   saveBtnText: {
     color: '#fff',

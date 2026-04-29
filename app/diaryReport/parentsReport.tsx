@@ -1,9 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
-import { useRouter } from 'expo-router';
-import * as Sharing from 'expo-sharing';
-import React, { useEffect, useRef, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system";
+import { useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -16,24 +16,28 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
-} from 'react-native';
+  View,
+} from "react-native";
 // @ts-ignore
-import API from '../../api';
+import API from "../../api";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 export default function ParentsReport() {
-  const [diary, setDiary] = useState('');
-  const [entries, setEntries] = useState<{ text: string; timestamp: string }[]>([]);
+  const [diary, setDiary] = useState("");
+  const [entries, setEntries] = useState<{ text: string; timestamp: string }[]>(
+    [],
+  );
   const [modalVisible, setModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<'diary' | 'history'>('diary');
-  const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"diary" | "history">("diary");
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(
+    null,
+  );
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentHistorySlide, setCurrentHistorySlide] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const historyFlatListRef = useRef<FlatList>(null);
-  
+
   // Child selection states
   const [showChildSelector, setShowChildSelector] = useState(false);
   const [selectedChild, setSelectedChild] = useState<any>(null);
@@ -44,32 +48,41 @@ export default function ParentsReport() {
   useEffect(() => {
     const initializeScreen = async () => {
       try {
-        const storedData = await AsyncStorage.getItem('userData');
-        
+        const storedData = await AsyncStorage.getItem("userData");
+
         if (storedData) {
           const data = JSON.parse(storedData);
-          
+
           // Fetch latest children data from API
           try {
-            const response = await API('apps/parents/displayDetails', {
-              parentID: data.parentId
-            }, 'GET');
-            
+            const response = await API(
+              "apps/parents/displayDetails",
+              {
+                parentID: data.parentId,
+              },
+              "GET",
+            );
+
             if (response.statusCode === 200 && response.data) {
               const parents = response.data as any[];
               const currentParent = parents[0]; // Get the first parent
-              
-              if (currentParent && currentParent.children && currentParent.children.length > 0) {
-                
+
+              if (
+                currentParent &&
+                currentParent.children &&
+                currentParent.children.length > 0
+              ) {
                 // Convert API children data to our format
-                const childrenData = currentParent.children.map((child: any) => ({
-                  patientId: child.childID,
-                  name: child.fullname,
-                  age: null // Age not available in current data
-                }));
-                
+                const childrenData = currentParent.children.map(
+                  (child: any) => ({
+                    patientId: child.childID,
+                    name: child.fullname,
+                    age: null, // Age not available in current data
+                  }),
+                );
+
                 setChildren(childrenData);
-                
+
                 // If multiple children, show selector
                 if (childrenData.length > 1) {
                   setShowChildSelector(true);
@@ -79,40 +92,44 @@ export default function ParentsReport() {
                   fetchDiaryReports(childrenData[0].patientId);
                 }
               } else {
-                console.log('No children found in API response');
+                console.log("No children found in API response");
                 // Fallback to stored data
                 fallbackToStoredData(data);
               }
             } else {
-              console.log('API response error:', response);
+              console.log("API response error:", response);
               // Fallback to stored data
               fallbackToStoredData(data);
             }
           } catch (apiError) {
-            console.error('Error fetching from API:', apiError);
+            console.error("Error fetching from API:", apiError);
             // Fallback to stored data
             fallbackToStoredData(data);
           }
         }
       } catch (error) {
-        console.error('Error initializing screen:', error);
+        console.error("Error initializing screen:", error);
       }
     };
 
     const fallbackToStoredData = (data: any) => {
       // Check if we have patientIds array (multiple children)
-      if (data.patientIds && Array.isArray(data.patientIds) && data.patientIds.length > 0) {
-        console.log('Using stored patientIds array:', data.patientIds);
-        
+      if (
+        data.patientIds &&
+        Array.isArray(data.patientIds) &&
+        data.patientIds.length > 0
+      ) {
+        console.log("Using stored patientIds array:", data.patientIds);
+
         // Convert patientIds to children format
         const childrenData = data.patientIds.map((patient: any) => ({
           patientId: patient.patient_id,
           name: patient.fullname,
-          age: null // Age not available in current data
+          age: null, // Age not available in current data
         }));
-        
+
         setChildren(childrenData);
-        
+
         // If multiple children, show selector
         if (childrenData.length > 1) {
           setShowChildSelector(true);
@@ -125,10 +142,10 @@ export default function ParentsReport() {
         // Fallback: try to use single patientId if available
         const patientId = data.patientId || data.patient_id;
         if (patientId) {
-          console.log('Using single patientId:', patientId);
+          console.log("Using single patientId:", patientId);
           fetchDiaryReports(patientId);
         } else {
-          console.error('No patient ID found in stored data');
+          console.error("No patient ID found in stored data");
         }
       }
     };
@@ -138,8 +155,13 @@ export default function ParentsReport() {
 
   const fetchDiaryReports = async (patientId: string) => {
     try {
-      console.log('Fetching diary reports for patientId:', patientId);
-      const response = await API('apps/diaryReport/listDiary', { patientID: patientId }, 'GET', false);
+      console.log("Fetching diary reports for patientId:", patientId);
+      const response = await API(
+        "apps/diaryReport/listDiary",
+        { patientID: patientId },
+        "GET",
+        false,
+      );
 
       if (response.statusCode === 200 && Array.isArray(response.data)) {
         const fetchedEntries = (response.data as any[]).map((item: any) => ({
@@ -148,11 +170,11 @@ export default function ParentsReport() {
         }));
         setEntries(fetchedEntries);
       } else {
-        console.warn('Failed to load diary reports:', response.message);
+        console.warn("Failed to load diary reports:", response.message);
         setEntries([]); // Set empty array if no data
       }
     } catch (error) {
-      console.error('Error fetching diary reports:', error);
+      console.error("Error fetching diary reports:", error);
       setEntries([]); // Set empty array on error
     }
   };
@@ -166,7 +188,7 @@ export default function ParentsReport() {
       if (selectedChild) {
         patientId = selectedChild.patientId;
       } else {
-        const storedData = await AsyncStorage.getItem('userData');
+        const storedData = await AsyncStorage.getItem("userData");
         if (storedData) {
           const data = JSON.parse(storedData);
           patientId = data.patientId;
@@ -174,11 +196,11 @@ export default function ParentsReport() {
       }
 
       if (!patientId) {
-        alert('No patient ID available');
+        alert("No patient ID available");
         return;
       }
 
-      const response = await API('apps/diaryReport/insert', {
+      const response = await API("apps/diaryReport/insert", {
         patientID: patientId,
         description: diary,
         date: new Date().toISOString(),
@@ -191,18 +213,18 @@ export default function ParentsReport() {
         };
 
         setEntries([newEntry, ...entries]);
-        setDiary('');
+        setDiary("");
         setModalVisible(true);
 
         setTimeout(() => {
           setModalVisible(false);
         }, 1500);
       } else {
-        alert(response.message || 'Failed to save diary report');
+        alert(response.message || "Failed to save diary report");
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while saving the report');
+      alert("An error occurred while saving the report");
     }
   };
 
@@ -219,14 +241,16 @@ export default function ParentsReport() {
   const today = new Date();
   const todayEntries = entries.filter((entry) => isToday(entry.timestamp));
 
-  const allHistoryDates = [...new Set(
-    entries
-      .filter((item) => {
-        const itemDate = new Date(item.timestamp);
-        return itemDate.toDateString() !== today.toDateString();
-      })
-      .map((item) => new Date(item.timestamp).toDateString())
-  )].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  const allHistoryDates = [
+    ...new Set(
+      entries
+        .filter((item) => {
+          const itemDate = new Date(item.timestamp);
+          return itemDate.toDateString() !== today.toDateString();
+        })
+        .map((item) => new Date(item.timestamp).toDateString()),
+    ),
+  ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   const historyDates = allHistoryDates.slice(0, 5);
 
@@ -237,29 +261,39 @@ export default function ParentsReport() {
 
       if (forAllEntries) {
         entriesToProcess = entries.filter(
-          (item) => new Date(item.timestamp).toDateString() !== today.toDateString()
+          (item) =>
+            new Date(item.timestamp).toDateString() !== today.toDateString(),
         );
         title = "All Diary Entries";
       } else {
         entriesToProcess = entries.filter(
-          (item) => new Date(item.timestamp).toDateString() === selectedHistoryDate
+          (item) =>
+            new Date(item.timestamp).toDateString() === selectedHistoryDate,
         );
         title = `Diary entries for ${selectedHistoryDate}`;
       }
 
       if (entriesToProcess.length === 0) {
-        Alert.alert("No Entries", forAllEntries ? "No history entries found." : "No entries found for selected date.");
+        Alert.alert(
+          "No Entries",
+          forAllEntries
+            ? "No history entries found."
+            : "No entries found for selected date.",
+        );
         return;
       }
 
-      const groupedEntries = entriesToProcess.reduce((acc, entry) => {
-        const date = new Date(entry.timestamp).toDateString();
-        if (!acc[date]) {
-          acc[date] = [];
-        }
-        acc[date].push(entry);
-        return acc;
-      }, {} as Record<string, typeof entriesToProcess>);
+      const groupedEntries = entriesToProcess.reduce(
+        (acc, entry) => {
+          const date = new Date(entry.timestamp).toDateString();
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(entry);
+          return acc;
+        },
+        {} as Record<string, typeof entriesToProcess>,
+      );
 
       let htmlContent = `
         <!DOCTYPE html>
@@ -300,8 +334,10 @@ export default function ParentsReport() {
 
       htmlContent += `</body></html>`;
 
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename = forAllEntries ? `Diary_Report_${timestamp}.html` : `Diary_${selectedHistoryDate?.replace(/\s/g, '_')}.html`;
+      const timestamp = new Date().toISOString().split("T")[0];
+      const filename = forAllEntries
+        ? `Diary_Report_${timestamp}.html`
+        : `Diary_${selectedHistoryDate?.replace(/\s/g, "_")}.html`;
 
       const fileUri = `${FileSystem.documentDirectory}${filename}`;
       await FileSystem.writeAsStringAsync(fileUri, htmlContent, {
@@ -319,18 +355,17 @@ export default function ParentsReport() {
             onPress: async () => {
               if (await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(fileUri, {
-                  mimeType: 'text/html',
-                  dialogTitle: 'Diary Report',
+                  mimeType: "text/html",
+                  dialogTitle: "Diary Report",
                 });
               }
-            }
+            },
           },
           {
-            text: "OK"
-          }
-        ]
+            text: "OK",
+          },
+        ],
       );
-
     } catch (error) {
       console.error("PDF generation error:", error);
       Alert.alert("Error", "Failed to generate PDF report. Please try again.");
@@ -338,9 +373,15 @@ export default function ParentsReport() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.mainContainer} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.mainContainer}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Diary Report</Text>
@@ -348,30 +389,58 @@ export default function ParentsReport() {
 
       <View style={styles.container}>
         <View style={styles.topTabs}>
-          <TouchableOpacity style={[styles.topTab, activeTab === 'diary' && styles.topTabActive]} onPress={() => setActiveTab('diary')}>
-            <Text style={[styles.topTabText, activeTab === 'diary' && styles.topTabTextActive]}>Diary</Text>
+          <TouchableOpacity
+            style={[
+              styles.topTab,
+              activeTab === "diary" && styles.topTabActive,
+            ]}
+            onPress={() => setActiveTab("diary")}
+          >
+            <Text
+              style={[
+                styles.topTabText,
+                activeTab === "diary" && styles.topTabTextActive,
+              ]}
+            >
+              Diary
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.topTab, activeTab === 'history' && styles.topTabActive]} onPress={() => setActiveTab('history')}>
-            <Text style={[styles.topTabText, activeTab === 'history' && styles.topTabTextActive]}>History</Text>
+          <TouchableOpacity
+            style={[
+              styles.topTab,
+              activeTab === "history" && styles.topTabActive,
+            ]}
+            onPress={() => setActiveTab("history")}
+          >
+            <Text
+              style={[
+                styles.topTabText,
+                activeTab === "history" && styles.topTabTextActive,
+              ]}
+            >
+              History
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Child Selector */}
         {children.length > 1 && (
           <View style={styles.childSelectorContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.childSelectorButton}
               onPress={() => setShowChildSelector(true)}
             >
               <Text style={styles.childSelectorText}>
-                {selectedChild ? `Selected: ${selectedChild.name}` : 'Select Child'}
+                {selectedChild
+                  ? `Selected: ${selectedChild.name}`
+                  : "Select Child"}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#666" />
             </TouchableOpacity>
           </View>
         )}
 
-        {activeTab === 'diary' && (
+        {activeTab === "diary" && (
           <>
             <View style={styles.card}>
               <Text style={styles.cardTitle}>New Diary Report</Text>
@@ -386,14 +455,19 @@ export default function ParentsReport() {
             </View>
 
             <TouchableOpacity
-              style={[styles.saveBtn, diary ? styles.saveBtnActive : styles.saveBtnDisabled]}
+              style={[
+                styles.saveBtn,
+                diary ? styles.saveBtnActive : styles.saveBtnDisabled,
+              ]}
               disabled={!diary}
               onPress={handleSave}
             >
               <Text style={styles.saveBtnText}>Save Report</Text>
             </TouchableOpacity>
 
-            <Text style={{ marginTop: 24, fontWeight: 'bold' }}>Today Diary Reports</Text>
+            <Text style={{ marginTop: 24, fontWeight: "bold" }}>
+              Today Diary Reports
+            </Text>
 
             <FlatList
               data={todayEntries}
@@ -403,12 +477,17 @@ export default function ParentsReport() {
               keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
                 <View style={styles.pagedEntryCard}>
-                  <Text style={styles.entryTimestamp}>{new Date(item.timestamp).toLocaleString()}</Text>
+                  <Text style={styles.entryTimestamp}>
+                    {new Date(item.timestamp).toLocaleString()}
+                  </Text>
                   <Text style={styles.entryText}>{item.text}</Text>
                 </View>
               )}
               onScroll={(e) => {
-                const index = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
+                const index = Math.round(
+                  e.nativeEvent.contentOffset.x /
+                    e.nativeEvent.layoutMeasurement.width,
+                );
                 setCurrentSlide(index);
               }}
               ref={flatListRef}
@@ -418,50 +497,76 @@ export default function ParentsReport() {
               {todayEntries.map((_, index) => (
                 <View
                   key={index}
-                  style={[styles.dot, currentSlide === index && styles.activeDot]}
+                  style={[
+                    styles.dot,
+                    currentSlide === index && styles.activeDot,
+                  ]}
                 />
               ))}
             </View>
           </>
         )}
 
-        {activeTab === 'history' && (
+        {activeTab === "history" && (
           <>
             <View style={styles.historyHeader}>
-              <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Diary Report History</Text>
+              <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                Diary Report History
+              </Text>
             </View>
 
-            <ScrollView style={{ width: '100%' }}>
+            <ScrollView style={{ width: "100%" }}>
               {historyDates.map((date) => (
                 <TouchableOpacity
                   key={date}
-                  style={[styles.entryCard, { backgroundColor: selectedHistoryDate === date ? '#CDE' : '#fff' }]}
-                  onPress={() => setSelectedHistoryDate(selectedHistoryDate === date ? null : date)}
+                  style={[
+                    styles.entryCard,
+                    {
+                      backgroundColor:
+                        selectedHistoryDate === date ? "#CDE" : "#fff",
+                    },
+                  ]}
+                  onPress={() =>
+                    setSelectedHistoryDate(
+                      selectedHistoryDate === date ? null : date,
+                    )
+                  }
                 >
-                  <Text style={{ fontWeight: 'bold' }}>{date}</Text>
+                  <Text style={{ fontWeight: "bold" }}>{date}</Text>
                 </TouchableOpacity>
               ))}
 
               {selectedHistoryDate && (
                 <>
-                  <Text style={styles.cardTitle}>Report for {selectedHistoryDate}</Text>
-                  
+                  <Text style={styles.cardTitle}>
+                    Report for {selectedHistoryDate}
+                  </Text>
+
                   <FlatList
-                    data={entries.filter((entry) => new Date(entry.timestamp).toDateString() === selectedHistoryDate)}
+                    data={entries.filter(
+                      (entry) =>
+                        new Date(entry.timestamp).toDateString() ===
+                        selectedHistoryDate,
+                    )}
                     horizontal
                     pagingEnabled
                     showsHorizontalScrollIndicator={false}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item: entry }) => (
                       <View style={styles.pagedHistoryEntryCard}>
-                        <Text style={styles.historyEntryText}>{entry.text}</Text>
+                        <Text style={styles.historyEntryText}>
+                          {entry.text}
+                        </Text>
                         <Text style={styles.historyEntryTime}>
                           {new Date(entry.timestamp).toLocaleTimeString()}
                         </Text>
                       </View>
                     )}
                     onScroll={(e) => {
-                      const index = Math.round(e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width);
+                      const index = Math.round(
+                        e.nativeEvent.contentOffset.x /
+                          e.nativeEvent.layoutMeasurement.width,
+                      );
                       setCurrentHistorySlide(index);
                     }}
                     ref={historyFlatListRef}
@@ -469,11 +574,18 @@ export default function ParentsReport() {
 
                   <View style={styles.pagination}>
                     {entries
-                      .filter((entry) => new Date(entry.timestamp).toDateString() === selectedHistoryDate)
+                      .filter(
+                        (entry) =>
+                          new Date(entry.timestamp).toDateString() ===
+                          selectedHistoryDate,
+                      )
                       .map((_, index) => (
                         <View
                           key={index}
-                          style={[styles.dot, currentHistorySlide === index && styles.activeDot]}
+                          style={[
+                            styles.dot,
+                            currentHistorySlide === index && styles.activeDot,
+                          ]}
                         />
                       ))}
                   </View>
@@ -481,14 +593,19 @@ export default function ParentsReport() {
               )}
 
               {allHistoryDates.length === 0 && (
-                <Text style={{ marginTop: 20, color: '#777', textAlign: 'center' }}>
+                <Text
+                  style={{ marginTop: 20, color: "#777", textAlign: "center" }}
+                >
                   No history entries found.
                 </Text>
               )}
 
-                <TouchableOpacity style={styles.generateAllBtn} onPress={() => handleGeneratePDF(true)}>
-                  <Text style={styles.generateAllBtnText}>Download Report</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.generateAllBtn}
+                onPress={() => handleGeneratePDF(true)}
+              >
+                <Text style={styles.generateAllBtnText}>Download Report</Text>
+              </TouchableOpacity>
             </ScrollView>
           </>
         )}
@@ -496,35 +613,39 @@ export default function ParentsReport() {
 
       {/* Child Selection Modal */}
       <Modal visible={showChildSelector} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Child</Text>
             </View>
-            
+
             <View style={styles.modalBody}>
               <Text style={styles.modalMessage}>
-              Choose which child's diary reports you want to view:
+                Choose which child's diary reports you want to view:
               </Text>
-              
+
               <View style={styles.childList}>
-              {children.map((child, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.childItem}
-                  onPress={() => {
-                    setSelectedChild(child);
-                    setShowChildSelector(false);
-                    fetchDiaryReports(child.patientId);
-                  }}
-                >
-                  <Text style={styles.childName}>{child.name || `Child ${index + 1}`}</Text>
-                  <Text style={styles.childAge}>{child.age ? `${child.age} years old` : ''}</Text>
-                </TouchableOpacity>
-              ))}
+                {children.map((child, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.childItem}
+                    onPress={() => {
+                      setSelectedChild(child);
+                      setShowChildSelector(false);
+                      fetchDiaryReports(child.patientId);
+                    }}
+                  >
+                    <Text style={styles.childName}>
+                      {child.name || `Child ${index + 1}`}
+                    </Text>
+                    <Text style={styles.childAge}>
+                      {child.age ? `${child.age} years old` : ""}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
-            
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalButtonSecondary}
@@ -535,7 +656,6 @@ export default function ParentsReport() {
             </View>
           </View>
         </View>
-
       </Modal>
 
       <Modal visible={modalVisible} transparent animationType="fade">
@@ -550,243 +670,255 @@ export default function ParentsReport() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: '#E1F5FF' },
+  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#4db5ff",
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
   },
   backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#000' },
-  tabContainer: { flex: 1, alignItems: 'center', },
-  container: { flex: 1, alignItems: 'center', padding: 16 },
+  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff" },
+  tabContainer: { flex: 1, alignItems: "center" },
+  container: { flex: 1, alignItems: "center", padding: 16 },
   card: {
-    width: '100%',
-    backgroundColor: '#fff',
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 16,
     marginTop: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#1E293B",
     marginBottom: 8,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   input: {
-    width: '100%',
+    width: "100%",
     minHeight: 120,
-    backgroundColor: '#F6FBFF',
-    borderRadius: 8,
+    backgroundColor: "#E1F5FF",
+    borderRadius: 14,
     padding: 12,
     fontSize: 14,
-    color: '#222',
-    textAlignVertical: 'top',
-    borderWidth: 1,
-    borderColor: '#E1F5FF',
+    color: "#1E293B",
+    textAlignVertical: "top",
+    borderWidth: 1.5,
+    borderColor: "#E1F5FF",
   },
   saveBtn: {
-    width: '100%',
-    borderRadius: 8,
+    width: "100%",
+    borderRadius: 16,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 32,
   },
   saveBtnActive: {
-    backgroundColor: '#24A8FF',
-    borderRadius: 8,
+    backgroundColor: "#4db5ff",
+    borderRadius: 16,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   saveBtnDisabled: {
-    backgroundColor: '#B3E3FF',
+    backgroundColor: "#A8DDD9",
   },
   saveBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 18,
   },
   modalCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: "#fff",
+    borderRadius: 24,
     padding: 32,
     minWidth: 180,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: "center",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   modalText: {
     fontSize: 18,
-    color: '#24A8FF',
-    fontWeight: 'bold',
+    color: "#4db5ff",
+    fontWeight: "bold",
   },
   topTabs: {
-    flexDirection: 'row',
-    width: '100%',
-    //marginTop: 16,
-    //marginBottom: 16,
-    backgroundColor: '#B3E3FF',
-    //borderRadius: 8,
-    overflow: 'hidden',
+    flexDirection: "row",
+    width: "100%",
+    backgroundColor: "#E1F5FF",
+    overflow: "hidden",
   },
   topTab: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   topTabActive: {
-    backgroundColor: '#24A8FF',
+    backgroundColor: "#4db5ff",
   },
   topTabText: {
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#1E293B",
   },
   topTabTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   pagedEntryCard: {
     width: screenWidth - 32,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 16,
     marginHorizontal: 8,
     marginTop: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 2,
   },
   entryTimestamp: {
     fontSize: 12,
-    color: '#888',
+    color: "#9CA3AF",
     marginBottom: 8,
   },
   entryText: {
     fontSize: 14,
-    color: '#222',
+    color: "#1E293B",
   },
   pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 8,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ccc',
+    backgroundColor: "#E1F5FF",
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: '#24A8FF',
+    backgroundColor: "#4db5ff",
   },
   entryCard: {
-    width: '100%',
-    backgroundColor: '#fff',
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 2,
   },
   historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 20,
     marginBottom: 16,
   },
   generateAllBtn: {
-    backgroundColor: '#24A8FF',
+    backgroundColor: "#4db5ff",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 12,
     marginTop: 16,
   },
   generateAllBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   pagedHistoryEntryCard: {
     width: screenWidth - 32,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 16,
     marginHorizontal: 8,
     marginTop: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 2,
     minHeight: 200,
   },
   historyEntryText: {
     fontSize: 14,
-    color: '#222',
+    color: "#1E293B",
     marginBottom: 8,
   },
   historyEntryTime: {
     fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
+    color: "#9CA3AF",
+    fontStyle: "italic",
   },
   childSelectorCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: "#fff",
+    borderRadius: 24,
     padding: 24,
     minWidth: 300,
     maxWidth: 350,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: "center",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   childSelectorTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#1E293B",
     marginBottom: 8,
   },
   childSelectorSubtitle: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#9CA3AF",
+    textAlign: "center",
     marginBottom: 20,
   },
   childOption: {
-    width: '100%',
-    backgroundColor: '#f8f9fa',
+    width: "100%",
+    backgroundColor: "#E1F5FF",
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: "#E1F5FF",
   },
   childName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#222',
+    fontWeight: "bold",
+    color: "#1E293B",
     marginBottom: 4,
   },
   childAge: {
     fontSize: 14,
-    color: '#666',
+    color: "#9CA3AF",
   },
   childSelectorScrollView: {
     maxHeight: 300,
-    width: '100%',
+    width: "100%",
   },
   childSelectorScrollContent: {
     paddingBottom: 10,
@@ -795,102 +927,102 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
+    backgroundColor: "#fff",
+    borderRadius: 24,
     padding: 24,
     marginHorizontal: 20,
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
     elevation: 5,
   },
   modalHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2A2A2A',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#1E293B",
+    textAlign: "center",
   },
   modalBody: {
     marginBottom: 24,
   },
   modalMessage: {
     fontSize: 16,
-    color: '#555',
+    color: "#9CA3AF",
     lineHeight: 24,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 12,
   },
   childList: {
     marginTop: 10,
   },
   childItem: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
+    backgroundColor: "#E1F5FF",
+    borderRadius: 14,
     padding: 15,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#E1F5FF",
   },
   modalButtons: {
     gap: 12,
   },
   modalButtonPrimary: {
-    backgroundColor: '#48B2E8',
-    borderRadius: 12,
+    backgroundColor: "#4db5ff",
+    borderRadius: 14,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonTextPrimary: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalButtonSecondary: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
+    backgroundColor: "#E1F5FF",
+    borderRadius: 14,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonTextSecondary: {
-    color: '#666',
+    color: "#4db5ff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   childSelectorContainer: {
-    width: '100%',
+    width: "100%",
     marginTop: 16,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    backgroundColor: "#fff",
+    borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ccc',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#E1F5FF",
   },
   childSelectorButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
   },
   childSelectorText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#1E293B",
     marginRight: 10,
   },
 });

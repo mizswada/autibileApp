@@ -65,7 +65,7 @@ export default function editFeed() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={{backgroundColor: '#99DBFD', justifyContent: 'flex-end'}}>
+      <View style={{backgroundColor: '#E1F5FF', justifyContent: 'flex-end'}}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerRow}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>

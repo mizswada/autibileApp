@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   submitText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   cancelBtn: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#E1F5FF',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',

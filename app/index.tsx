@@ -53,7 +53,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#99DBFD',
+    backgroundColor: '#E1F5FF',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 40,
@@ -69,15 +69,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#1E293B',
   },
   sponsorContainer: {
     alignItems: 'center',
   },
   sponsorText: {
     fontSize: 12,
-    color: '#333',
+    color: '#4db5ff',
     marginBottom: 8,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   sponsorLogos: {
     flexDirection: 'row',
