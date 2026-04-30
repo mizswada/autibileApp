@@ -14,6 +14,49 @@ export default function UserTypeSelect() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  const getValidationEndpoint = (role: string) => {
+    if (role === 'Doctor') return 'validateDoctor';
+    if (role === 'Parents') return 'validateParents';
+    return 'validateTherapist';
+  };
+
+  const navigateByRole = (role: string) => {
+    if (role === 'Doctor') {
+      router.push('/doctorPage');
+    } else if (role === 'Parents') {
+      router.push('/parentsPage');
+    } else if (role === 'Therapist') {
+      router.push('/therapistPage');
+    }
+  };
+
+  const refreshAccessToken = async (data: any) => {
+    if (!data?.refreshToken) return null;
+
+    if (__DEV__) console.log('[Auth] access token invalid, attempting refresh');
+
+    const refreshResult = await API(
+      'apps/auth/refresh',
+      { refreshToken: data.refreshToken },
+      'POST',
+      false,
+    );
+
+    if (refreshResult.statusCode !== 200 || !refreshResult?.data?.accessToken) {
+      if (__DEV__) console.log('[Auth] refresh failed');
+      return null;
+    }
+
+    if (__DEV__) console.log('[Auth] refresh succeeded');
+
+    const updatedData = {
+      ...data,
+      accessToken: refreshResult.data.accessToken,
+    };
+    await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+    return updatedData;
+  };
+
   useEffect(() => {
     const checkUserType = async () => {
       setLoading(true);
@@ -22,26 +65,28 @@ export default function UserTypeSelect() {
 
       if (data && data.accessToken) {
         try {
-          let endpoint;
-          if (data.roles[0] === 'Doctor') {
-            endpoint = 'validateDoctor';
-          } else if (data.roles[0] === 'Parents') {
-            endpoint = 'validateParents';
-          } else {
-            endpoint = 'validateTherapist';
+          const role = data.roles?.[0];
+          const endpoint = getValidationEndpoint(role);
+
+          let result = await API(`apps/auth/${endpoint}`, {}, 'GET', true, data.accessToken);
+          if (__DEV__ && result.statusCode === 200) {
+            console.log('[Auth] startup validated with existing access token');
           }
 
-          const result = await API(`apps/auth/${endpoint}`, {}, "GET", true, data.accessToken);
-          //console.log('Validation result:', result);
+          if (result.statusCode !== 200) {
+            const refreshedData = await refreshAccessToken(data);
+            if (refreshedData?.accessToken) {
+              result = await API(`apps/auth/${endpoint}`, {}, 'GET', true, refreshedData.accessToken);
+              if (__DEV__ && result.statusCode === 200) {
+                console.log('[Auth] startup validated after refresh');
+              }
+            } else {
+              await AsyncStorage.removeItem('userData');
+            }
+          }
 
           if (result.statusCode === 200) {
-            if (data.roles[0] === 'Doctor') {
-              router.push('/doctorPage');
-            } else if (data.roles[0] === 'Parents') {
-              router.push('/parentsPage');
-            } else if (data.roles[0] === 'Therapist') {
-              router.push('/therapistPage');
-            }
+            navigateByRole(role);
           } else {
             console.log('User validation failed');
           }

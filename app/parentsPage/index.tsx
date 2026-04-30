@@ -41,7 +41,7 @@ const notifications = [
 const features = [
   {
     key: "mchat",
-    label: "M-CHAT-R",
+    label: "Screening",
     icon: require("@/assets/images/passFail.png"),
     color: "#20B2AA",
   },
@@ -524,7 +524,7 @@ export default function HomeScreen() {
                     ? () =>
                         router.push("/appointment/parentsAppointment" as any)
                     : f.key === "mchat"
-                      ? () => handleMchatrPress()
+                      ? () => router.push("/questionnaire" as any)
                       : f.key === "therapy"
                         ? () => router.push("/therapy/TherapyPlanList" as any)
                         : f.key === "progress"
@@ -532,7 +532,7 @@ export default function HomeScreen() {
                               router.push("/diaryReport/parentsReport" as any)
                           : undefined
                 }
-                disabled={f.key === "mchat" && children.length === 0}
+                disabled={false}
                 activeOpacity={0.8}
               >
                 <View style={styles.featureIconBg}>
@@ -555,9 +555,7 @@ export default function HomeScreen() {
                       styles.disabledFeatureLabel,
                   ]}
                 >
-                  {f.key === "mchat" && children.length === 0
-                    ? "No Children"
-                    : f.label}
+                  {f.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -579,7 +577,7 @@ export default function HomeScreen() {
                     ? () =>
                         router.push("/appointment/parentsAppointment" as any)
                     : f.key === "mchat"
-                      ? () => handleMchatrPress()
+                      ? () => router.push("/questionnaire" as any)
                       : f.key === "therapy"
                         ? () => router.push("/therapy/TherapyPlanList" as any)
                         : f.key === "progress"
@@ -587,7 +585,7 @@ export default function HomeScreen() {
                               router.push("/diaryReport/parentsReport" as any)
                           : undefined
                 }
-                disabled={f.key === "mchat" && children.length === 0}
+                disabled={false}
                 activeOpacity={0.8}
               >
                 <View style={styles.featureIconBg}>
@@ -610,9 +608,7 @@ export default function HomeScreen() {
                       styles.disabledFeatureLabel,
                   ]}
                 >
-                  {f.key === "mchat" && children.length === 0
-                    ? "No Children"
-                    : f.label}
+                  {f.label}
                 </Text>
               </TouchableOpacity>
             ))}
