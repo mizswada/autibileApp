@@ -593,6 +593,11 @@ export default function QuestionnaireForm() {
         try {
           // Use the API function instead of hardcoded fetch
           // Server may run AI (OpenRouter etc.) after saving answers — allow up to 90s
+          console.log("=== SUBMITTING QUESTIONNAIRE ===");
+          console.log("Questionnaire ID:", id);
+          console.log("Patient ID:", selectedChild?.patientId);
+          console.log("Formatted Answers:", JSON.stringify(formattedAnswers, null, 2));
+
           const apiResponse = await API(
             "apps/questionnaire/submit",
             {
@@ -605,6 +610,10 @@ export default function QuestionnaireForm() {
             null,
             90000,
           );
+
+          console.log("=== API RESPONSE RECEIVED ===");
+          console.log("Status Code:", apiResponse.statusCode);
+          console.log("Raw Response:", JSON.stringify(apiResponse, null, 2));
 
           if (apiResponse.statusCode === 200) {
             response = apiResponse;
@@ -637,6 +646,14 @@ export default function QuestionnaireForm() {
       if (response && response.statusCode === 200) {
         const resultData = response.data as any;
         const score = resultData?.total_score || 0;
+
+        // Debug: Log the full response
+        console.log("=== SUBMISSION RESPONSE ===");
+        console.log("Full Response:", JSON.stringify(resultData, null, 2));
+        console.log("Score:", score);
+        console.log("Threshold:", resultData?.threshold);
+        console.log("AI Analysis:", resultData?.ai_analysis);
+        console.log("=========================");
 
         setResult({
           score: score,
@@ -789,8 +806,13 @@ export default function QuestionnaireForm() {
                     </Text>
                   </View>
                   <Text style={styles.questionText}>
-                    {q.question_text_bi || q.question_text_bm}
+                    {q.question_text_bi}
                   </Text>
+                  {q.question_text_bm && (
+                    <Text style={styles.questionTextBm}>
+                      {q.question_text_bm}
+                    </Text>
+                  )}
 
                   {/* Radio/Checkbox Options */}
                   {(questionType === "radio" ||
@@ -936,8 +958,13 @@ export default function QuestionnaireForm() {
                           </View>
 
                           <Text style={styles.questionText}>
-                            {subQ.question_text_bi || subQ.question_text_bm}
+                            {subQ.question_text_bi}
                           </Text>
+                          {subQ.question_text_bm && (
+                            <Text style={styles.questionTextBm}>
+                              {subQ.question_text_bm}
+                            </Text>
+                          )}
 
                           {/* Sub-question options */}
                           {(subQuestionType === "radio" ||
@@ -1129,97 +1156,106 @@ export default function QuestionnaireForm() {
                   <Text style={styles.predictionLabel}>Prediction</Text>
                 </View>
                 <View style={styles.predictionBox}>
-                  {/* Doctor's prediction (M-CHAT-R) or main prediction (other questionnaires) */}
-                  <Text style={styles.predictionText}>
-                    {result.interpretation}
-                  </Text>
-
-                  {/* AI Analysis - varies by questionnaire type */}
-                  {result.aiAnalysis && (
+                  {/* Threshold Interpretation (from scoring rules) */}
+                  {result.interpretation && result.interpretation !== "No prediction available" && (
                     <>
-                      {id === "1" ? (
-                        // M-CHAT-R: AI is supplementary
-                        <>
-                          <View
-                            style={{
-                              height: 1,
-                              backgroundColor: "#ddd",
-                              marginVertical: 12,
-                            }}
-                          />
-                          <View style={{ marginTop: 8 }}>
-                            <Text
-                              style={{
-                                fontSize: 12,
-                                color: "#666",
-                                fontWeight: "600",
-                                marginBottom: 4,
-                              }}
-                            >
-                              AI Prediction: {result.aiAnalysis.result}
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: 11,
-                                color: "#999",
-                                lineHeight: 16,
-                              }}
-                            >
-                              {result.aiAnalysis.explanation}
-                            </Text>
-                          </View>
-                        </>
-                      ) : (
-                        // Other questionnaires: AI is primary (replaces the interpretation)
-                        <>
-                          <Text
-                            style={{
-                              fontSize: 11,
-                              color: "#666",
-                              lineHeight: 16,
-                              marginTop: 8,
-                            }}
-                          >
-                            {result.aiAnalysis.explanation}
-                          </Text>
-                        </>
-                      )}
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#333",
+                          fontWeight: "600",
+                          marginBottom: 8,
+                        }}
+                      >
+                        Based on Score ({result.score}):
+                      </Text>
+                      <Text style={styles.predictionText}>
+                        {result.interpretation}
+                      </Text>
                     </>
                   )}
+
+                  {/* AI Response */}
+                  {result.aiAnalysis ? (
+                    <>
+                      <View
+                        style={{
+                          height: 1,
+                          backgroundColor: "#ddd",
+                          marginVertical: 12,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#666",
+                          fontWeight: "600",
+                          marginBottom: 8,
+                        }}
+                      >
+                        AI Analysis:
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: "#999",
+                          lineHeight: 16,
+                        }}
+                      >
+                        {result.aiAnalysis.explanation}
+                      </Text>
+                    </>
+                  ) : null}
                 </View>
               </View>
 
               {/* Recommendation Box */}
-              {/* For non-M-CHAT-R questionnaires with AI, recommendation comes from AI */}
-              {id !== "1" && result.aiAnalysis ? (
-                <View style={styles.recommendationBoxContainer}>
-                  <View style={styles.recommendationHeader}>
-                    <Ionicons name="star" size={24} color="#FFD700" />
-                    <Text style={styles.recommendationLabel}>
-                      Recommendation
-                    </Text>
-                  </View>
-                  <View style={styles.recommendationBox}>
-                    <Text style={styles.recommendationText}>
-                      {result.aiAnalysis.explanation}
-                    </Text>
-                  </View>
+              <View style={styles.recommendationBoxContainer}>
+                <View style={styles.recommendationHeader}>
+                  <Ionicons name="star" size={24} color="#FFD700" />
+                  <Text style={styles.recommendationLabel}>
+                    Recommendation
+                  </Text>
                 </View>
-              ) : (
-                <View style={styles.recommendationBoxContainer}>
-                  <View style={styles.recommendationHeader}>
-                    <Ionicons name="star" size={24} color="#FFD700" />
-                    <Text style={styles.recommendationLabel}>
-                      Recommendation
-                    </Text>
-                  </View>
-                  <View style={styles.recommendationBox}>
-                    <Text style={styles.recommendationText}>
-                      {result.recommendation}
-                    </Text>
-                  </View>
+                <View style={styles.recommendationBox}>
+                  {/* Threshold Recommendation (from scoring rules) */}
+                  {result.recommendation && result.recommendation !== "No recommendation available" && (
+                    <>
+                      <Text style={styles.recommendationText}>
+                        {result.recommendation}
+                      </Text>
+                    </>
+                  )}
+
+                  {/* AI Recommendation (from AI response result field) */}
+                  {result.aiAnalysis && result.aiAnalysis.result && (
+                    <>
+                      {result.recommendation && result.recommendation !== "No recommendation available" && (
+                        <View
+                          style={{
+                            height: 1,
+                            backgroundColor: "#ddd",
+                            marginVertical: 12,
+                          }}
+                        />
+                      )}
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: "#666",
+                          fontWeight: "600",
+                          marginBottom: 8,
+                        }}
+                      >
+                        AI Recommendation:
+                      </Text>
+                      <Text style={styles.recommendationText}>
+                        {result.aiAnalysis.result}
+                      </Text>
+                    </>
+                  )}
                 </View>
-              )}
+              </View>
 
               {/* Show message for intermediate score (3-7) */}
               {(() => {
