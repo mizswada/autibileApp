@@ -1292,7 +1292,15 @@ export default function QuestionnaireForm() {
               style={styles.resultModalButton}
               onPress={() => {
                 setShowResult(false);
-                router.back();
+                // Pass a refresh flag to parent if M-CHAT-R was completed
+                if (id === "1") {
+                  // Store a flag in AsyncStorage to signal parent to refresh
+                  AsyncStorage.setItem("refreshQuestionnaires", "true").then(() => {
+                    router.back();
+                  });
+                } else {
+                  router.back();
+                }
               }}
             >
               <Text style={styles.resultModalButtonText}>Done</Text>

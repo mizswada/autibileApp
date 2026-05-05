@@ -227,6 +227,30 @@ export default function QuestionnaireIndex() {
               if (response.statusCode === 200 && response.data) {
                 const data = response.data as any[];
 
+                // Check if M-CHAT-R has been completed
+                const questionnaireHistoryResponse = await API(
+                  "apps/questionnaire/response",
+                  { parentId: userData.parentId },
+                  "GET",
+                  false,
+                );
+
+                let isMchatrCompleted = false;
+                if (
+                  questionnaireHistoryResponse.statusCode === 200 &&
+                  questionnaireHistoryResponse.data
+                ) {
+                  const historyData = questionnaireHistoryResponse.data as any[];
+                  const patientResponses = historyData.filter((response: any) => {
+                    const responsePatientId = Number(response.patient_id);
+                    const selectedChildId = Number(userData.selectedChildId);
+                    return responsePatientId === selectedChildId;
+                  });
+                  isMchatrCompleted = patientResponses.some(
+                    (r: any) => r.questionnaire_id === 1,
+                  );
+                }
+
                 // Mark questionnaires based on new eligibility logic
                 const questionnairesWithStatus = data
                   .filter((q: any) => Number(q.questionnaire_id) !== 2) // Filter out questionnaire id = 2
@@ -238,6 +262,9 @@ export default function QuestionnaireIndex() {
                       // For MCHAT-R: only disable if explicitly disabled in backend
                       // If status is null/undefined, treat as "Enable" (default behavior)
                       isDisabled = eligibility?.mchatr_status === "Disable";
+                    } else {
+                      // Lock all other questionnaires until M-CHAT-R is completed
+                      isDisabled = !isMchatrCompleted;
                     }
 
                     return {
@@ -306,7 +333,10 @@ export default function QuestionnaireIndex() {
             );
           }
 
-          // Mark questionnaires as disabled if they've been completed
+          // Check if M-CHAT-R (questionnaire ID = 1) has been completed
+          const isMchatrCompleted = completedQuestionnaireIds.includes(1);
+
+          // Mark questionnaires as disabled if they've been completed or if M-CHAT-R hasn't been completed
           // Filter out questionnaire id = 2 from the listing
           const questionnairesWithStatus = data
             .filter((q: any) => Number(q.questionnaire_id) !== 2) // Filter out questionnaire id = 2
@@ -317,6 +347,9 @@ export default function QuestionnaireIndex() {
               if (questionnaireId === 1) {
                 // Only disable questionnaire ID = 1 if it has been completed for the currently selected child
                 isDisabled = completedQuestionnaireIds.includes(1);
+              } else {
+                // Lock all other questionnaires until M-CHAT-R is completed
+                isDisabled = !isMchatrCompleted;
               }
 
               return {
@@ -388,8 +421,40 @@ export default function QuestionnaireIndex() {
     initialize();
   }, []);
 
-  // Remove the useFocusEffect that was causing infinite loop
-  // Instead, we'll rely on pull-to-refresh and manual refresh
+  // Listen for refresh signal from questionnaire submission
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkForRefresh = async () => {
+      const refreshFlag = await AsyncStorage.getItem("refreshQuestionnaires");
+      if (refreshFlag === "true" && isMounted) {
+        // Clear the flag first
+        await AsyncStorage.removeItem("refreshQuestionnaires");
+        // Then refresh the data
+        setLoading(true);
+        try {
+          await Promise.all([
+            fetchQuestionnaires("current"),
+            fetchQuestionnaires("history"),
+          ]);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      }
+    };
+
+    // Check on mount and also set up an interval to check periodically
+    checkForRefresh();
+    const interval = setInterval(checkForRefresh, 500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
 
   const handleTabChange = (tab: "current" | "history") => {
     setActiveTab(tab);
@@ -758,43 +823,43 @@ export default function QuestionnaireIndex() {
           <meta charset="utf-8">
           <title>Integrated Developmental Screening Report</title>
           <style>
-            @page { margin: 40px; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #333; line-height: 1.6; }
-            .header { text-align: center; border-bottom: 2px solid #1565C0; padding-bottom: 20px; margin-bottom: 30px; }
-            .header-logo { max-width: 150px; height: auto; margin-bottom: 10px; }
-            .header-title { font-size: 24px; font-weight: bold; color: #1565C0; margin: 0; }
-            .header-subtitle { font-size: 12px; color: #666; margin: 5px 0 0 0; }
-            .report-meta { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 11px; color: #666; }
+            @page { margin: 20px; size: A4; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #333; line-height: 1.7; font-size: 12px; }
+            .header { text-align: center; border-bottom: 2px solid #1565C0; padding-bottom: 16px; margin-bottom: 16px; }
+            .header-logo { max-width: 140px; height: auto; margin-bottom: 8px; }
+            .header-title { font-size: 22px; font-weight: bold; color: #1565C0; margin: 0; }
+            .header-subtitle { font-size: 12.5px; color: #666; margin: 5px 0 0 0; }
+            .report-meta { background: #f9f9f9; padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #666; }
             .report-meta-item { display: inline-block; margin-right: 30px; }
-            h1 { text-align: center; font-size: 18px; margin: 20px 0 25px 0; font-weight: 600; color: #000; }
-            h3 { font-size: 14px; margin-top: 20px; margin-bottom: 10px; font-weight: 600; color: #1565C0; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
-            .section { margin: 25px 0; }
-            .section-title { font-weight: 600; color: #1565C0; margin-bottom: 12px; }
-            .two-col { display: flex; justify-content: space-between; gap: 40px; }
+            h1 { text-align: center; font-size: 16px; margin: 14px 0 16px 0; font-weight: 600; color: #000; }
+            h3 { font-size: 13px; margin-top: 14px; margin-bottom: 8px; font-weight: 600; color: #1565C0; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; }
+            .section { margin: 14px 0; }
+            .section-title { font-weight: 600; color: #1565C0; margin-bottom: 10px; }
+            .two-col { display: flex; justify-content: space-between; gap: 30px; }
             .two-col > div { flex: 1; }
-            p { margin: 8px 0; }
+            p { margin: 6px 0; }
             .label { font-weight: 600; display: inline; color: #333; }
-            .value { text-decoration: underline; display: inline; min-width: 150px; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #999; padding: 12px; text-align: left; }
+            .value { text-decoration: underline; display: inline; min-width: 100px; }
+            table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+            th, td { border: 1px solid #999; padding: 9px; text-align: left; }
             th { background: #1565C0; color: white; font-weight: 600; }
             tr:nth-child(even) { background: #f9f9f9; }
             .highlight { font-weight: 600; color: #d9534f; }
-            .domain-section { margin: 15px 0; padding: 10px; background: #fafafa; border-left: 3px solid #1565C0; }
-            .domain-section h4 { margin: 0 0 10px 0; font-size: 13px; color: #1565C0; }
-            .domain-section ul { margin: 10px 0; padding-left: 20px; }
-            .domain-section li { margin: 6px 0; font-size: 13px; }
-            .domain-section p { margin: 8px 0; font-size: 13px; color: #666; }
-            .notes-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 3px; }
-            .notes-box h4 { margin-top: 0; color: #856404; font-weight: 600; }
-            .notes-box ul { margin: 10px 0; padding-left: 20px; }
-            .notes-box li { margin: 5px 0; color: #856404; }
-            .bottom-section { display: flex; justify-content: space-between; gap: 40px; margin-top: 40px; }
+            .domain-section { margin: 10px 0; padding: 10px; background: #fafafa; border-left: 3px solid #1565C0; font-size: 12px; }
+            .domain-section h4 { margin: 0 0 7px 0; font-size: 12px; color: #1565C0; }
+            .domain-section ul { margin: 7px 0; padding-left: 24px; }
+            .domain-section li { margin: 5px 0; font-size: 12px; }
+            .domain-section p { margin: 6px 0; font-size: 12px; color: #666; }
+            .notes-box { background: #fff3cd; border-left: 3px solid #ffc107; padding: 12px; margin: 14px 0; border-radius: 2px; font-size: 12px; }
+            .notes-box h4 { margin-top: 0; margin-bottom: 7px; color: #856404; font-weight: 600; font-size: 12px; }
+            .notes-box ul { margin: 7px 0; padding-left: 24px; }
+            .notes-box li { margin: 5px 0; color: #856404; font-size: 11.5px; }
+            .bottom-section { display: flex; justify-content: space-between; gap: 30px; margin-top: 16px; }
             .assessor-block { flex: 1; }
-            .assessor-block h4 { font-size: 13px; font-weight: 600; margin-bottom: 15px; color: #1565C0; }
-            .assessor-block p { margin: 12px 0; font-size: 12px; }
-            .signature-line { border-bottom: 1px solid #000; display: inline-block; min-width: 250px; }
-            .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 10px; color: #999; }
+            .assessor-block h4 { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: #1565C0; }
+            .assessor-block p { margin: 7px 0; font-size: 11.5px; }
+            .signature-line { border-bottom: 1px solid #000; display: inline-block; min-width: 120px; }
+            .footer { text-align: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e0e0e0; font-size: 9.5px; color: #999; }
           </style>
         </head>
         <body>
@@ -1027,11 +1092,19 @@ export default function QuestionnaireIndex() {
               onPress={() => {
                 if (activeTab === "current") {
                   if (q.isDisabled) {
-                    Alert.alert(
-                      "Autism Screening Completed",
-                      "This autism screening has already been completed for this patient.",
-                      [{ text: "OK" }],
-                    );
+                    if (Number(q.questionnaire_id) === 1) {
+                      Alert.alert(
+                        "Autism Screening Completed",
+                        "This autism screening has already been completed for this patient.",
+                        [{ text: "OK" }],
+                      );
+                    } else {
+                      Alert.alert(
+                        "Screening Locked",
+                        "Please complete the Autism Screening (M-CHAT-R) first before accessing other screenings.",
+                        [{ text: "OK" }],
+                      );
+                    }
                     return;
                   }
                   router.push(`/questionnaire/${q.questionnaire_id}` as any);
@@ -1084,7 +1157,9 @@ export default function QuestionnaireIndex() {
                   </Text>
                   {q.isDisabled && (
                     <Text style={styles.completedText}>
-                      ✓ Already completed
+                      {Number(q.questionnaire_id) === 1
+                        ? "✓ Already completed"
+                        : "🔒 Complete M-CHAT-R first"}
                     </Text>
                   )}
                 </View>

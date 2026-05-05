@@ -269,6 +269,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     fontSize: 16,
+    color: "#1E293B",
   },
   forgotPassword: {
     alignSelf: "flex-end",
