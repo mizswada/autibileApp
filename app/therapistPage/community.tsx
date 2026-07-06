@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../api';
 
@@ -18,6 +18,7 @@ export default function CommunityFeed() {
   const params = useLocalSearchParams();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [isMenuVisible, setMenuVisible] = React.useState(false);
   const [selectedPostId, setSelectedPostId] = React.useState<number | null>(null);
@@ -26,16 +27,17 @@ export default function CommunityFeed() {
     fetchCommunityPosts();
   }, []);
 
-  // Listen for refresh parameter
   useEffect(() => {
     if (params.refresh === 'true') {
-      fetchCommunityPosts();
+      fetchCommunityPosts(true);
     }
   }, [params.refresh]);
 
-  const fetchCommunityPosts = async () => {
+  const fetchCommunityPosts = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isRefresh) {
+        setLoading(true);
+      }
       const response = await API('apps/community/list', {}, 'GET', false);
       
       if (Array.isArray(response)) {
@@ -48,8 +50,16 @@ export default function CommunityFeed() {
       console.error('Error fetching community posts:', error);
       setPosts([]);
     } finally {
-      setLoading(false);
+      if (!isRefresh) {
+        setLoading(false);
+      }
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCommunityPosts(true);
   };
 
   const handleBack = () => {
@@ -148,7 +158,7 @@ export default function CommunityFeed() {
         <SafeAreaView edges={['top']}>
           <View style={styles.headerRow}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-            <Text style={styles.headerTitle}>Community Feed</Text>
+            <Text style={styles.headerTitle}>News Update</Text>
             </View>
 
             <TouchableOpacity onPress={() => router.push({
@@ -187,6 +197,14 @@ export default function CommunityFeed() {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.feedContainer}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#4db5ff']}
+              tintColor="#4db5ff"
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="chatbubble-outline" size={48} color="#ccc" />

@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +17,7 @@ import {
 } from "react-native";
 import API from "../../api";
 import { MchatImportanceNoteModal } from "../../components/MchatImportanceNoteModal";
+import { getLogoBase64 } from "../../utils/getLogoBase64";
 
 export default function QuestionnaireForm() {
   const { id } = useLocalSearchParams();
@@ -46,6 +49,7 @@ export default function QuestionnaireForm() {
     aiAnalysis: null,
   });
   const [showMchatImportanceNote, setShowMchatImportanceNote] = useState(true);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     setShowMchatImportanceNote(id === "1");
@@ -118,49 +122,39 @@ export default function QuestionnaireForm() {
           if (response.statusCode === 200 && response.data) {
             const questionnaireData = response.data as any;
 
-            // Check MCHAT-R eligibility from the API response
+            // Check questionnaire access from the API response
+            const access = questionnaireData.questionnaire_access;
+            if (access && !access.can_access) {
+              Alert.alert(
+                "Access Denied",
+                access.access_reason ||
+                  "This questionnaire is currently locked for this child.",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.back(),
+                  },
+                ],
+              );
+              return;
+            }
+
+            // Legacy M-CHAT-R eligibility fallback
             if (questionnaireData.mchatr_eligibility) {
               const eligibility = questionnaireData.mchatr_eligibility;
 
-              if (id === "1") {
-                // For M-CHAT-R questionnaire - only block if explicitly disabled
-
-                // Check multiple possible values for disabled status
-                const isDisabled =
-                  eligibility.mchatr_status === "Disable" ||
-                  eligibility.mchatr_status === "disable" ||
-                  eligibility.mchatr_status === "DISABLE" ||
-                  eligibility.mchatr_status === false ||
-                  eligibility.mchatr_status === 0;
-
-                if (isDisabled) {
-                  Alert.alert(
-                    "Access Denied",
-                    "M-CHAT-R screening is currently disabled for this child.",
-                    [
-                      {
-                        text: "OK",
-                        onPress: () => router.back(),
-                      },
-                    ],
-                  );
-                  return;
-                }
-              } else if (id === "2") {
-                // For follow-up questionnaire
-                if (!eligibility.can_take_questionnaire_2) {
-                  Alert.alert(
-                    "Access Denied",
-                    "You must complete the M-CHAT-R screening first and receive a score between 3-7 to access the follow-up questionnaire.",
-                    [
-                      {
-                        text: "OK",
-                        onPress: () => router.back(),
-                      },
-                    ],
-                  );
-                  return;
-                }
+              if (id === "2" && !eligibility.can_take_questionnaire_2) {
+                Alert.alert(
+                  "Access Denied",
+                  "You must complete the M-CHAT-R screening first and receive a score between 3-7 to access the follow-up questionnaire.",
+                  [
+                    {
+                      text: "OK",
+                      onPress: () => router.back(),
+                    },
+                  ],
+                );
+                return;
               }
             }
 
@@ -750,6 +744,156 @@ export default function QuestionnaireForm() {
     );
   }
 
+  const handleDownloadResult = async () => {
+    try {
+      setIsGeneratingPdf(true);
+
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString("en-MY", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const formattedTime = now.toLocaleTimeString("en-MY", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      let logoHTML = "";
+      try {
+        const logoUri = await getLogoBase64();
+        if (logoUri) {
+          logoHTML = `<img src="${logoUri}" alt="NeuroSpa Therapy Logo" class="header-logo" style="max-width: 180px; height: auto; margin-bottom: 15px;">`;
+        }
+      } catch (error) {
+        console.warn("Logo loading error:", error);
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${questionnaire.title} Screening Result</title>
+          <style>
+            @page { margin: 15px; size: A4; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #333; line-height: 1.4; font-size: 11px; }
+            .header { text-align: center; border-bottom: 2px solid #1565C0; padding-bottom: 10px; margin-bottom: 8px; }
+            .header-logo { max-width: 120px; height: auto; margin-bottom: 4px; }
+            .header-title { font-size: 18px; font-weight: bold; color: #1565C0; margin: 0; }
+            .header-subtitle { font-size: 11px; color: #666; margin: 2px 0 0 0; }
+            .report-meta { background: #f9f9f9; padding: 8px; border-radius: 3px; margin-bottom: 8px; font-size: 10px; color: #666; }
+            .report-meta-item { display: inline-block; margin-right: 20px; }
+            h1 { text-align: center; font-size: 14px; margin: 8px 0 8px 0; font-weight: 600; color: #000; }
+            h3 { font-size: 12px; margin-top: 8px; margin-bottom: 4px; font-weight: 600; color: #1565C0; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
+            .section { margin: 6px 0; }
+            .section-title { font-weight: 600; color: #1565C0; margin-bottom: 6px; }
+            .two-col { display: flex; justify-content: space-between; gap: 20px; }
+            .two-col > div { flex: 1; }
+            p { margin: 3px 0; }
+            .label { font-weight: 600; display: inline; color: #333; }
+            .value { text-decoration: underline; display: inline; min-width: 100px; }
+            .score-box { background: #f0f0f0; padding: 10px; border-radius: 4px; text-align: center; margin: 6px 0; border-left: 4px solid #1565C0; }
+            .score-number { font-size: 28px; font-weight: bold; color: #d9534f; margin: 4px 0; }
+            .content-box { background: #f9f9f9; padding: 8px; border-radius: 4px; margin: 6px 0; border-left: 3px solid #1565C0; }
+            .content-label { font-weight: 600; color: #666; margin-bottom: 3px; font-size: 11px; }
+            .content-text { color: #333; line-height: 1.4; font-size: 10.5px; }
+            .divider { height: 1px; background: #ddd; margin: 6px 0; }
+            .ai-section { margin-top: 4px; padding-top: 4px; }
+            .ai-label { font-size: 10px; color: #999; font-weight: 600; }
+            .ai-text { font-size: 10px; color: #666; line-height: 1.4; }
+            .notes-box { background: #fff3cd; border-left: 3px solid #ffc107; padding: 8px; margin: 8px 0; border-radius: 2px; font-size: 11px; }
+            .notes-box h4 { margin-top: 0; margin-bottom: 4px; color: #856404; font-weight: 600; font-size: 11px; }
+            .notes-box ul { margin: 4px 0; padding-left: 20px; }
+            .notes-box li { margin: 2px 0; color: #856404; font-size: 10px; }
+            .next-steps { background: #e3f2fd; border-left: 3px solid #0B8FAC; padding: 8px; margin: 8px 0; border-radius: 2px; font-size: 10.5px; color: #01579b; }
+            .footer { text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; font-size: 9px; color: #999; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            ${logoHTML}
+            <h2 class="header-title">${questionnaire.title} Screening Result</h2>
+            <p class="header-subtitle">Individual Assessment Report</p>
+          </div>
+
+          <div class="report-meta">
+            <div class="report-meta-item"><strong>Report Generated:</strong> ${formattedDate} ${formattedTime}</div>
+            <div class="report-meta-item"><strong>Assessment:</strong> ${questionnaire.title}</div>
+          </div>
+
+          <div class="section">
+            <h3>Child Information</h3>
+            <p><span class="label">Child's Name:</span> <span class="value">${selectedChild?.name || "N/A"}</span></p>
+            <p><span class="label">Patient ID:</span> <span class="value">${selectedChild?.patientId || "N/A"}</span></p>
+          </div>
+
+          <div class="score-box">
+            <p style="margin: 0; font-size: 14px; color: #666;">Your Score</p>
+            <div class="score-number">${result.score}</div>
+          </div>
+
+          <div class="content-box">
+            <div class="content-label">Prediction</div>
+            ${result.interpretation && result.interpretation !== "No prediction available" ? `<p class="content-text"><strong>Based on Score (${result.score}):</strong> ${result.interpretation}</p>` : ""}
+            ${result.aiAnalysis ? `
+              <div class="divider"></div>
+              <div class="ai-section">
+                <div class="ai-label">AI Analysis</div>
+                <p class="ai-text">${result.aiAnalysis.explanation || ""}</p>
+              </div>
+            ` : ""}
+          </div>
+
+          <div class="content-box">
+            <div class="content-label">Recommendation</div>
+            ${result.recommendation && result.recommendation !== "No recommendation available" ? `<p class="content-text">${result.recommendation}</p>` : ""}
+            ${result.aiAnalysis && result.aiAnalysis.result ? `
+              <div class="divider"></div>
+              <div class="ai-section">
+                <div class="ai-label">AI Recommendation</div>
+                <p class="ai-text">${result.aiAnalysis.result}</p>
+              </div>
+            ` : ""}
+          </div>
+
+          ${id === "1" && result.score >= 3 && result.score <= 7 ? `
+            <div class="next-steps">
+              <strong>Next Steps:</strong> Based on your score, the patient needs to take the next level questionnaire (MCHATRF). Please contact our administrator for the next process.
+            </div>
+          ` : ""}
+
+          <div class="notes-box">
+            <h4>Important Notes</h4>
+            <ul>
+              <li>This screening is not a diagnosis</li>
+              <li>Further clinical evaluation required</li>
+              <li>Early intervention improves outcomes</li>
+            </ul>
+          </div>
+
+          <div class="footer">
+            <p>This report is confidential and intended for the parent/guardian and authorized healthcare providers only.</p>
+            <p>© NeuroSpa Therapy. All rights reserved.</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri, {
+        mimeType: "application/pdf",
+        dialogTitle: "Save Screening Result",
+      });
+
+      setIsGeneratingPdf(false);
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      Alert.alert("Error", "Failed to generate PDF. Please try again.");
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
       <View style={styles.header}>
@@ -857,6 +1001,11 @@ export default function QuestionnaireForm() {
                               >
                                 {cleanOptionTitle(option.option_title)}
                               </Text>
+                              {option.option_title_bm ? (
+                                <Text style={styles.optionTextBm}>
+                                  {option.option_title_bm}
+                                </Text>
+                              ) : null}
                             </TouchableOpacity>
                           ))}
                         </View>
@@ -1018,6 +1167,11 @@ export default function QuestionnaireForm() {
                                             option.option_title,
                                           )}
                                         </Text>
+                                        {option.option_title_bm ? (
+                                          <Text style={styles.optionTextBm}>
+                                            {option.option_title_bm}
+                                          </Text>
+                                        ) : null}
                                       </TouchableOpacity>
                                     ),
                                   )}
@@ -1287,24 +1441,45 @@ export default function QuestionnaireForm() {
               })()}
             </ScrollView>
 
-            {/* Close Button */}
-            <TouchableOpacity
-              style={styles.resultModalButton}
-              onPress={() => {
-                setShowResult(false);
-                // Pass a refresh flag to parent if M-CHAT-R was completed
-                if (id === "1") {
-                  // Store a flag in AsyncStorage to signal parent to refresh
-                  AsyncStorage.setItem("refreshQuestionnaires", "true").then(() => {
+            {/* Button Container */}
+            <View style={styles.resultButtonContainer}>
+              <TouchableOpacity
+                style={[styles.resultModalButton, styles.downloadButton]}
+                onPress={handleDownloadResult}
+                disabled={isGeneratingPdf}
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <ActivityIndicator size="small" color="#1565C0" style={{ marginRight: 8 }} />
+                    <Text style={styles.downloadButtonText}>Generating PDF...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="download" size={20} color="#1565C0" style={{ marginRight: 8 }} />
+                    <Text style={styles.downloadButtonText}>Download Result</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Close Button */}
+              <TouchableOpacity
+                style={styles.resultModalButton}
+                onPress={() => {
+                  setShowResult(false);
+                  // Pass a refresh flag to parent if M-CHAT-R was completed
+                  if (id === "1") {
+                    // Store a flag in AsyncStorage to signal parent to refresh
+                    AsyncStorage.setItem("refreshQuestionnaires", "true").then(() => {
+                      router.back();
+                    });
+                  } else {
                     router.back();
-                  });
-                } else {
-                  router.back();
-                }
-              }}
-            >
-              <Text style={styles.resultModalButtonText}>Done</Text>
-            </TouchableOpacity>
+                  }
+                }}
+              >
+                <Text style={styles.resultModalButtonText}>Done</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1345,43 +1520,32 @@ export default function QuestionnaireForm() {
                         eligibilityResponse.statusCode === 200 &&
                         eligibilityResponse.data
                       ) {
-                        const eligibility = (eligibilityResponse.data as any)
-                          .mchatr_eligibility;
+                        const questionnaireData =
+                          eligibilityResponse.data as any;
+                        const access = questionnaireData.questionnaire_access;
 
-                        if (id === "1") {
-                          // For M-CHAT-R questionnaire
-                          if (!eligibility.can_take_mchatr) {
-                            Alert.alert(
-                              "Access Denied",
-                              "M-CHAT-R screening is currently disabled for this child.",
-                              [{ text: "OK" }],
-                            );
-                            setShowChildSelector(false);
-                            return;
-                          }
+                        if (access && !access.can_access) {
+                          Alert.alert(
+                            "Access Denied",
+                            access.access_reason ||
+                              "This questionnaire is currently locked for this child.",
+                            [{ text: "OK" }],
+                          );
+                          setShowChildSelector(false);
+                          return;
+                        }
 
-                          // If status is Enable, allow access regardless of completion
-                          // Only block if explicitly disabled
-                          if (eligibility.mchatr_status === "Disable") {
-                            Alert.alert(
-                              "Access Denied",
-                              "M-CHAT-R screening is currently disabled for this child.",
-                              [{ text: "OK" }],
-                            );
-                            setShowChildSelector(false);
-                            return;
-                          }
-                        } else if (id === "2") {
-                          // For follow-up questionnaire
-                          if (!eligibility.can_take_questionnaire_2) {
-                            Alert.alert(
-                              "Access Denied",
-                              "You must complete the M-CHAT-R screening first and receive a score between 3-7 to access the follow-up questionnaire.",
-                              [{ text: "OK" }],
-                            );
-                            setShowChildSelector(false);
-                            return;
-                          }
+                        const eligibility =
+                          questionnaireData.mchatr_eligibility;
+
+                        if (id === "2" && !eligibility?.can_take_questionnaire_2) {
+                          Alert.alert(
+                            "Access Denied",
+                            "You must complete the M-CHAT-R screening first and receive a score between 3-7 to access the follow-up questionnaire.",
+                            [{ text: "OK" }],
+                          );
+                          setShowChildSelector(false);
+                          return;
                         }
                       }
                     } catch (error) {
@@ -1491,6 +1655,7 @@ const styles = StyleSheet.create({
   questionNumber: { fontWeight: "bold", fontSize: 16, marginBottom: 4 },
   questionText: { fontSize: 14, color: "#333", marginBottom: 4 },
   questionTextBm: { fontSize: 12, color: "#666", marginTop: 4 },
+  optionTextBm: { fontSize: 11, color: "#888", marginTop: 2 },
   requiredStar: { color: "red", fontSize: 16 },
   optionsContainer: {
     marginTop: 10,
@@ -2015,14 +2180,36 @@ const styles = StyleSheet.create({
   resultModalButton: {
     backgroundColor: "#4db5ff",
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 12,
     borderRadius: 10,
-    width: "100%",
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
   },
   resultModalButtonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  resultButtonContainer: {
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  downloadButton: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#1565C0",
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  downloadButtonText: {
+    color: "#1565C0",
+    fontSize: 14,
     fontWeight: "bold",
   },
 });

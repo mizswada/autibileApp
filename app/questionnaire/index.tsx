@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
@@ -8,7 +7,6 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Modal,
   RefreshControl,
   ScrollView,
@@ -18,6 +16,7 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+import { getLogoBase64 } from "../../utils/getLogoBase64";
 
 export default function QuestionnaireIndex() {
   const [activeTab, setActiveTab] = useState<"current" | "history">("current");
@@ -195,100 +194,41 @@ export default function QuestionnaireIndex() {
           apiParams.childID = userData.selectedChildId;
         }
 
-        // Use the new mobile API to get eligibility information
+        // Fetch questionnaires with per-patient access info
         if (userData.selectedChildId) {
-          try {
-            // Check eligibility for questionnaire ID 1 (MCHAT-R)
-            const eligibilityResponse = await API(
-              "apps/questionnaire/mobile",
-              {
-                questionnaireID: 1,
-                patientID: userData.selectedChildId,
-              },
-              "GET",
-              false,
-            );
+          const response = await API(
+            "apps/questionnaire/listQuestionnaire",
+            {
+              ...apiParams,
+              patientID: userData.selectedChildId,
+            },
+            "GET",
+            false,
+          );
 
-            if (
-              eligibilityResponse.statusCode === 200 &&
-              eligibilityResponse.data
-            ) {
-              const eligibility = (eligibilityResponse.data as any)
-                .mchatr_eligibility;
+          if (response.statusCode === 200 && response.data) {
+            const data = response.data as any[];
 
-              // First get the questionnaire list data
-              const response = await API(
-                "apps/questionnaire/listQuestionnaire",
-                apiParams,
-                "GET",
-                false,
-              );
+            const questionnairesWithStatus = data
+              .filter((q: any) => Number(q.questionnaire_id) !== 2)
+              .map((q: any) => ({
+                ...q,
+                isDisabled: q.questionnaire_access
+                  ? !q.questionnaire_access.can_access
+                  : false,
+              }))
+              .sort((a: any, b: any) => {
+                if (Number(a.questionnaire_id) === 1) return -1;
+                if (Number(b.questionnaire_id) === 1) return 1;
+                return 0;
+              });
 
-              if (response.statusCode === 200 && response.data) {
-                const data = response.data as any[];
-
-                // Check if M-CHAT-R has been completed
-                const questionnaireHistoryResponse = await API(
-                  "apps/questionnaire/response",
-                  { parentId: userData.parentId },
-                  "GET",
-                  false,
-                );
-
-                let isMchatrCompleted = false;
-                if (
-                  questionnaireHistoryResponse.statusCode === 200 &&
-                  questionnaireHistoryResponse.data
-                ) {
-                  const historyData = questionnaireHistoryResponse.data as any[];
-                  const patientResponses = historyData.filter((response: any) => {
-                    const responsePatientId = Number(response.patient_id);
-                    const selectedChildId = Number(userData.selectedChildId);
-                    return responsePatientId === selectedChildId;
-                  });
-                  isMchatrCompleted = patientResponses.some(
-                    (r: any) => r.questionnaire_id === 1,
-                  );
-                }
-
-                // Mark questionnaires based on new eligibility logic
-                const questionnairesWithStatus = data
-                  .filter((q: any) => Number(q.questionnaire_id) !== 2) // Filter out questionnaire id = 2
-                  .map((q: any) => {
-                    const questionnaireId = Number(q.questionnaire_id);
-                    let isDisabled = false;
-
-                    if (questionnaireId === 1) {
-                      // For MCHAT-R: only disable if explicitly disabled in backend
-                      // If status is null/undefined, treat as "Enable" (default behavior)
-                      isDisabled = eligibility?.mchatr_status === "Disable";
-                    } else {
-                      // Lock all other questionnaires until M-CHAT-R is completed
-                      isDisabled = !isMchatrCompleted;
-                    }
-
-                    return {
-                      ...q,
-                      isDisabled,
-                    };
-                  })
-                  .sort((a: any, b: any) => {
-                    if (Number(a.questionnaire_id) === 1) return -1;
-                    if (Number(b.questionnaire_id) === 1) return 1;
-                    return 0;
-                  });
-
-                setQuestionnaires(questionnairesWithStatus);
-                return; // Exit early since we handled the logic
-              }
-            }
-          } catch (error) {
-            console.error("Error fetching eligibility:", error);
-            // Continue with fallback logic if eligibility API fails
+            setQuestionnaires(questionnairesWithStatus);
+            return;
           }
         }
 
-        // Fallback to old logic if mobile API fails or no child selected
+        // Fallback when no child is selected
         const response = await API(
           "apps/questionnaire/listQuestionnaire",
           apiParams,
@@ -513,69 +453,6 @@ export default function QuestionnaireIndex() {
   const showDetailedAnswersModal = (response: any) => {
     setSelectedResponse(response);
     setShowDetailedAnswers(true);
-  };
-
-  const getLogoBase64 = async () => {
-    try {
-      // Step 1: Get the asset module
-      const logoAsset = require("../../assets/images/neurspatherapy_logo.png");
-      console.log("Logo asset loaded:", logoAsset);
-
-      // Step 2: Resolve asset source to get URI
-      let logoUri: string | null = null;
-
-      if (typeof logoAsset === "string") {
-        // Already a string URI
-        logoUri = logoAsset;
-        console.log("Logo is string URI:", logoUri);
-      } else if (typeof logoAsset === "number") {
-        // Module ID - use Image.resolveAssetSource
-        try {
-          const assetSource = Image.resolveAssetSource(logoAsset);
-          console.log("Asset source resolved:", assetSource);
-          logoUri = assetSource?.uri || null;
-          if (logoUri) {
-            console.log("Logo URI from resolveAssetSource:", logoUri);
-          }
-        } catch (resolveError) {
-          console.warn("Failed to resolve asset source:", resolveError);
-        }
-      } else if (logoAsset && typeof logoAsset === "object" && logoAsset.uri) {
-        // Already has URI property
-        logoUri = logoAsset.uri;
-        console.log("Logo object has uri:", logoUri);
-      }
-
-      // Step 3: If we have a URI, try to fetch and convert to base64
-      if (logoUri) {
-        try {
-          // If it's a file:// URI or regular path, read it
-          if (logoUri.startsWith("file://") || !logoUri.startsWith("data:")) {
-            console.log("Attempting to read logo from URI:", logoUri);
-            const base64 = await FileSystem.readAsStringAsync(logoUri, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-            const dataUri = `data:image/png;base64,${base64}`;
-            console.log("Logo converted to base64, length:", dataUri.length);
-            return dataUri;
-          } else {
-            // Already a data URI or http(s), return as-is
-            console.log("Logo URI is already usable");
-            return logoUri;
-          }
-        } catch (readError) {
-          console.warn("Failed to read logo from URI:", readError);
-          // Return the URI anyway - it might still work in the PDF
-          return logoUri;
-        }
-      }
-
-      console.warn("Could not load logo from any source");
-      return null;
-    } catch (error) {
-      console.warn("Unexpected error in getLogoBase64:", error);
-      return null;
-    }
   };
 
   const handleGenerateReport = async (child: any) => {
@@ -805,10 +682,6 @@ export default function QuestionnaireIndex() {
       let logoHTML = "";
       try {
         const logoUri = await getLogoBase64();
-        console.log(
-          "Logo URI loaded:",
-          logoUri ? `${logoUri.substring(0, 50)}...` : "null",
-        );
         if (logoUri) {
           logoHTML = `<img src="${logoUri}" alt="NeuroSpa Therapy Logo" class="header-logo" style="max-width: 180px; height: auto; margin-bottom: 15px;">`;
         }
@@ -1282,9 +1155,14 @@ export default function QuestionnaireIndex() {
 
                   // First render main questions (parent_question_id is null) in correct order
                   if (groupedAnswers["main"]) {
-                    // Sort main questions by question_id to maintain proper order
+                    // Sort main questions by admin-defined order
                     const sortedMainQuestions = groupedAnswers["main"].sort(
                       (a: any, b: any) => {
+                        const orderA =
+                          a.question_order ?? Number.MAX_SAFE_INTEGER;
+                        const orderB =
+                          b.question_order ?? Number.MAX_SAFE_INTEGER;
+                        if (orderA !== orderB) return orderA - orderB;
                         return (a.question_id || 0) - (b.question_id || 0);
                       },
                     );
@@ -1310,6 +1188,11 @@ export default function QuestionnaireIndex() {
                                 <Text style={styles.answerText}>
                                   {answer.option_title}
                                 </Text>
+                                {answer.option_title_bm ? (
+                                  <Text style={styles.answerTextBm}>
+                                    {answer.option_title_bm}
+                                  </Text>
+                                ) : null}
                               </View>
                             ) : answer.text_answer ? (
                               <View style={styles.answerDisplay}>
@@ -1340,9 +1223,14 @@ export default function QuestionnaireIndex() {
                       // Now render sub-questions for this parent question
                       const subQuestions = groupedAnswers[answer.question_id];
                       if (subQuestions) {
-                        // Sort sub-questions by question_id to maintain proper order
+                        // Sort sub-questions by admin-defined order
                         const sortedSubQuestions = subQuestions.sort(
                           (a: any, b: any) => {
+                            const orderA =
+                              a.question_order ?? Number.MAX_SAFE_INTEGER;
+                            const orderB =
+                              b.question_order ?? Number.MAX_SAFE_INTEGER;
+                            if (orderA !== orderB) return orderA - orderB;
                             return (a.question_id || 0) - (b.question_id || 0);
                           },
                         );
@@ -1380,6 +1268,11 @@ export default function QuestionnaireIndex() {
                                     <Text style={styles.answerText}>
                                       {subAnswer.option_title}
                                     </Text>
+                                    {subAnswer.option_title_bm ? (
+                                      <Text style={styles.answerTextBm}>
+                                        {subAnswer.option_title_bm}
+                                      </Text>
+                                    ) : null}
                                   </View>
                                 ) : subAnswer.text_answer ? (
                                   <View style={styles.answerDisplay}>
@@ -1833,6 +1726,11 @@ const styles = StyleSheet.create({
   answerText: {
     fontSize: 15,
     color: "#333",
+  },
+  answerTextBm: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 2,
   },
   noAnswerText: {
     fontSize: 15,
