@@ -22,6 +22,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="userType" options={{ headerShown: false }} />
+        <Stack.Screen name="adminWeb" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="parentsPage" options={{ headerShown: false }} />
         <Stack.Screen name="doctorPage" options={{ headerShown: false }} />

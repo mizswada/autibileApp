@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Slider from "@react-native-community/slider";
 import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
@@ -16,6 +17,12 @@ import {
   View,
 } from "react-native";
 import { getQuestionnaireLockInfo } from "./access";
+import {
+  getNumberAnswerDefaults,
+  getNumberConfig,
+  isNumberAnswerSet,
+  isNumberQuestion,
+} from "./numberConfig";
 import API from "../../api";
 import { MchatImportanceNoteModal } from "../../components/MchatImportanceNoteModal";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
@@ -203,6 +210,13 @@ export default function QuestionnaireForm() {
         );
 
         setQuestions(processedQuestions);
+        setAnswers((prev) => ({
+          ...getNumberAnswerDefaults(
+            processedQuestions,
+            questionnaire.number_answer_type_id,
+          ),
+          ...prev,
+        }));
       }
     } catch (error) {
       Alert.alert("Error", "Failed to process questionnaire questions");
@@ -231,13 +245,22 @@ export default function QuestionnaireForm() {
       );
 
       if (conditionalLogic && conditionalLogic.conditional_sub_questions) {
+        const subQuestions = conditionalLogic.conditional_sub_questions;
+        setAnswers((prev) => ({
+          ...getNumberAnswerDefaults(
+            subQuestions,
+            questionnaire?.number_answer_type_id,
+          ),
+          ...prev,
+        }));
+
         // Update the question with conditional sub-questions
         setQuestions((prev) => {
           const updatedQuestions = prev.map((q) => {
             if (q.question_id === parentQuestionId) {
               return {
                 ...q,
-                sub_questions: conditionalLogic.conditional_sub_questions,
+                sub_questions: subQuestions,
               };
             }
             return q;
@@ -358,7 +381,15 @@ export default function QuestionnaireForm() {
     setTextAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
+  const handleNumberChange = (questionId: string | number, value: number) => {
+    setAnswers((prev) => ({ ...prev, [String(questionId)]: value }));
+  };
+
   const getQuestionType = (question: any) => {
+    if (isNumberQuestion(question, questionnaire?.number_answer_type_id)) {
+      return "number";
+    }
+
     // Check if question has options to determine type
     if (question.options && question.options.length > 0) {
       const firstOption = question.options[0];
@@ -458,9 +489,13 @@ export default function QuestionnaireForm() {
       const questionType = getQuestionType(q);
       if (questionType === "text" || questionType === "textarea") {
         return !textAnswers[q.question_id];
-      } else {
-        return !answers[q.question_id];
       }
+
+      if (questionType === "number" || questionType === "scale") {
+        return !isNumberAnswerSet(answers[q.question_id]);
+      }
+
+      return !answers[q.question_id];
     });
 
     if (unansweredQuestions.length > 0) {
@@ -487,11 +522,11 @@ export default function QuestionnaireForm() {
             parent_question_id: null, // Main question has no parent
             text_answer: textAnswers[q.question_id] || "",
           });
-        } else if (questionType === "scale") {
+        } else if (questionType === "scale" || questionType === "number") {
           formattedAnswers.push({
             question_id: q.question_id,
             parent_question_id: null, // Main question has no parent
-            numeric_answer: answers[q.question_id] || 0,
+            numeric_answer: answers[q.question_id] ?? 0,
           });
         } else {
           // radio/checkbox - find the selected option to get option_value
@@ -535,11 +570,11 @@ export default function QuestionnaireForm() {
                 parent_question_id: q.question_id, // Link to parent question
                 text_answer: textAnswers[subQ.question_id] || "",
               });
-            } else if (subQuestionType === "scale") {
+            } else if (subQuestionType === "scale" || subQuestionType === "number") {
               formattedAnswers.push({
                 question_id: subQ.question_id,
                 parent_question_id: q.question_id, // Link to parent question
-                numeric_answer: answers[subQ.question_id] || 0,
+                numeric_answer: answers[subQ.question_id] ?? 0,
               });
             } else {
               // radio/checkbox - find the selected option to get option_value
@@ -939,6 +974,8 @@ export default function QuestionnaireForm() {
         {questions && questions.length ? (
           questions.map((q: any, idx: number) => {
             const questionType = getQuestionType(q);
+            const numberConfig =
+              questionType === "number" ? getNumberConfig(q) : null;
 
             return (
               <View key={q.question_id}>
@@ -1052,6 +1089,39 @@ export default function QuestionnaireForm() {
                     </View>
                   )}
 
+                  {/* Number Slider */}
+                  {questionType === "number" && numberConfig && (
+                    <View style={styles.numberSliderContainer}>
+                      <View style={styles.numberSliderLabels}>
+                        <Text style={styles.numberSliderLabelText}>
+                          {numberConfig.minLabel || numberConfig.min}
+                        </Text>
+                        <Text style={styles.numberSliderValue}>
+                          {answers[q.question_id] ?? numberConfig.defaultValue} /{" "}
+                          {numberConfig.max}
+                        </Text>
+                        <Text style={styles.numberSliderLabelText}>
+                          {numberConfig.maxLabel || numberConfig.max}
+                        </Text>
+                      </View>
+                      <Slider
+                        style={styles.numberSlider}
+                        minimumValue={numberConfig.min}
+                        maximumValue={numberConfig.max}
+                        step={numberConfig.step}
+                        value={
+                          answers[q.question_id] ?? numberConfig.defaultValue
+                        }
+                        onValueChange={(value) =>
+                          handleNumberChange(q.question_id, value)
+                        }
+                        minimumTrackTintColor="#4db5ff"
+                        maximumTrackTintColor="#d3d3d3"
+                        thumbTintColor="#4db5ff"
+                      />
+                    </View>
+                  )}
+
                   {/* Text Input */}
                   {questionType === "text" && (
                     <View style={styles.textInputContainer}>
@@ -1089,6 +1159,10 @@ export default function QuestionnaireForm() {
                   <View style={styles.subQuestionsContainer}>
                     {q.sub_questions.map((subQ: any, subIdx: number) => {
                       const subQuestionType = getQuestionType(subQ);
+                      const subNumberConfig =
+                        subQuestionType === "number"
+                          ? getNumberConfig(subQ)
+                          : null;
 
                       return (
                         <View
@@ -1181,6 +1255,41 @@ export default function QuestionnaireForm() {
                                   No options available
                                 </Text>
                               )}
+                            </View>
+                          )}
+
+                          {/* Sub-question number slider */}
+                          {subQuestionType === "number" && subNumberConfig && (
+                            <View style={styles.numberSliderContainer}>
+                              <View style={styles.numberSliderLabels}>
+                                <Text style={styles.numberSliderLabelText}>
+                                  {subNumberConfig.minLabel || subNumberConfig.min}
+                                </Text>
+                                <Text style={styles.numberSliderValue}>
+                                  {answers[subQ.question_id] ??
+                                    subNumberConfig.defaultValue}{" "}
+                                  / {subNumberConfig.max}
+                                </Text>
+                                <Text style={styles.numberSliderLabelText}>
+                                  {subNumberConfig.maxLabel || subNumberConfig.max}
+                                </Text>
+                              </View>
+                              <Slider
+                                style={styles.numberSlider}
+                                minimumValue={subNumberConfig.min}
+                                maximumValue={subNumberConfig.max}
+                                step={subNumberConfig.step}
+                                value={
+                                  answers[subQ.question_id] ??
+                                  subNumberConfig.defaultValue
+                                }
+                                onValueChange={(value) =>
+                                  handleNumberChange(subQ.question_id, value)
+                                }
+                                minimumTrackTintColor="#4db5ff"
+                                maximumTrackTintColor="#d3d3d3"
+                                thumbTintColor="#4db5ff"
+                              />
                             </View>
                           )}
 
@@ -1735,6 +1844,33 @@ const styles = StyleSheet.create({
   rangeLabel: {
     fontSize: 12,
     color: "#666",
+  },
+  numberSliderContainer: {
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  numberSliderLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  numberSliderLabelText: {
+    fontSize: 12,
+    color: "#666",
+    flex: 1,
+  },
+  numberSliderValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#4db5ff",
+    textAlign: "center",
+    flex: 1,
+  },
+  numberSlider: {
+    width: "100%",
+    height: 40,
   },
   textInputContainer: {
     marginTop: 10,

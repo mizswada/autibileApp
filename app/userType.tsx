@@ -119,6 +119,13 @@ export default function UserTypeSelect() {
           <Text style={styles.label}>{type.label}</Text>
         </TouchableOpacity>
       ))}
+
+      <TouchableOpacity
+        style={styles.adminLink}
+        onPress={() => router.push('/adminWeb')}
+      >
+        <Text style={styles.adminLinkText}>Open as Admin</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -141,4 +148,11 @@ const styles = StyleSheet.create({
   },
   image: { width: 120, height: 100, resizeMode: 'contain', marginBottom: 12 },
   label: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
+  adminLink: { marginTop: 8, paddingVertical: 8 },
+  adminLinkText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2563EB',
+    textDecorationLine: 'underline',
+  },
 });

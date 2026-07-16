@@ -1609,6 +1609,11 @@
   dependencies:
     invariant "^2.2.4"
 
+"@react-native-community/slider@4.5.6":
+  version "4.5.6"
+  resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.5.6.tgz#dfbfdd6a582b160d41719ad42a7b524794b06dd5"
+  integrity sha512-UhLPFeqx0YfPLrEz8ffT3uqAyXWu6iqFjohNsbp4cOU7hnJwg2RXtDnYHoHMr7MOkZDVdlLMdrSrAuzY6KGqrg==
+
 "@react-native-picker/picker@^2.11.0":
   version "2.11.1"
   resolved "https://registry.npmjs.org/@react-native-picker/picker/-/picker-2.11.1.tgz"
