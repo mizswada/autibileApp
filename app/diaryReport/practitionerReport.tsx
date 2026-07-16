@@ -12,11 +12,21 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+import {
+  DIARY_CATEGORIES,
+  isLegacyDiaryEntry,
+  OPTIONAL_NOTES_LABEL,
+} from "./constants";
 
 interface DiaryReport {
   diary_id: number;
   patient_id: number;
-  description: string;
+  description: string | null;
+  category_1?: string | null;
+  category_2?: string | null;
+  category_3?: string | null;
+  category_4?: string | null;
+  category_5?: string | null;
   date: string;
   created_at: string;
   updated_at: string;
@@ -47,6 +57,36 @@ export default function PractitionerReport() {
     [],
   );
   const router = useRouter();
+
+  const renderEntryContent = (entry: DiaryReport) => {
+    if (isLegacyDiaryEntry(entry)) {
+      return (
+        <Text style={styles.modalEntryContent}>{entry.description}</Text>
+      );
+    }
+
+    return (
+      <View>
+        {DIARY_CATEGORIES.map(({ key, label }) => {
+          const value = entry[key]?.trim();
+          if (!value) return null;
+
+          return (
+            <View key={key} style={styles.categoryBlock}>
+              <Text style={styles.categoryLabel}>{label}</Text>
+              <Text style={styles.modalEntryContent}>{value}</Text>
+            </View>
+          );
+        })}
+        {entry.description?.trim() ? (
+          <View style={styles.categoryBlock}>
+            <Text style={styles.categoryLabel}>{OPTIONAL_NOTES_LABEL}</Text>
+            <Text style={styles.modalEntryContent}>{entry.description}</Text>
+          </View>
+        ) : null}
+      </View>
+    );
+  };
 
   useEffect(() => {
     fetchDiaryReports();
@@ -215,9 +255,7 @@ export default function PractitionerReport() {
                       ).toLocaleTimeString()}
                     </Text>
                   </View>
-                  <Text style={styles.modalEntryContent}>
-                    {entry.description}
-                  </Text>
+                  {renderEntryContent(entry)}
                   {entry.patient && (
                     <View style={styles.modalPatientInfo}>
                       <Text style={styles.modalPatientDetail}>
@@ -352,6 +390,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#1E293B",
     marginBottom: 5,
+  },
+  categoryBlock: {
+    marginBottom: 8,
+  },
+  categoryLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#4db5ff",
+    marginBottom: 2,
   },
   modalPatientInfo: {
     flexDirection: "row",

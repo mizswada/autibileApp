@@ -20,14 +20,41 @@ import {
 } from "react-native";
 // @ts-ignore
 import API from "../../api";
+import {
+  DIARY_CATEGORIES,
+  EMPTY_CATEGORIES,
+  formatDiaryEntryLines,
+  hasAnyCategoryFilled,
+  OPTIONAL_NOTES_LABEL,
+  type DiaryCategoryKey,
+  type DiaryEntryData,
+} from "./constants";
 
 const { width: screenWidth } = Dimensions.get("window");
 
-export default function ParentsReport() {
-  const [diary, setDiary] = useState("");
-  const [entries, setEntries] = useState<{ text: string; timestamp: string }[]>(
-    [],
+type DiaryEntry = DiaryEntryData & {
+  timestamp: string;
+};
+
+function DiaryEntryContent({ entry }: { entry: DiaryEntry }) {
+  const lines = formatDiaryEntryLines(entry);
+
+  return (
+    <>
+      {lines.map((line, index) => (
+        <Text key={index} style={styles.entryText}>
+          {line}
+        </Text>
+      ))}
+    </>
   );
+}
+
+export default function ParentsReport() {
+  const [categories, setCategories] =
+    useState<Record<DiaryCategoryKey, string>>(EMPTY_CATEGORIES);
+  const [optionalNotes, setOptionalNotes] = useState("");
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<"diary" | "history">("diary");
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(
@@ -165,7 +192,12 @@ export default function ParentsReport() {
 
       if (response.statusCode === 200 && Array.isArray(response.data)) {
         const fetchedEntries = (response.data as any[]).map((item: any) => ({
-          text: item.description,
+          description: item.description,
+          category_1: item.category_1,
+          category_2: item.category_2,
+          category_3: item.category_3,
+          category_4: item.category_4,
+          category_5: item.category_5,
           timestamp: item.created_at,
         }));
         setEntries(fetchedEntries);
@@ -180,7 +212,7 @@ export default function ParentsReport() {
   };
 
   const handleSave = async () => {
-    if (!diary) return;
+    if (!hasAnyCategoryFilled(categories)) return;
 
     try {
       // Use selectedChild if available, otherwise use stored user data
@@ -202,18 +234,25 @@ export default function ParentsReport() {
 
       const response = await API("apps/diaryReport/insert", {
         patientID: patientId,
-        description: diary,
+        category_1: categories.category_1,
+        category_2: categories.category_2,
+        category_3: categories.category_3,
+        category_4: categories.category_4,
+        category_5: categories.category_5,
+        description: optionalNotes,
         date: new Date().toISOString(),
       });
 
       if (response.statusCode === 200) {
-        const newEntry = {
-          text: diary,
+        const newEntry: DiaryEntry = {
+          ...categories,
+          description: optionalNotes,
           timestamp: new Date().toISOString(),
         };
 
         setEntries([newEntry, ...entries]);
-        setDiary("");
+        setCategories({ ...EMPTY_CATEGORIES });
+        setOptionalNotes("");
         setModalVisible(true);
 
         setTimeout(() => {
@@ -226,6 +265,12 @@ export default function ParentsReport() {
       console.error(error);
       alert("An error occurred while saving the report");
     }
+  };
+
+  const canSave = hasAnyCategoryFilled(categories);
+
+  const updateCategory = (key: DiaryCategoryKey, value: string) => {
+    setCategories((prev) => ({ ...prev, [key]: value }));
   };
 
   const isToday = (timestamp: string) => {
@@ -323,9 +368,11 @@ export default function ParentsReport() {
             <div class="date-header">${date}</div>
         `;
         dayEntries.forEach((entry, index) => {
+          const lines = formatDiaryEntryLines(entry);
           htmlContent += `
             <div class="entry">
-              <span class="entry-number">${index + 1}.</span> ${entry.text}
+              <span class="entry-number">${index + 1}.</span>
+              ${lines.map((line) => `<div>${line}</div>`).join("")}
             </div>
           `;
         });
@@ -442,24 +489,48 @@ export default function ParentsReport() {
 
         {activeTab === "diary" && (
           <>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>New Diary Report</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your report here ..."
-                placeholderTextColor="#B0B0B0"
-                multiline
-                value={diary}
-                onChangeText={setDiary}
-              />
-            </View>
+            <ScrollView
+              style={styles.diaryFormScroll}
+              contentContainerStyle={styles.diaryFormContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>New Diary Report</Text>
+
+                {DIARY_CATEGORIES.map(({ key, label }) => (
+                  <View key={key} style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>{label}</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder={`Enter ${label.toLowerCase()}...`}
+                      placeholderTextColor="#B0B0B0"
+                      multiline
+                      value={categories[key]}
+                      onChangeText={(value) => updateCategory(key, value)}
+                    />
+                  </View>
+                ))}
+
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>{OPTIONAL_NOTES_LABEL}</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter additional notes (optional)..."
+                    placeholderTextColor="#B0B0B0"
+                    multiline
+                    value={optionalNotes}
+                    onChangeText={setOptionalNotes}
+                  />
+                </View>
+              </View>
+            </ScrollView>
 
             <TouchableOpacity
               style={[
                 styles.saveBtn,
-                diary ? styles.saveBtnActive : styles.saveBtnDisabled,
+                canSave ? styles.saveBtnActive : styles.saveBtnDisabled,
               ]}
-              disabled={!diary}
+              disabled={!canSave}
               onPress={handleSave}
             >
               <Text style={styles.saveBtnText}>Save Report</Text>
@@ -480,7 +551,7 @@ export default function ParentsReport() {
                   <Text style={styles.entryTimestamp}>
                     {new Date(item.timestamp).toLocaleString()}
                   </Text>
-                  <Text style={styles.entryText}>{item.text}</Text>
+                  <DiaryEntryContent entry={item} />
                 </View>
               )}
               onScroll={(e) => {
@@ -554,9 +625,7 @@ export default function ParentsReport() {
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item: entry }) => (
                       <View style={styles.pagedHistoryEntryCard}>
-                        <Text style={styles.historyEntryText}>
-                          {entry.text}
-                        </Text>
+                        <DiaryEntryContent entry={entry} />
                         <Text style={styles.historyEntryTime}>
                           {new Date(entry.timestamp).toLocaleTimeString()}
                         </Text>
@@ -688,7 +757,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
-    marginTop: 30,
     shadowColor: "#4db5ff",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -702,9 +770,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     alignSelf: "center",
   },
+  diaryFormScroll: {
+    width: "100%",
+    maxHeight: 420,
+    marginTop: 30,
+  },
+  diaryFormContent: {
+    paddingBottom: 8,
+  },
+  fieldGroup: {
+    marginBottom: 12,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1E293B",
+    marginBottom: 6,
+  },
   input: {
     width: "100%",
-    minHeight: 120,
+    minHeight: 80,
     backgroundColor: "#E1F5FF",
     borderRadius: 14,
     padding: 12,
@@ -800,6 +885,7 @@ const styles = StyleSheet.create({
   entryText: {
     fontSize: 14,
     color: "#1E293B",
+    marginBottom: 6,
   },
   pagination: {
     flexDirection: "row",
