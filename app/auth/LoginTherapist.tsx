@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons"; // for back icon and eye icon
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -128,7 +128,7 @@ export default function LoginTherapist() {
         style={styles.forgotPassword}
         onPress={handleForgotPassword}
       >
-        <Text style={styles.forgotPasswordText}>Forget Password</Text>
+        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
