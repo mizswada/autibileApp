@@ -3,20 +3,43 @@ import { useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
-import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import API from "../../api";
+import PaymentHeader from "./components/PaymentHeader";
+import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./constants";
+import { paymentStyles } from "./styles";
 
 export default function ReceiptDetail() {
   const { paymentId } = useLocalSearchParams<{ paymentId: string }>();
   const [payment, setPayment] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const raw = await AsyncStorage.getItem("userData");
-      const userData = raw ? JSON.parse(raw) : null;
-      const response = await API(`apps/payment/getReceipt/${paymentId}`, {}, "GET", true, userData?.accessToken);
-      if (response.statusCode === 200) {
-        setPayment(response.data);
+      setLoading(true);
+      try {
+        const raw = await AsyncStorage.getItem("userData");
+        const userData = raw ? JSON.parse(raw) : null;
+        const response = await API(
+          `apps/payment/getReceipt/${paymentId}`,
+          {},
+          "GET",
+          true,
+          userData?.accessToken,
+        );
+        if (response.statusCode === 200) {
+          setPayment(response.data);
+        }
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -24,47 +47,106 @@ export default function ReceiptDetail() {
 
   const printReceipt = async () => {
     if (!payment) return;
+    setPrinting(true);
     const html = `
-      <html><body style="font-family: Arial; padding: 24px;">
-      <h2>Autibile Receipt</h2>
-      <p>Receipt No: PAY-${String(payment.payment_id).padStart(3, "0")}</p>
-      <p>Patient: ${payment.user_patients?.fullname || "N/A"}</p>
-      <p>Invoice: INV-${String(payment.invoice_id).padStart(3, "0")}</p>
-      <p>Description: ${payment.invoice?.description || "N/A"}</p>
-      <p>Amount: RM ${Number(payment.amount || 0).toFixed(2)}</p>
-      <p>Method: ${payment.method || "N/A"}</p>
-      <p>Bank: ${payment.bank_name || "-"}</p>
-      <p>Reference: ${payment.reference_code || "-"}</p>
-      <p>Date: ${new Date(payment.created_at).toLocaleString()}</p>
-      </body></html>
+      <html>
+        <body style="font-family: Arial, sans-serif; padding: 32px;">
+          <h2 style="color: #4db5ff;">Autibile Receipt</h2>
+          <p><strong>Receipt No:</strong> ${formatPaymentId(payment.payment_id)}</p>
+          <p><strong>Patient:</strong> ${payment.user_patients?.fullname || "N/A"}</p>
+          <p><strong>Invoice:</strong> ${formatInvoiceId(payment.invoice_id)}</p>
+          <p><strong>Description:</strong> ${payment.invoice?.description || "N/A"}</p>
+          <p><strong>Amount:</strong> RM ${formatPrice(payment.amount)}</p>
+          <p><strong>Method:</strong> ${payment.method || "N/A"}</p>
+          <p><strong>Bank:</strong> ${payment.bank_name || "-"}</p>
+          <p><strong>Reference:</strong> ${payment.reference_code || "-"}</p>
+          <p><strong>Date:</strong> ${formatDate(payment.created_at)}</p>
+          <p style="margin-top: 24px; font-size: 12px;">This is a computer generated receipt.</p>
+        </body>
+      </html>
     `;
+
     try {
       const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { mimeType: "application/pdf", dialogTitle: "Share receipt" });
+      await Sharing.shareAsync(uri, {
+        mimeType: "application/pdf",
+        dialogTitle: "Share receipt",
+      });
     } catch (error) {
       Alert.alert("Error", "Failed to generate receipt");
+    } finally {
+      setPrinting(false);
     }
   };
 
-  if (!payment) return <SafeAreaView style={styles.container}><Text>Loading...</Text></SafeAreaView>;
+  if (loading) {
+    return (
+      <View style={paymentStyles.container}>
+        <PaymentHeader title="Receipt" />
+        <View style={paymentStyles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4db5ff" />
+          <Text style={paymentStyles.loadingText}>Loading receipt...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!payment) {
+    return (
+      <View style={paymentStyles.container}>
+        <PaymentHeader title="Receipt" />
+        <View style={paymentStyles.emptyContainer}>
+          <Text style={paymentStyles.emptyText}>Receipt not found</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Receipt</Text>
-      <Text>PAY-{String(payment.payment_id).padStart(3, "0")}</Text>
-      <Text>{payment.invoice?.description}</Text>
-      <Text style={styles.amount}>RM {Number(payment.amount || 0).toFixed(2)}</Text>
-      <TouchableOpacity style={styles.button} onPress={printReceipt}>
-        <Text style={styles.buttonText}>Print / Share Receipt</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+    <View style={paymentStyles.container}>
+      <PaymentHeader title="Receipt" />
+      <ScrollView contentContainerStyle={paymentStyles.content}>
+        <View style={paymentStyles.detailSection}>
+          <Text style={paymentStyles.detailLabel}>Receipt Number</Text>
+          <Text style={paymentStyles.detailValue}>{formatPaymentId(payment.payment_id)}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Patient</Text>
+          <Text style={paymentStyles.detailValue}>{payment.user_patients?.fullname || "N/A"}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Invoice</Text>
+          <Text style={paymentStyles.detailValue}>{formatInvoiceId(payment.invoice_id)}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Description</Text>
+          <Text style={paymentStyles.detailValue}>{payment.invoice?.description || "N/A"}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Amount</Text>
+          <Text style={[paymentStyles.detailValue, { color: "#4db5ff", fontSize: 20 }]}>
+            RM {formatPrice(payment.amount)}
+          </Text>
+
+          <Text style={paymentStyles.detailLabel}>Payment Method</Text>
+          <Text style={paymentStyles.detailValue}>{payment.method || "N/A"}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Bank / Provider</Text>
+          <Text style={paymentStyles.detailValue}>{payment.bank_name || "-"}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Reference Code</Text>
+          <Text style={paymentStyles.detailValue}>{payment.reference_code || "-"}</Text>
+
+          <Text style={paymentStyles.detailLabel}>Payment Date</Text>
+          <Text style={paymentStyles.detailValue}>{formatDate(payment.created_at)}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[paymentStyles.primaryButton, printing && { opacity: 0.7 }]}
+          onPress={printReceipt}
+          disabled={printing}
+        >
+          <Text style={paymentStyles.primaryButtonText}>
+            {printing ? "Generating..." : "Print / Share Receipt"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#F8F8F8" },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 12 },
-  amount: { fontWeight: "700", fontSize: 18, marginVertical: 8 },
-  button: { marginTop: 16, backgroundColor: "#1C8ADB", borderRadius: 8, padding: 12, alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "700" },
-});

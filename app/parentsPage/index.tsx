@@ -63,12 +63,6 @@ const features = [
     icon: require("@/assets/images/report.png"),
     color: "#1C8ADB",
   },
-  {
-    key: "payment",
-    label: "Payments",
-    icon: require("@/assets/images/report.png"),
-    color: "#2E7D32",
-  },
 ];
 
 export default function HomeScreen() {
@@ -568,7 +562,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.gridRow}>
-            {features.slice(2, 5).map((f) => (
+            {features.slice(2, 4).map((f) => (
               <TouchableOpacity
                 key={f.key}
                 style={[
@@ -589,8 +583,6 @@ export default function HomeScreen() {
                         : f.key === "progress"
                           ? () =>
                               router.push("/diaryReport/parentsReport" as any)
-                          : f.key === "payment"
-                            ? () => router.push("/payment" as any)
                           : undefined
                 }
                 disabled={false}

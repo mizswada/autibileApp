@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Image, Platform } from 'react-native';
@@ -55,6 +56,19 @@ export default function TabLayout() {
                   ? Colors[colorScheme ?? 'light'].tint
                   : '#888',
               }}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="payments"
+        options={{
+          title: 'Payments',
+          tabBarIcon: ({ focused }) => (
+            <Ionicons
+              name="card-outline"
+              size={24}
+              color={focused ? Colors[colorScheme ?? 'light'].tint : '#888'}
             />
           ),
         }}

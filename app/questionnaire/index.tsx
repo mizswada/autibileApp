@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import API from "../../api";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
+import { getQuestionnaireLockInfo } from "./access";
 
 export default function QuestionnaireIndex() {
   const [activeTab, setActiveTab] = useState<"current" | "history">("current");
@@ -283,18 +284,33 @@ export default function QuestionnaireIndex() {
             .map((q: any) => {
               const questionnaireId = Number(q.questionnaire_id);
               let isDisabled = false;
+              let questionnaire_access: any = null;
 
               if (questionnaireId === 1) {
-                // Only disable questionnaire ID = 1 if it has been completed for the currently selected child
                 isDisabled = completedQuestionnaireIds.includes(1);
+                if (isDisabled) {
+                  questionnaire_access = {
+                    can_access: false,
+                    has_completed: true,
+                    access_reason:
+                      "This screening has already been completed for this child.",
+                  };
+                }
               } else {
-                // Lock all other questionnaires until M-CHAT-R is completed
                 isDisabled = !isMchatrCompleted;
+                if (isDisabled) {
+                  questionnaire_access = {
+                    can_access: false,
+                    has_completed_mchatr: false,
+                    access_reason: "Complete M-CHAT-R screening first.",
+                  };
+                }
               }
 
               return {
                 ...q,
                 isDisabled,
+                questionnaire_access,
               };
             })
             .sort((a: any, b: any) => {
@@ -965,19 +981,13 @@ export default function QuestionnaireIndex() {
               onPress={() => {
                 if (activeTab === "current") {
                   if (q.isDisabled) {
-                    if (Number(q.questionnaire_id) === 1) {
-                      Alert.alert(
-                        "Autism Screening Completed",
-                        "This autism screening has already been completed for this patient.",
-                        [{ text: "OK" }],
-                      );
-                    } else {
-                      Alert.alert(
-                        "Screening Locked",
-                        "Please complete the Autism Screening (M-CHAT-R) first before accessing other screenings.",
-                        [{ text: "OK" }],
-                      );
-                    }
+                    const lockInfo = getQuestionnaireLockInfo(
+                      Number(q.questionnaire_id),
+                      q.questionnaire_access,
+                    );
+                    Alert.alert(lockInfo.alertTitle, lockInfo.alertMessage, [
+                      { text: "OK" },
+                    ]);
                     return;
                   }
                   router.push(`/questionnaire/${q.questionnaire_id}` as any);
@@ -1030,9 +1040,12 @@ export default function QuestionnaireIndex() {
                   </Text>
                   {q.isDisabled && (
                     <Text style={styles.completedText}>
-                      {Number(q.questionnaire_id) === 1
-                        ? "✓ Already completed"
-                        : "🔒 Complete M-CHAT-R first"}
+                      {
+                        getQuestionnaireLockInfo(
+                          Number(q.questionnaire_id),
+                          q.questionnaire_access,
+                        ).badge
+                      }
                     </Text>
                   )}
                 </View>

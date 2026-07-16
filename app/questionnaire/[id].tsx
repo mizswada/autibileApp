@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getQuestionnaireLockInfo } from "./access";
 import API from "../../api";
 import { MchatImportanceNoteModal } from "../../components/MchatImportanceNoteModal";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
@@ -125,17 +126,16 @@ export default function QuestionnaireForm() {
             // Check questionnaire access from the API response
             const access = questionnaireData.questionnaire_access;
             if (access && !access.can_access) {
-              Alert.alert(
-                "Access Denied",
-                access.access_reason ||
-                  "This questionnaire is currently locked for this child.",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => router.back(),
-                  },
-                ],
+              const lockInfo = getQuestionnaireLockInfo(
+                Number(id),
+                access,
               );
+              Alert.alert(lockInfo.alertTitle, lockInfo.alertMessage, [
+                {
+                  text: "OK",
+                  onPress: () => router.back(),
+                },
+              ]);
               return;
             }
 
@@ -1525,12 +1525,13 @@ export default function QuestionnaireForm() {
                         const access = questionnaireData.questionnaire_access;
 
                         if (access && !access.can_access) {
-                          Alert.alert(
-                            "Access Denied",
-                            access.access_reason ||
-                              "This questionnaire is currently locked for this child.",
-                            [{ text: "OK" }],
+                          const lockInfo = getQuestionnaireLockInfo(
+                            Number(id),
+                            access,
                           );
+                          Alert.alert(lockInfo.alertTitle, lockInfo.alertMessage, [
+                            { text: "OK" },
+                          ]);
                           setShowChildSelector(false);
                           return;
                         }
