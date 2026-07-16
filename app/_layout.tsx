@@ -37,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="diaryReport" options={{ headerShown: false }} />
         <Stack.Screen name="contactUs" options={{ headerShown: false }} />
         <Stack.Screen name="therapy" options={{ headerShown: false }} />
+        <Stack.Screen name="payment" options={{ headerShown: false }} />
         <Stack.Screen name="disclaimer" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
