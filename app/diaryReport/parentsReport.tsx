@@ -193,11 +193,12 @@ export default function ParentsReport() {
       if (response.statusCode === 200 && Array.isArray(response.data)) {
         const fetchedEntries = (response.data as any[]).map((item: any) => ({
           description: item.description,
-          category_1: item.category_1,
-          category_2: item.category_2,
-          category_3: item.category_3,
-          category_4: item.category_4,
-          category_5: item.category_5,
+          two_way_communication: item.two_way_communication,
+          emotional_regulation: item.emotional_regulation,
+          focus_and_comprehension: item.focus_and_comprehension,
+          feeding_and_sensory: item.feeding_and_sensory,
+          sleep_and_daily_routines: item.sleep_and_daily_routines,
+          socialisation_self_confidence: item.socialisation_self_confidence,
           timestamp: item.created_at,
         }));
         setEntries(fetchedEntries);
@@ -234,11 +235,12 @@ export default function ParentsReport() {
 
       const response = await API("apps/diaryReport/insert", {
         patientID: patientId,
-        category_1: categories.category_1,
-        category_2: categories.category_2,
-        category_3: categories.category_3,
-        category_4: categories.category_4,
-        category_5: categories.category_5,
+        two_way_communication: categories.two_way_communication,
+        emotional_regulation: categories.emotional_regulation,
+        focus_and_comprehension: categories.focus_and_comprehension,
+        feeding_and_sensory: categories.feeding_and_sensory,
+        sleep_and_daily_routines: categories.sleep_and_daily_routines,
+        socialisation_self_confidence: categories.socialisation_self_confidence,
         description: optionalNotes,
         date: new Date().toISOString(),
       });

@@ -22,11 +22,12 @@ interface DiaryReport {
   diary_id: number;
   patient_id: number;
   description: string | null;
-  category_1?: string | null;
-  category_2?: string | null;
-  category_3?: string | null;
-  category_4?: string | null;
-  category_5?: string | null;
+  two_way_communication?: string | null;
+  emotional_regulation?: string | null;
+  focus_and_comprehension?: string | null;
+  feeding_and_sensory?: string | null;
+  sleep_and_daily_routines?: string | null;
+  socialisation_self_confidence?: string | null;
   date: string;
   created_at: string;
   updated_at: string;

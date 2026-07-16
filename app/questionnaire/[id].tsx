@@ -48,12 +48,16 @@ export default function QuestionnaireForm() {
   const [result, setResult] = useState<{
     score: number;
     interpretation: string;
+    interpretation_bm: string;
     recommendation: string;
+    recommendation_bm: string;
     aiAnalysis: { result: string; explanation: string } | null;
   }>({
     score: 0,
     interpretation: "",
+    interpretation_bm: "",
     recommendation: "",
+    recommendation_bm: "",
     aiAnalysis: null,
   });
   const [showMchatImportanceNote, setShowMchatImportanceNote] = useState(true);
@@ -688,9 +692,11 @@ export default function QuestionnaireForm() {
           score: score,
           interpretation:
             resultData?.threshold?.interpretation || "No prediction available",
+          interpretation_bm: resultData?.threshold?.interpretation_bm || "",
           recommendation:
             resultData?.threshold?.recommendation ||
             "No recommendation available",
+          recommendation_bm: resultData?.threshold?.recommendation_bm || "",
           aiAnalysis: resultData?.ai_analysis ?? null,
         });
 
@@ -871,6 +877,7 @@ export default function QuestionnaireForm() {
           <div class="content-box">
             <div class="content-label">Prediction</div>
             ${result.interpretation && result.interpretation !== "No prediction available" ? `<p class="content-text"><strong>Based on Score (${result.score}):</strong> ${result.interpretation}</p>` : ""}
+            ${result.interpretation_bm ? `<p class="content-text" style="font-style: italic;">${result.interpretation_bm}</p>` : ""}
             ${result.aiAnalysis ? `
               <div class="divider"></div>
               <div class="ai-section">
@@ -883,6 +890,7 @@ export default function QuestionnaireForm() {
           <div class="content-box">
             <div class="content-label">Recommendation</div>
             ${result.recommendation && result.recommendation !== "No recommendation available" ? `<p class="content-text">${result.recommendation}</p>` : ""}
+            ${result.recommendation_bm ? `<p class="content-text" style="font-style: italic;">${result.recommendation_bm}</p>` : ""}
             ${result.aiAnalysis && result.aiAnalysis.result ? `
               <div class="divider"></div>
               <div class="ai-section">
@@ -1435,6 +1443,11 @@ export default function QuestionnaireForm() {
                       <Text style={styles.predictionText}>
                         {result.interpretation}
                       </Text>
+                      {result.interpretation_bm ? (
+                        <Text style={[styles.predictionText, { marginTop: 6, fontStyle: "italic" }]}>
+                          {result.interpretation_bm}
+                        </Text>
+                      ) : null}
                     </>
                   )}
 
@@ -1487,6 +1500,11 @@ export default function QuestionnaireForm() {
                       <Text style={styles.recommendationText}>
                         {result.recommendation}
                       </Text>
+                      {result.recommendation_bm ? (
+                        <Text style={[styles.recommendationText, { marginTop: 6, fontStyle: "italic" }]}>
+                          {result.recommendation_bm}
+                        </Text>
+                      ) : null}
                     </>
                   )}
 

@@ -1,9 +1,10 @@
 export const DIARY_CATEGORY_KEYS = [
-  "category_1",
-  "category_2",
-  "category_3",
-  "category_4",
-  "category_5",
+  "two_way_communication",
+  "emotional_regulation",
+  "focus_and_comprehension",
+  "feeding_and_sensory",
+  "sleep_and_daily_routines",
+  "socialisation_self_confidence",
 ] as const;
 
 export type DiaryCategoryKey = (typeof DIARY_CATEGORY_KEYS)[number];
@@ -12,30 +13,51 @@ export const DIARY_CATEGORIES: ReadonlyArray<{
   key: DiaryCategoryKey;
   label: string;
 }> = [
-  { key: "category_1", label: "Category 1" },
-  { key: "category_2", label: "Category 2" },
-  { key: "category_3", label: "Category 3" },
-  { key: "category_4", label: "Category 4" },
-  { key: "category_5", label: "Category 5" },
+  {
+    key: "two_way_communication",
+    label: "Two-way communication (Komunikasi dua hala)",
+  },
+  {
+    key: "emotional_regulation",
+    label: "Emotional regulation (Kawalan emosi)",
+  },
+  {
+    key: "focus_and_comprehension",
+    label: "Focus and comprehension (Fokus dan kefahaman)",
+  },
+  {
+    key: "feeding_and_sensory",
+    label: "Feeding and sensory needs (Pemakanan dan sensori)",
+  },
+  {
+    key: "sleep_and_daily_routines",
+    label: "Sleep and daily routines (Tidur dan rutin harian)",
+  },
+  {
+    key: "socialisation_self_confidence",
+    label: "Socialisation and self-confidence (Sosialisasi dan keyakinan diri)",
+  },
 ];
 
 export const OPTIONAL_NOTES_LABEL = "Additional Notes (Optional)";
 
 export type DiaryEntryData = {
   description?: string | null;
-  category_1?: string | null;
-  category_2?: string | null;
-  category_3?: string | null;
-  category_4?: string | null;
-  category_5?: string | null;
+  two_way_communication?: string | null;
+  emotional_regulation?: string | null;
+  focus_and_comprehension?: string | null;
+  feeding_and_sensory?: string | null;
+  sleep_and_daily_routines?: string | null;
+  socialisation_self_confidence?: string | null;
 };
 
 export const EMPTY_CATEGORIES: Record<DiaryCategoryKey, string> = {
-  category_1: "",
-  category_2: "",
-  category_3: "",
-  category_4: "",
-  category_5: "",
+  two_way_communication: "",
+  emotional_regulation: "",
+  focus_and_comprehension: "",
+  feeding_and_sensory: "",
+  sleep_and_daily_routines: "",
+  socialisation_self_confidence: "",
 };
 
 export function hasAnyCategoryFilled(

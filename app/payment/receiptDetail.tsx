@@ -12,7 +12,9 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+import { getLogoBase64 } from "../../utils/getLogoBase64";
 import PaymentHeader from "./components/PaymentHeader";
+import { buildReceiptHtml } from "./receiptTemplate";
 import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./constants";
 import { paymentStyles } from "./styles";
 
@@ -48,25 +50,15 @@ export default function ReceiptDetail() {
   const printReceipt = async () => {
     if (!payment) return;
     setPrinting(true);
-    const html = `
-      <html>
-        <body style="font-family: Arial, sans-serif; padding: 32px;">
-          <h2 style="color: #4db5ff;">Autibile Receipt</h2>
-          <p><strong>Receipt No:</strong> ${formatPaymentId(payment.payment_id)}</p>
-          <p><strong>Patient:</strong> ${payment.user_patients?.fullname || "N/A"}</p>
-          <p><strong>Invoice:</strong> ${formatInvoiceId(payment.invoice_id)}</p>
-          <p><strong>Description:</strong> ${payment.invoice?.description || "N/A"}</p>
-          <p><strong>Amount:</strong> RM ${formatPrice(payment.amount)}</p>
-          <p><strong>Method:</strong> ${payment.method || "N/A"}</p>
-          <p><strong>Bank:</strong> ${payment.bank_name || "-"}</p>
-          <p><strong>Reference:</strong> ${payment.reference_code || "-"}</p>
-          <p><strong>Date:</strong> ${formatDate(payment.created_at)}</p>
-          <p style="margin-top: 24px; font-size: 12px;">This is a computer generated receipt.</p>
-        </body>
-      </html>
-    `;
-
     try {
+      let logoUri: string | null = null;
+      try {
+        logoUri = await getLogoBase64();
+      } catch (logoError) {
+        console.warn("Logo loading error:", logoError);
+      }
+
+      const html = buildReceiptHtml(payment, logoUri);
       const { uri } = await Print.printToFileAsync({ html });
       await Sharing.shareAsync(uri, {
         mimeType: "application/pdf",
