@@ -625,6 +625,8 @@ export default function QuestionnaireIndex() {
       const screenScore = (screenResponse as any)?.total_score ?? "N/A";
       const screenInterpretation =
         (screenResponse as any)?.score_analysis?.interpretation || "Not assessed";
+      const screenRecommendation =
+        (screenResponse as any)?.score_analysis?.recommendation || "";
 
       // Build HTML with conditional bold for interpretations
       const getMchatDetailedText = () => {
@@ -680,17 +682,19 @@ export default function QuestionnaireIndex() {
       const getScreenDetailedText = () => {
         if (screenScore === "N/A")
           return '<div class="domain-section"><h3>Screen Time (SEQ) [Not assessed]</h3><p>Not assessed — no screening completed</p></div>';
-        const score =
-          typeof screenScore === "number" ? screenScore : parseInt(screenScore);
+        // Interpretation and recommendation are driven by the admin-configured
+        // scoring thresholds, so nothing about the cutoffs is hardcoded here.
         let html = `<div class="domain-section"><h3>Screen Time (SEQ) [Score: ${screenScore}]</h3>`;
         html += "<ul>";
-        if (score >= 7) {
-          html += `<li><span class="highlight">Excessive.</span></li>`;
+        if (screenInterpretation && screenInterpretation !== "Not assessed") {
+          html += `<li><span class="highlight">${screenInterpretation}</span></li>`;
         } else {
-          html += `<li><span class="highlight">Acceptable.</span></li>`;
+          html += `<li>Score recorded.</li>`;
         }
-        html +=
-          "<li>Recommendation: Reduce or maintain healthy habits.</li></ul></div>";
+        if (screenRecommendation) {
+          html += `<li>Recommendation: ${screenRecommendation}</li>`;
+        }
+        html += "</ul></div>";
         return html;
       };
 
