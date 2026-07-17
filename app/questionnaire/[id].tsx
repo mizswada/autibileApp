@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getQuestionnaireLockInfo } from "./access";
+import { getAgeWarningInfo, getQuestionnaireLockInfo } from "./access";
 import {
   getNumberAnswerDefaults,
   getNumberConfig,
@@ -145,6 +145,22 @@ export default function QuestionnaireForm() {
                 {
                   text: "OK",
                   onPress: () => router.back(),
+                },
+              ]);
+              return;
+            }
+
+            const ageWarning = getAgeWarningInfo(access);
+            if (ageWarning) {
+              Alert.alert(ageWarning.title, ageWarning.message, [
+                {
+                  text: "Cancel",
+                  style: "cancel",
+                  onPress: () => router.back(),
+                },
+                {
+                  text: "Continue",
+                  onPress: () => setQuestionnaire(questionnaireData),
                 },
               ]);
               return;

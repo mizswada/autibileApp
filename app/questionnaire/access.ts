@@ -3,6 +3,11 @@ export type QuestionnaireAccess = {
   has_completed?: boolean;
   has_completed_mchatr?: boolean;
   access_reason?: string;
+  show_age_warning?: boolean;
+  age_warning_message?: string | null;
+  age_in_range?: boolean | null;
+  age_range_label?: string | null;
+  age_label?: string | null;
 };
 
 export function getQuestionnaireLockInfo(
@@ -10,7 +15,7 @@ export function getQuestionnaireLockInfo(
   access?: QuestionnaireAccess | null,
 ) {
   if (access) {
-    if (access.has_completed) {
+    if (access.has_completed && !access.can_access) {
       return {
         badge: "✓ Already completed",
         alertTitle: "Screening Completed",
@@ -25,8 +30,11 @@ export function getQuestionnaireLockInfo(
         access.access_reason || "This screening is currently unavailable.";
       let badge = "🔒 Locked";
 
-      if (questionnaireId !== 1 && access.has_completed_mchatr === false) {
-        badge = "🔒 Complete M-CHAT-R first";
+      if (
+        reason.toLowerCase().includes("age") ||
+        reason.toLowerCase().includes("month")
+      ) {
+        badge = "🔒 Outside age range";
       } else if (reason.toLowerCase().includes("eligible")) {
         badge = "🔒 Not eligible";
       } else if (
@@ -56,7 +64,17 @@ export function getQuestionnaireLockInfo(
   return {
     badge: "🔒 Unavailable",
     alertTitle: "Screening Locked",
-    alertMessage:
-      "This screening is currently unavailable. Complete M-CHAT-R first or contact admin.",
+    alertMessage: "This screening is currently unavailable. Contact admin.",
+  };
+}
+
+export function getAgeWarningInfo(access?: QuestionnaireAccess | null) {
+  if (!access?.show_age_warning) return null;
+
+  return {
+    title: "Age Range Notice",
+    message:
+      access.age_warning_message ||
+      "This child is outside the recommended age range for this screening. You may still continue.",
   };
 }

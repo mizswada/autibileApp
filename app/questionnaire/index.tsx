@@ -274,10 +274,7 @@ export default function QuestionnaireIndex() {
             );
           }
 
-          // Check if M-CHAT-R (questionnaire ID = 1) has been completed
-          const isMchatrCompleted = completedQuestionnaireIds.includes(1);
-
-          // Mark questionnaires as disabled if they've been completed or if M-CHAT-R hasn't been completed
+          // Mark questionnaires as disabled only when completed (fallback without access API)
           // Filter out questionnaire id = 2 from the listing
           const questionnairesWithStatus = data
             .filter((q: any) => Number(q.questionnaire_id) !== 2) // Filter out questionnaire id = 2
@@ -294,15 +291,6 @@ export default function QuestionnaireIndex() {
                     has_completed: true,
                     access_reason:
                       "This screening has already been completed for this child.",
-                  };
-                }
-              } else {
-                isDisabled = !isMchatrCompleted;
-                if (isDisabled) {
-                  questionnaire_access = {
-                    can_access: false,
-                    has_completed_mchatr: false,
-                    access_reason: "Complete M-CHAT-R screening first.",
                   };
                 }
               }
@@ -1052,6 +1040,12 @@ export default function QuestionnaireIndex() {
                       }
                     </Text>
                   )}
+                  {!q.isDisabled &&
+                    q.questionnaire_access?.show_age_warning && (
+                      <Text style={styles.ageWarningText}>
+                        ⚠ Outside recommended age
+                      </Text>
+                    )}
                 </View>
               ) : (
                 <View style={styles.historyInfo}>
@@ -1781,6 +1775,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#4CAF50",
     fontWeight: "bold",
+    marginTop: 4,
+  },
+  ageWarningText: {
+    fontSize: 12,
+    color: "#D97706",
+    fontWeight: "600",
     marginTop: 4,
   },
   childSelectorContainer: {
