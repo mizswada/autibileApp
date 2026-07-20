@@ -15,31 +15,48 @@ export function getQuestionnaireLockInfo(
   access?: QuestionnaireAccess | null,
 ) {
   if (access) {
-    if (access.has_completed && !access.can_access) {
-      return {
-        badge: "✓ Already completed",
-        alertTitle: "Screening Completed",
-        alertMessage:
-          access.access_reason ||
-          "This screening has already been completed for this child.",
-      };
-    }
-
     if (!access.can_access) {
       const reason =
         access.access_reason || "This screening is currently unavailable.";
+      const lowerReason = reason.toLowerCase();
+
+      // Age hard-lock takes precedence: a child may have completed the
+      // screening before but is now outside the eligible age range.
+      const isAgeLock =
+        access.age_in_range === false ||
+        lowerReason.includes("age") ||
+        lowerReason.includes("month");
+
+      if (isAgeLock) {
+        return {
+          badge: "🔒 Outside age range",
+          alertTitle: "Screening Locked",
+          alertMessage:
+            reason !== "This screening is currently unavailable."
+              ? reason
+              : `This child is outside the recommended age range${
+                  access.age_range_label ? ` (${access.age_range_label})` : ""
+                } for this screening.`,
+        };
+      }
+
+      if (access.has_completed) {
+        return {
+          badge: "✓ Already completed",
+          alertTitle: "Screening Completed",
+          alertMessage:
+            access.access_reason ||
+            "This screening has already been completed for this child.",
+        };
+      }
+
       let badge = "🔒 Locked";
 
-      if (
-        reason.toLowerCase().includes("age") ||
-        reason.toLowerCase().includes("month")
-      ) {
-        badge = "🔒 Outside age range";
-      } else if (reason.toLowerCase().includes("eligible")) {
+      if (lowerReason.includes("eligible")) {
         badge = "🔒 Not eligible";
       } else if (
-        reason.toLowerCase().includes("admin") ||
-        reason.toLowerCase().includes("unlock")
+        lowerReason.includes("admin") ||
+        lowerReason.includes("unlock")
       ) {
         badge = "🔒 Contact admin";
       }

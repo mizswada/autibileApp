@@ -60,9 +60,7 @@ export default function ParentsReport() {
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(
     null,
   );
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [currentHistorySlide, setCurrentHistorySlide] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
   const historyFlatListRef = useRef<FlatList>(null);
 
   // Child selection states
@@ -251,10 +249,15 @@ export default function ParentsReport() {
           description: optionalNotes,
           timestamp: new Date().toISOString(),
         };
+        const todayDateString = new Date(newEntry.timestamp).toDateString();
 
         setEntries([newEntry, ...entries]);
         setCategories({ ...EMPTY_CATEGORIES });
         setOptionalNotes("");
+        // Show the new entry under History for today.
+        setActiveTab("history");
+        setSelectedHistoryDate(todayDateString);
+        setCurrentHistorySlide(0);
         setModalVisible(true);
 
         setTimeout(() => {
@@ -275,27 +278,10 @@ export default function ParentsReport() {
     setCategories((prev) => ({ ...prev, [key]: value }));
   };
 
-  const isToday = (timestamp: string) => {
-    const entryDate = new Date(timestamp);
-    const now = new Date();
-    return (
-      entryDate.getDate() === now.getDate() &&
-      entryDate.getMonth() === now.getMonth() &&
-      entryDate.getFullYear() === now.getFullYear()
-    );
-  };
-
-  const today = new Date();
-  const todayEntries = entries.filter((entry) => isToday(entry.timestamp));
-
+  // Include all dates (including today) so new entries appear in History.
   const allHistoryDates = [
     ...new Set(
-      entries
-        .filter((item) => {
-          const itemDate = new Date(item.timestamp);
-          return itemDate.toDateString() !== today.toDateString();
-        })
-        .map((item) => new Date(item.timestamp).toDateString()),
+      entries.map((item) => new Date(item.timestamp).toDateString()),
     ),
   ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
@@ -307,10 +293,7 @@ export default function ParentsReport() {
       let title;
 
       if (forAllEntries) {
-        entriesToProcess = entries.filter(
-          (item) =>
-            new Date(item.timestamp).toDateString() !== today.toDateString(),
-        );
+        entriesToProcess = entries;
         title = "All Diary Entries";
       } else {
         entriesToProcess = entries.filter(
@@ -459,7 +442,12 @@ export default function ParentsReport() {
               styles.topTab,
               activeTab === "history" && styles.topTabActive,
             ]}
-            onPress={() => setActiveTab("history")}
+            onPress={() => {
+              setActiveTab("history");
+              if (!selectedHistoryDate && historyDates.length > 0) {
+                setSelectedHistoryDate(historyDates[0]);
+              }
+            }}
           >
             <Text
               style={[
@@ -537,46 +525,6 @@ export default function ParentsReport() {
             >
               <Text style={styles.saveBtnText}>Save Report</Text>
             </TouchableOpacity>
-
-            <Text style={{ marginTop: 24, fontWeight: "bold" }}>
-              Today Diary Reports
-            </Text>
-
-            <FlatList
-              data={todayEntries}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={({ item }) => (
-                <View style={styles.pagedEntryCard}>
-                  <Text style={styles.entryTimestamp}>
-                    {new Date(item.timestamp).toLocaleString()}
-                  </Text>
-                  <DiaryEntryContent entry={item} />
-                </View>
-              )}
-              onScroll={(e) => {
-                const index = Math.round(
-                  e.nativeEvent.contentOffset.x /
-                    e.nativeEvent.layoutMeasurement.width,
-                );
-                setCurrentSlide(index);
-              }}
-              ref={flatListRef}
-            />
-
-            <View style={styles.pagination}>
-              {todayEntries.map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.dot,
-                    currentSlide === index && styles.activeDot,
-                  ]}
-                />
-              ))}
-            </View>
           </>
         )}
 

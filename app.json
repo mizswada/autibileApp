@@ -30,16 +30,16 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-    ],
+    "plugins": [],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f4bfd0d7-9ff4-4075-9f99-643188f0fb2a"
+        "projectId": "6953a09c-2ff3-4676-a4f8-0d1ef7f67210"
       }
-    }
+    },
+    "owner": "hakiminaim"
   }
 }
