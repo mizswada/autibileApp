@@ -1,0 +1,6 @@
+* text=auto
+
+# iOS/macOS build scripts must use LF (EAS/Xcode runs on Linux/macOS bash).
+ios/.xcode.env text eol=lf
+ios/Podfile text eol=lf
+*.sh text eol=lf
