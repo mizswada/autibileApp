@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>autibile</string>
-          <string>com.achib.autibile</string>
+          <string>my.autibile.app</string>
         </array>
       </dict>
     </array>

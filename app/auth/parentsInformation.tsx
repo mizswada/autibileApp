@@ -26,7 +26,7 @@ export default function parentsInformation() {
 
       if (response.statusCode === 200) {
         alert('Parent details saved');
-        router.push('/'); // or any page you want after completion
+        router.replace('/parentsPage');
       } else {
         alert(response.message || 'Failed to save parent details');
       }

@@ -72,7 +72,13 @@ export default function PractitionerInformation() {
 
       if (response.statusCode === 200) {
         Alert.alert('Success', 'Practitioner details saved successfully');
-        router.push('/');
+        const storedData = await AsyncStorage.getItem('userData');
+        const role = storedData ? JSON.parse(storedData)?.roles?.[0] : null;
+        if (role === 'Therapist') {
+          router.replace('/therapistPage');
+        } else {
+          router.replace('/doctorPage');
+        }
       } else {
         Alert.alert('Error', response.message || 'Failed to save practitioner details');
       }

@@ -1,4 +1,4 @@
-package com.achib.autibile
+package my.autibile.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

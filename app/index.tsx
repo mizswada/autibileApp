@@ -1,24 +1,30 @@
 import { useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-export default function SplashScreen() {
+// Keep the native splash up until this JS splash is ready, then hand off cleanly.
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+export default function AppSplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+
     const timer = setTimeout(() => {
       router.replace('/userType');
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <View style={styles.container}>
       {/* Main logo and title section */}
       <View style={styles.centerContent}>
-        <Image 
-          source={require('../assets/images/adaptive-icon.png')} 
+        <Image
+          source={require('../assets/images/adaptive-icon.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -29,18 +35,18 @@ export default function SplashScreen() {
       <View style={styles.sponsorContainer}>
         <Text style={styles.sponsorText}>Sponsor by</Text>
         <View style={styles.sponsorLogos}>
-          <Image 
-            source={require('../assets/images/kementerian.png')} 
+          <Image
+            source={require('../assets/images/kementerian.png')}
             style={styles.sponsorLogo}
             resizeMode="contain"
           />
-          <Image 
-            source={require('../assets/images/upnm.png')} 
+          <Image
+            source={require('../assets/images/upnm.png')}
             style={styles.sponsorLogo}
             resizeMode="contain"
           />
-          <Image 
-            source={require('../assets/images/neurospa.png')} 
+          <Image
+            source={require('../assets/images/neurospa.png')}
             style={styles.sponsorLogo}
             resizeMode="contain"
           />
@@ -63,8 +69,8 @@ const styles = StyleSheet.create({
     marginTop: 100,
   },
   logo: {
-    width: 400,
-    height: 400,
+    width: 280,
+    height: 280,
   },
   title: {
     fontSize: 40,

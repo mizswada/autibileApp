@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +15,8 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+
+const DELETE_ACCOUNT_URL = "https://autibile.my/delete-account";
 
 export default function LoginTherapist() {
   const [email, setEmail] = useState("");
@@ -51,9 +54,9 @@ export default function LoginTherapist() {
             text: "OK",
             onPress: () => {
               if (data.hasPractitionerInfo) {
-                router.push("/therapistPage"); // existing user
+                router.replace("/therapistPage"); // existing user
               } else {
-                router.push("/manageDetails/practitionerInformation"); // first time user
+                router.replace("/manageDetails/practitionerInformation"); // first time user
               }
             },
           },
@@ -78,6 +81,17 @@ export default function LoginTherapist() {
     router.push("/auth/TherapistRegister");
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      await Linking.openURL(DELETE_ACCOUNT_URL);
+    } catch {
+      Alert.alert(
+        "Unable to open link",
+        `Please visit ${DELETE_ACCOUNT_URL} in your browser to request account deletion.`,
+      );
+    }
+  };
+
   const isButtonDisabled = !email || !password;
 
   return (
@@ -86,7 +100,7 @@ export default function LoginTherapist() {
       <View style={styles.headerContainer}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace("/userType")}
         >
           <Ionicons name="chevron-back" size={24} color="#333" />
         </TouchableOpacity>
@@ -183,6 +197,10 @@ export default function LoginTherapist() {
           Don&apos;t have an account?{" "}
           <Text style={styles.signUpText}>Sign Up</Text>
         </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountLink}>
+        <Text style={styles.deleteAccountText}>Request account deletion</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -363,6 +381,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     resizeMode: "contain",
+  },
+  deleteAccountLink: {
+    marginTop: 20,
+    alignItems: "center",
+    paddingBottom: 12,
+  },
+  deleteAccountText: {
+    fontSize: 14,
+    color: "#64748B",
+    textDecorationLine: "underline",
   },
   signUpLink: {
     fontSize: 14,

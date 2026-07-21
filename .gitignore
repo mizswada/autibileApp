@@ -36,7 +36,11 @@ Thumbs.db
 *.p8
 *.p12
 *.jks
+*.keystore
+!android/app/debug.keystore
 *.mobileprovision
+android/keystore.properties
+android/app/autibile-upload.keystore
 
 # Misc
 npm-debug.log*

@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import API from '../api';
+
+const DELETE_ACCOUNT_URL = 'https://autibile.my/delete-account';
 
 const userTypes = [
   { label: 'Parents', image: require('../assets/parents.png'), route: '/auth/LoginParents' },
@@ -22,11 +24,11 @@ export default function UserTypeSelect() {
 
   const navigateByRole = (role: string) => {
     if (role === 'Doctor') {
-      router.push('/doctorPage');
+      router.replace('/doctorPage');
     } else if (role === 'Parents') {
-      router.push('/parentsPage');
+      router.replace('/parentsPage');
     } else if (role === 'Therapist') {
-      router.push('/therapistPage');
+      router.replace('/therapistPage');
     }
   };
 
@@ -126,6 +128,22 @@ export default function UserTypeSelect() {
       >
         <Text style={styles.adminLinkText}>Open as Admin</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.deleteAccountLink}
+        onPress={async () => {
+          try {
+            await Linking.openURL(DELETE_ACCOUNT_URL);
+          } catch {
+            Alert.alert(
+              'Unable to open link',
+              `Please visit ${DELETE_ACCOUNT_URL} in your browser to request account deletion.`,
+            );
+          }
+        }}
+      >
+        <Text style={styles.deleteAccountText}>Request account deletion</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -153,6 +171,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#2563EB',
+    textDecorationLine: 'underline',
+  },
+  deleteAccountLink: { marginTop: 4, paddingVertical: 8 },
+  deleteAccountText: {
+    fontSize: 14,
+    color: '#64748B',
     textDecorationLine: 'underline',
   },
 });

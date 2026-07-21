@@ -9,13 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-screen.jpg",
-      "resizeMode": "cover",
-      "backgroundColor": "#fff"
+      "image": "./assets/images/adaptive-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E1F5FF"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.achib.autibile"
+      "bundleIdentifier": "my.autibile.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,14 +23,24 @@
         "backgroundColor": "#99DBFD"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.achib.autibile"
+      "package": "my.autibile.app"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [],
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/adaptive-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#E1F5FF"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
