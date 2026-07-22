@@ -19,6 +19,60 @@ import API from "../../api";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
 import { getQuestionnaireLockInfo } from "./access";
 
+function getNumericAnswerValue(answer: any): string | null {
+  if (
+    answer.numeric_answer !== null &&
+    answer.numeric_answer !== undefined &&
+    answer.numeric_answer !== ""
+  ) {
+    return String(answer.numeric_answer);
+  }
+
+  if (
+    answer.score !== null &&
+    answer.score !== undefined &&
+    !answer.option_id &&
+    !answer.option_title &&
+    (!answer.text_answer || String(answer.text_answer).trim() === "")
+  ) {
+    return String(answer.score);
+  }
+
+  return null;
+}
+
+function renderAnswerContent(answer: any) {
+  if (answer.option_title) {
+    return (
+      <View style={styles.answerDisplay}>
+        <Text style={styles.answerText}>{answer.option_title}</Text>
+        {answer.option_title_bm ? (
+          <Text style={styles.answerTextBm}>{answer.option_title_bm}</Text>
+        ) : null}
+      </View>
+    );
+  }
+
+  if (answer.text_answer && String(answer.text_answer).trim() !== "") {
+    return (
+      <View style={styles.answerDisplay}>
+        <Text style={styles.answerText}>{answer.text_answer}</Text>
+      </View>
+    );
+  }
+
+  const numericValue = getNumericAnswerValue(answer);
+  if (numericValue !== null) {
+    return (
+      <View style={styles.answerDisplay}>
+        <Text style={styles.answerText}>{numericValue}</Text>
+      </View>
+    );
+  }
+
+  return <Text style={styles.noAnswerText}>No answer provided</Text>;
+}
+
 export default function QuestionnaireIndex() {
   const [activeTab, setActiveTab] = useState<"current" | "history">("current");
   const [questionnaires, setQuestionnaires] = useState<any[]>([]);
@@ -1132,7 +1186,7 @@ export default function QuestionnaireIndex() {
                 Patient: {selectedResponse?.patient_name}
               </Text>
               <Text style={styles.modalInfoText}>
-                Score: {selectedResponse?.total_score}
+                Total score: {selectedResponse?.total_score}
               </Text>
               <Text style={styles.modalInfoText}>
                 Completed:{" "}
@@ -1142,10 +1196,45 @@ export default function QuestionnaireIndex() {
               </Text>
             </View>
 
+            {Array.isArray(selectedResponse?.composite_scores) &&
+              selectedResponse.composite_scores.length > 0 && (
+              <View style={styles.compositeScoresSection}>
+                <Text style={styles.compositeScoresTitle}>Group scores</Text>
+                {selectedResponse.composite_scores.map(
+                  (group: any, index: number) => (
+                    <View
+                      key={`${group.label}-${index}`}
+                      style={styles.compositeGroupCard}
+                    >
+                      <View style={styles.compositeGroupText}>
+                        <Text style={styles.compositeGroupLabel}>
+                          {group.label}
+                        </Text>
+                        <Text style={styles.compositeGroupMeta}>
+                          Weighted avg {Number(group.average).toFixed(2)}
+                        </Text>
+                      </View>
+                      <Text style={styles.compositeGroupScore}>
+                        {group.score}
+                      </Text>
+                    </View>
+                  ),
+                )}
+                <Text style={styles.compositeScoresNote}>
+                  Total score includes these group scores plus other question
+                  scores.
+                </Text>
+              </View>
+            )}
+
             <ScrollView style={styles.detailedAnswersScroll}>
               {selectedResponse?.answers &&
               selectedResponse.answers.length > 0 ? (
                 (() => {
+                  const compositeMemberIds = new Set<number>(
+                    selectedResponse.composite_member_question_ids || [],
+                  );
+
                   // Group answers by parent question
                   const groupedAnswers: { [parentId: string | "main"]: any[] } =
                     {};
@@ -1194,37 +1283,18 @@ export default function QuestionnaireIndex() {
                           {/* Display Answer */}
                           <View style={styles.answerContainer}>
                             <Text style={styles.answerLabel}>Answer:</Text>
-                            {answer.option_title ? (
-                              <View style={styles.answerDisplay}>
-                                <Text style={styles.answerText}>
-                                  {answer.option_title}
-                                </Text>
-                                {answer.option_title_bm ? (
-                                  <Text style={styles.answerTextBm}>
-                                    {answer.option_title_bm}
-                                  </Text>
-                                ) : null}
-                              </View>
-                            ) : answer.text_answer ? (
-                              <View style={styles.answerDisplay}>
-                                <Text style={styles.answerText}>
-                                  {answer.text_answer}
-                                </Text>
-                              </View>
-                            ) : answer.numeric_answer ? (
-                              <View style={styles.answerDisplay}>
-                                <Text style={styles.answerText}>
-                                  {answer.numeric_answer}
-                                </Text>
-                              </View>
-                            ) : (
-                              <Text style={styles.noAnswerText}>
-                                No answer provided
-                              </Text>
-                            )}
+                            {renderAnswerContent(answer)}
 
-                            <Text style={styles.scoreText}>
-                              Score: {answer.score || 0}
+                            <Text
+                              style={
+                                compositeMemberIds.has(answer.question_id)
+                                  ? styles.groupMemberScoreText
+                                  : styles.scoreText
+                              }
+                            >
+                              {compositeMemberIds.has(answer.question_id)
+                                ? "Included in group score"
+                                : `Score: ${answer.score ?? 0}`}
                             </Text>
                           </View>
                         </View>,
@@ -1274,37 +1344,18 @@ export default function QuestionnaireIndex() {
                               {/* Display Sub-Question Answer */}
                               <View style={styles.answerContainer}>
                                 <Text style={styles.answerLabel}>Answer:</Text>
-                                {subAnswer.option_title ? (
-                                  <View style={styles.answerDisplay}>
-                                    <Text style={styles.answerText}>
-                                      {subAnswer.option_title}
-                                    </Text>
-                                    {subAnswer.option_title_bm ? (
-                                      <Text style={styles.answerTextBm}>
-                                        {subAnswer.option_title_bm}
-                                      </Text>
-                                    ) : null}
-                                  </View>
-                                ) : subAnswer.text_answer ? (
-                                  <View style={styles.answerDisplay}>
-                                    <Text style={styles.answerText}>
-                                      {subAnswer.text_answer}
-                                    </Text>
-                                  </View>
-                                ) : subAnswer.numeric_answer ? (
-                                  <View style={styles.answerDisplay}>
-                                    <Text style={styles.answerText}>
-                                      {subAnswer.numeric_answer}
-                                    </Text>
-                                  </View>
-                                ) : (
-                                  <Text style={styles.noAnswerText}>
-                                    No answer provided
-                                  </Text>
-                                )}
+                                {renderAnswerContent(subAnswer)}
 
-                                <Text style={styles.scoreText}>
-                                  Score: {subAnswer.score || 0}
+                                <Text
+                                  style={
+                                    compositeMemberIds.has(subAnswer.question_id)
+                                      ? styles.groupMemberScoreText
+                                      : styles.scoreText
+                                  }
+                                >
+                                  {compositeMemberIds.has(subAnswer.question_id)
+                                    ? "Included in group score"
+                                    : `Score: ${subAnswer.score ?? 0}`}
                                 </Text>
                               </View>
                             </View>,
@@ -1860,6 +1911,59 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
+  },
+  compositeScoresSection: {
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  compositeScoresTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    marginBottom: 8,
+  },
+  compositeGroupCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#eef2ff",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#c7d2fe",
+  },
+  compositeGroupText: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  compositeGroupLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#312e81",
+  },
+  compositeGroupMeta: {
+    fontSize: 12,
+    color: "#4338ca",
+    marginTop: 2,
+  },
+  compositeGroupScore: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#4338ca",
+  },
+  compositeScoresNote: {
+    fontSize: 12,
+    color: "#666",
+    fontStyle: "italic",
+  },
+  groupMemberScoreText: {
+    fontSize: 12,
+    color: "#4338ca",
+    fontStyle: "italic",
+    marginTop: 4,
   },
   downloadButton: {
     backgroundColor: "#24A8FF",

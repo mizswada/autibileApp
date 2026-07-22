@@ -1,9 +1,9 @@
 ﻿import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Dimensions,
   Image,
   Modal,
   SafeAreaView,
@@ -16,9 +16,10 @@ import {
 } from "react-native";
 import API from "../../api";
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const CARD_HORIZONTAL_PADDING = 24;
-const CARD_WIDTH = SCREEN_WIDTH - CARD_HORIZONTAL_PADDING * 2;
+const APPOINTMENT_CARD_HEIGHT = 140;
+const MAX_HOME_APPOINTMENTS = 10;
+const MAX_DOT_INDICATORS = 5;
+const CANCELLED_APPOINTMENT_STATUS = 37;
 
 interface Appointment {
   id: number;
@@ -75,6 +76,27 @@ export default function HomeScreen() {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [activeAppointmentIndex, setActiveAppointmentIndex] = useState(0);
   const [userName, setUserName] = useState("Parent");
+  const appointmentPagerRef = useRef<ScrollView>(null);
+
+  const totalAppointmentCount = allAppointments.length;
+  const visibleAppointments = useMemo(
+    () => allAppointments.slice(0, MAX_HOME_APPOINTMENTS),
+    [allAppointments],
+  );
+  const hasMoreAppointments = totalAppointmentCount > MAX_HOME_APPOINTMENTS;
+  const useDotIndicator = visibleAppointments.length <= MAX_DOT_INDICATORS;
+
+  const scrollToAppointment = (index: number) => {
+    const nextIndex = Math.max(
+      0,
+      Math.min(index, visibleAppointments.length - 1),
+    );
+    appointmentPagerRef.current?.scrollTo({
+      y: nextIndex * APPOINTMENT_CARD_HEIGHT,
+      animated: true,
+    });
+    setActiveAppointmentIndex(nextIndex);
+  };
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -125,10 +147,15 @@ export default function HomeScreen() {
         }
       }
 
-      // Filter only upcoming appointments (future dates)
+      // Upcoming only: future dates, not cancelled
       const now = new Date();
       const upcomingAppointments = fetchedAppointments
-        .filter((appt: any) => new Date(appt.start) > now)
+        .filter((appt: any) => {
+          const isFuture = new Date(appt.start) > now;
+          const isCancelled =
+            appt.extendedProps?.status === CANCELLED_APPOINTMENT_STATUS;
+          return isFuture && !isCancelled;
+        })
         .sort(
           (a: any, b: any) =>
             new Date(a.start).getTime() - new Date(b.start).getTime(),
@@ -339,6 +366,141 @@ export default function HomeScreen() {
     }, []),
   );
 
+  const renderAppointmentCard = (appointment: Appointment, inPager = false) => {
+    const name = appointment.extendedProps?.patient_name;
+    const date = new Date(appointment.start).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const time = new Date(appointment.start).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    const dateTime = `${date} at ${time}`;
+
+    return (
+      <View
+        style={[
+          styles.notificationCard,
+          inPager && styles.notificationCardInPager,
+        ]}
+      >
+        <View
+          style={[styles.notificationIcon, { backgroundColor: "#FBAB33" }]}
+        >
+          <Image
+            source={require("@/assets/images/calendar.png")}
+            style={styles.calendarIcon}
+          />
+        </View>
+
+        <View style={styles.notificationContent}>
+          <Text style={styles.notificationLabel}>UPDATE</Text>
+          <Text style={styles.notificationTitle}>Upcoming Appointment</Text>
+          <Text style={styles.notificationMessage}>
+            {name ? (
+              <>
+                <Text style={styles.highlightText}>{name}</Text>
+                {" has a visit on "}
+                <Text style={styles.highlightText}>{dateTime}</Text>
+                {". We will see you soon!"}
+              </>
+            ) : (
+              <>
+                {"You have a visit on "}
+                <Text style={styles.highlightText}>{dateTime}</Text>
+                {". We will see you soon!"}
+              </>
+            )}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderPagerIndicator = () => {
+    if (visibleAppointments.length <= 1) {
+      return null;
+    }
+
+    if (useDotIndicator) {
+      return (
+        <View style={styles.paginationDots}>
+          {visibleAppointments.map((_, index) => {
+            const isActive = index === activeAppointmentIndex;
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.dot,
+                  {
+                    width: isActive ? 10 : 6,
+                    height: isActive ? 10 : 6,
+                    opacity: isActive ? 1 : 0.5,
+                    backgroundColor: isActive ? "#4db5ff" : "#E5E7EB",
+                  },
+                ]}
+              />
+            );
+          })}
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.paginationNumeric}>
+        <TouchableOpacity
+          style={[
+            styles.pagerNavButton,
+            activeAppointmentIndex === 0 && styles.pagerNavButtonDisabled,
+          ]}
+          onPress={() => scrollToAppointment(activeAppointmentIndex - 1)}
+          disabled={activeAppointmentIndex === 0}
+          accessibilityLabel="Previous appointment"
+        >
+          <Ionicons name="chevron-up" size={16} color="#4db5ff" />
+        </TouchableOpacity>
+
+        <View style={styles.paginationNumericText}>
+          <Text style={styles.paginationCurrent}>
+            {activeAppointmentIndex + 1}
+          </Text>
+          <View style={styles.paginationDivider} />
+          <Text style={styles.paginationTotal}>
+            {hasMoreAppointments
+              ? `${totalAppointmentCount}+`
+              : totalAppointmentCount}
+          </Text>
+        </View>
+
+        <View style={styles.progressTrack}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                height: `${((activeAppointmentIndex + 1) / visibleAppointments.length) * 100}%`,
+              },
+            ]}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[
+            styles.pagerNavButton,
+            activeAppointmentIndex >= visibleAppointments.length - 1 &&
+              styles.pagerNavButtonDisabled,
+          ]}
+          onPress={() => scrollToAppointment(activeAppointmentIndex + 1)}
+          disabled={activeAppointmentIndex >= visibleAppointments.length - 1}
+          accessibilityLabel="Next appointment"
+        >
+          <Ionicons name="chevron-down" size={16} color="#4db5ff" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeContainer}>
       <LinearGradient
@@ -366,115 +528,71 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Notification Card Carousel */}
+        {/* Upcoming Appointments — one card at a time, swipe vertically */}
         <View style={styles.notificationSection}>
           {allAppointments.length > 0 ? (
-            <>
-              <ScrollView
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={CARD_WIDTH}
-                decelerationRate="fast"
-                contentContainerStyle={{ alignItems: "flex-start" }}
-                onScroll={(event) => {
-                  const scrollPosition = event.nativeEvent.contentOffset.x;
-                  const index = Math.round(scrollPosition / CARD_WIDTH);
-                  setActiveAppointmentIndex(
-                    Math.max(0, Math.min(index, allAppointments.length - 1)),
-                  );
-                }}
-                scrollEventThrottle={16}
-              >
-                {allAppointments.map((appointment) => {
-                  const name = appointment.extendedProps?.patient_name;
-                  const date = new Date(appointment.start).toLocaleDateString(
-                    "en-US",
-                    { month: "short", day: "numeric" },
-                  );
-                  const time = new Date(appointment.start).toLocaleTimeString(
-                    "en-US",
-                    { hour: "2-digit", minute: "2-digit", hour12: true },
-                  );
-                  const dateTime = `${date} at ${time}`;
-
-                  return (
-                    <View
-                      key={appointment.id}
-                      style={[styles.notificationCard, styles.carouselCard]}
+            <View style={styles.appointmentPager}>
+              {visibleAppointments.length === 1 ? (
+                renderAppointmentCard(visibleAppointments[0])
+              ) : (
+                <>
+                  <View style={styles.appointmentPagerShell}>
+                    <ScrollView
+                      ref={appointmentPagerRef}
+                      pagingEnabled
+                      nestedScrollEnabled
+                      showsVerticalScrollIndicator={false}
+                      decelerationRate="fast"
+                      snapToInterval={APPOINTMENT_CARD_HEIGHT}
+                      style={styles.appointmentPagerScroll}
+                      contentContainerStyle={styles.appointmentPagerContent}
+                      onScroll={(event) => {
+                        const scrollPosition = event.nativeEvent.contentOffset.y;
+                        const index = Math.round(
+                          scrollPosition / APPOINTMENT_CARD_HEIGHT,
+                        );
+                        setActiveAppointmentIndex(
+                          Math.max(
+                            0,
+                            Math.min(index, visibleAppointments.length - 1),
+                          ),
+                        );
+                      }}
+                      scrollEventThrottle={16}
                     >
-                      <View
-                        style={[
-                          styles.notificationIcon,
-                          { backgroundColor: "#FBAB33" },
-                        ]}
-                      >
-                        <Image
-                          source={require("@/assets/images/calendar.png")}
-                          style={styles.calendarIcon}
-                        />
-                      </View>
+                      {visibleAppointments.map((appointment) => (
+                        <View
+                          key={appointment.id}
+                          style={styles.appointmentPagerPage}
+                        >
+                          {renderAppointmentCard(appointment, true)}
+                        </View>
+                      ))}
+                    </ScrollView>
 
-                      <View style={styles.notificationContent}>
-                        <Text style={styles.notificationLabel}>UPDATE</Text>
-                        <Text style={styles.notificationTitle}>
-                          Upcoming Appointment
-                        </Text>
-                        <Text style={styles.notificationMessage}>
-                          {name ? (
-                            <>
-                              <Text style={styles.highlightText}>{name}</Text>
-                              {" has a visit on "}
-                              <Text style={styles.highlightText}>
-                                {dateTime}
-                              </Text>
-                              {". We will see you soon!"}
-                            </>
-                          ) : (
-                            <>
-                              {"You have a visit on "}
-                              <Text style={styles.highlightText}>
-                                {dateTime}
-                              </Text>
-                              {". We will see you soon!"}
-                            </>
-                          )}
-                        </Text>
-                      </View>
+                    {renderPagerIndicator()}
+                  </View>
 
-                      <View style={styles.paginationDots}>
-                        {allAppointments.map((_, index) => {
-                          const distance = Math.abs(
-                            index - activeAppointmentIndex,
-                          );
-                          let size = 6;
-                          let opacity = 0.5;
-                          if (distance === 0) {
-                            size = 10;
-                            opacity = 1;
-                          } else if (distance === 1) {
-                            size = 8;
-                            opacity = 0.8;
-                          } else if (distance === 2) {
-                            size = 7;
-                            opacity = 0.6;
-                          }
-                          return (
-                            <View
-                              key={index}
-                              style={[
-                                styles.dotActive,
-                                { width: size, height: size, opacity },
-                              ]}
-                            />
-                          );
-                        })}
-                      </View>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            </>
+                  {hasMoreAppointments && (
+                    <TouchableOpacity
+                      style={styles.viewAllAppointmentsButton}
+                      onPress={() =>
+                        router.push("/appointment/parentsAppointment" as any)
+                      }
+                    >
+                      <Text style={styles.viewAllAppointmentsText}>
+                        View all {totalAppointmentCount} appointments
+                      </Text>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={16}
+                        color="#4db5ff"
+                      />
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+            </View>
           ) : (
             <View style={styles.notificationCard}>
               <View
@@ -497,10 +615,6 @@ export default function HomeScreen() {
                 <Text style={styles.notificationMessage}>
                   No appointments scheduled. Book one to get started!
                 </Text>
-              </View>
-
-              <View style={styles.paginationDots}>
-                <View style={styles.dotInactive} />
               </View>
             </View>
           )}
@@ -819,6 +933,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 32,
   },
+  appointmentPager: {
+    width: "100%",
+  },
+  appointmentPagerShell: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 32,
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: "hidden",
+  },
+  appointmentPagerScroll: {
+    flex: 1,
+    height: APPOINTMENT_CARD_HEIGHT,
+  },
+  appointmentPagerContent: {
+    flexGrow: 1,
+  },
+  appointmentPagerPage: {
+    height: APPOINTMENT_CARD_HEIGHT,
+    justifyContent: "center",
+  },
   notificationCard: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -832,9 +972,12 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  carouselCard: {
-    width: CARD_WIDTH,
-    flexShrink: 0,
+  notificationCardInPager: {
+    borderRadius: 0,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    margin: 0,
   },
   notificationIcon: {
     width: 60,
@@ -881,22 +1024,79 @@ const styles = StyleSheet.create({
   },
   paginationDots: {
     flexDirection: "column",
-    gap: 6,
     justifyContent: "center",
-    alignSelf: "center",
-    marginLeft: 8,
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
   },
-  dotActive: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  paginationNumeric: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  paginationNumericText: {
+    alignItems: "center",
+  },
+  paginationCurrent: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#4db5ff",
+    lineHeight: 20,
+  },
+  paginationDivider: {
+    width: 18,
+    height: 1,
+    backgroundColor: "#CBD5E1",
+    marginVertical: 2,
+  },
+  paginationTotal: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#94A3B8",
+    lineHeight: 16,
+  },
+  progressTrack: {
+    width: 4,
+    height: 36,
+    borderRadius: 999,
+    backgroundColor: "#E2E8F0",
+    overflow: "hidden",
+    justifyContent: "flex-end",
+  },
+  progressFill: {
+    width: "100%",
     backgroundColor: "#4db5ff",
+    borderRadius: 999,
   },
-  dotInactive: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#E5E7EB",
+  pagerNavButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#E1F5FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pagerNavButtonDisabled: {
+    opacity: 0.35,
+  },
+  viewAllAppointmentsButton: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 8,
+  },
+  viewAllAppointmentsText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4db5ff",
+  },
+  dot: {
+    borderRadius: 999,
   },
   gridSection: {
     paddingHorizontal: 24,
