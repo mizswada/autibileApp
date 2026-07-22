@@ -135,6 +135,9 @@ export default function AppointmentDetail() {
         
         if (foundAppointment) {
           setAppointment(foundAppointment);
+          const savedRate = Number(foundAppointment.extendedProps.parent_rate) || 0;
+          setRating(savedRate);
+          setFeedback(foundAppointment.extendedProps.parent_comment || '');
         } else {
           console.error('Appointment not found:', { appointmentId, allAppointments });
           Alert.alert('Error', 'Appointment not found');
@@ -176,10 +179,25 @@ export default function AppointmentDetail() {
       }, 'POST');
 
       if (response && (response as any).success === true) {
+        const updatedData = (response as any).data;
+        const savedRate = Number(updatedData?.parent_rate ?? rating) || 0;
+        const savedComment = updatedData?.parent_comment ?? feedback.trim();
 
+        setAppointment((prev) =>
+          prev
+            ? {
+                ...prev,
+                extendedProps: {
+                  ...prev.extendedProps,
+                  parent_rate: savedRate,
+                  parent_comment: savedComment,
+                },
+              }
+            : prev
+        );
+        setRating(savedRate);
+        setFeedback(savedComment);
         setSubmitted(true);
-        setFeedback('');
-        setRating(0);
         setTimeout(() => setSubmitted(false), 3000);
         Alert.alert('Success', 'Your feedback has been submitted successfully!');
       } else {
@@ -288,13 +306,6 @@ export default function AppointmentDetail() {
             <Text style={styles.label}>Session Number: </Text>
             <Text style={styles.value}>{appointment.extendedProps.session_number}</Text>
           </View>
-          
-          {appointment.extendedProps.parent_comment && (
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Parent Comment: </Text>
-              <Text style={styles.value}>{appointment.extendedProps.parent_comment}</Text>
-            </View>
-          )}
           
           {appointment.extendedProps.therapist_doctor_comment && (
             <View style={styles.detailRow}>
