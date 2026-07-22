@@ -60,5 +60,19 @@ target 'autibile' do
         end
       end
     end
+
+    # Xcode 16.3+ enforces stricter C++20 consteval checks that fmt 11.0.2
+    # (pinned by React Native 0.79.x) fails to satisfy. fmt hardcodes
+    # FMT_CONSTEVAL via an unconditional #define, so a compiler -D override
+    # gets clobbered; patch the header directly instead.
+    fmt_base_header = File.join(installer.sandbox.pod_dir('fmt'), 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base_header)
+      contents = File.read(fmt_base_header)
+      patched = contents.sub('#  define FMT_CONSTEVAL consteval', '#  define FMT_CONSTEVAL')
+      if patched != contents
+        File.chmod(0644, fmt_base_header)
+        File.write(fmt_base_header, patched)
+      end
+    end
   end
 end
