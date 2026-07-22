@@ -2,7 +2,7 @@
   "expo": {
     "name": "autibile",
     "slug": "autibile",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "autibile",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "my.autibile.app",
+      "bundleIdentifier": "app.autibile.my",
       "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
