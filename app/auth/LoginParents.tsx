@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import {
     ActivityIndicator,
     Alert,
-    Image,
     Linking,
     ScrollView,
     StyleSheet,
@@ -175,25 +174,6 @@ export default function LoginParents() {
         </TouchableOpacity>
       )}
 
-      <Text style={styles.orText}>OR</Text>
-
-      <View style={styles.socialRow}>
-        {/* <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png' }}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity> */}
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={{
-              uri: "https://developers.google.com/identity/images/g-logo.png",
-            }}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-      </View>
-
       <TouchableOpacity onPress={handleSignUp}>
         <Text style={styles.signUpLink}>
           Don&apos;t have an account?{" "}
@@ -356,33 +336,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-  },
-  orText: {
-    fontSize: 14,
-    color: "#9CA3AF",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  socialRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 16,
-  },
-  socialButton: {
-    marginHorizontal: 12,
-    padding: 10,
-    borderRadius: 16,
-    backgroundColor: "#fff",
-    shadowColor: "#4db5ff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  socialIcon: {
-    width: 32,
-    height: 32,
-    resizeMode: "contain",
   },
   deleteAccountLink: {
     marginTop: 20,

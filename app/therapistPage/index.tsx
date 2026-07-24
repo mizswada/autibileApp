@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import HomeAppointmentPager from "@/components/HomeAppointmentPager";
+import { useUpcomingAppointments } from "@/hooks/useUpcomingAppointments";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -40,6 +42,7 @@ const features = [
 export default function HomeScreen() {
   const router = useRouter();
   const [userName, setUserName] = useState("Therapist");
+  const { appointments } = useUpcomingAppointments({ mode: "practitioner" });
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -65,7 +68,6 @@ export default function HomeScreen() {
         style={styles.backgroundGradient}
       />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.logoBox}>
@@ -83,29 +85,14 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Welcome Card */}
         <View style={styles.notificationSection}>
-          <View style={styles.notificationCard}>
-            <View
-              style={[styles.notificationIcon, { backgroundColor: "#4db5ff" }]}
-            >
-              <Image
-                source={require("@/assets/images/bell.png")}
-                style={styles.calendarIcon}
-              />
-            </View>
-            <View style={styles.notificationContent}>
-              <Text style={styles.notificationLabel}>WELCOME</Text>
-              <Text style={styles.notificationTitle}>Hi, {userName}!</Text>
-              <Text style={styles.notificationMessage}>
-                Manage your therapy plans, appointments, and diary reports from
-                here.
-              </Text>
-            </View>
-          </View>
+          <HomeAppointmentPager
+            appointments={appointments}
+            variant="practitioner"
+            viewAllRoute="/appointment/practitionerAppointment"
+          />
         </View>
 
-        {/* Features Grid */}
         <View style={styles.gridSection}>
           <View style={styles.gridRow}>
             {features.slice(0, 2).map((f) => (
@@ -217,56 +204,6 @@ const styles = StyleSheet.create({
   notificationSection: {
     paddingHorizontal: 24,
     marginBottom: 32,
-  },
-  notificationCard: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 32,
-    padding: 16,
-    alignItems: "flex-start",
-    shadowColor: "#4db5ff",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  notificationIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    flexShrink: 0,
-    marginTop: 4,
-  },
-  calendarIcon: {
-    width: 32,
-    height: 32,
-    resizeMode: "contain",
-    tintColor: "#fff",
-  },
-  notificationContent: {
-    flex: 1,
-  },
-  notificationLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4db5ff",
-    letterSpacing: 1.2,
-    marginBottom: 4,
-  },
-  notificationTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1E293B",
-    marginBottom: 6,
-  },
-  notificationMessage: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#9CA3AF",
-    lineHeight: 20,
   },
   gridSection: {
     paddingHorizontal: 24,
