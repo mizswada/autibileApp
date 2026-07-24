@@ -95,7 +95,7 @@ android {
         applicationId 'my.autibile.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode appVersionCode
+        versionCode 1
         versionName appVersionName
     }
     signingConfigs {
