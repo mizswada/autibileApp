@@ -15,6 +15,7 @@ import {
   View
 } from 'react-native';
 import API from '../../api';
+import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 
 interface Appointment {
   id: number;
@@ -31,9 +32,9 @@ interface Appointment {
     status: number;
     booked_by: string;
     time_slot: string;
-    parent_comment: string;
-    therapist_doctor_comment: string;
-    parent_rate: number;
+    parent_comment: string | null;
+    therapist_doctor_comment: string | null;
+    parent_rate: number | string | null;
     slot_ID: number;
     session_number: number;
   };
@@ -275,6 +276,11 @@ export default function PractitionerAppointment() {
                 <Text style={styles.title}>{appt.title}</Text>
                 <Text style={styles.time}>{formatTime(appt.start, appt.end)}</Text>
                 <Text style={styles.patient}>{appt.extendedProps.patient_name}</Text>
+                <ParentFeedbackDisplay
+                  variant="compact"
+                  rating={appt.extendedProps.parent_rate}
+                  comment={appt.extendedProps.parent_comment}
+                />
               </View>
               <TouchableOpacity onPress={() => router.push({ 
                 pathname: '/appointment/therapistAppDetail', 
@@ -312,6 +318,15 @@ export default function PractitionerAppointment() {
             <Text style={styles.modalPatient}>
               {selectedDate?.extendedProps.patient_name}
             </Text>
+            {selectedDate && (
+              <View style={styles.modalFeedback}>
+                <ParentFeedbackDisplay
+                  variant="compact"
+                  rating={selectedDate.extendedProps.parent_rate}
+                  comment={selectedDate.extendedProps.parent_comment}
+                />
+              </View>
+            )}
             <TouchableOpacity 
               style={styles.modalButton}
               onPress={handleModalPress}
@@ -346,6 +361,11 @@ export default function PractitionerAppointment() {
                   <Text style={styles.appointmentItemPatient}>
                     {appointment.extendedProps.patient_name}
                   </Text>
+                  <ParentFeedbackDisplay
+                    variant="compact"
+                    rating={appointment.extendedProps.parent_rate}
+                    comment={appointment.extendedProps.parent_comment}
+                  />
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -480,6 +500,11 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#2A2A2A', marginBottom: 4 },
   modalSummary: { fontSize: 14, color: '#2A2A2A', textAlign: 'center', marginBottom: 8 },
   modalPatient: { fontSize: 12, color: '#666', textAlign: 'center', marginBottom: 16 },
+  modalFeedback: {
+    width: '100%',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
   modalButton: {
     backgroundColor: '#48B2E8',
     paddingVertical: 12,

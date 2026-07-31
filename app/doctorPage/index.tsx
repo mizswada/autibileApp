@@ -109,7 +109,14 @@ export default function HomeScreen() {
                     style={[styles.featureIcon, { tintColor: f.color }]}
                   />
                 </View>
-                <Text style={styles.featureLabel}>{f.label}</Text>
+                <Text
+                  style={styles.featureLabel}
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  minimumFontScale={0.75}
+                >
+                  {f.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -202,7 +209,7 @@ const styles = StyleSheet.create({
     flex: 1,
     aspectRatio: 1,
     borderRadius: 36,
-    padding: 20,
+    padding: 16,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -212,13 +219,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   featureIconBg: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     backgroundColor: "rgba(255, 255, 255, 0.98)",
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -231,10 +238,12 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
   },
   featureLabel: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "700",
     color: "#fff",
     textAlign: "center",
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
+    paddingHorizontal: 6,
+    width: "100%",
   },
 });

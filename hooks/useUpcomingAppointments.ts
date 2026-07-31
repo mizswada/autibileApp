@@ -5,6 +5,7 @@ import API from "../api";
 import type { HomeAppointment } from "../components/HomeAppointmentPager";
 
 const CANCELLED_APPOINTMENT_STATUS = 37;
+const EMPTY_CHILDREN: { childID: number }[] = [];
 
 function filterUpcomingAppointments(
   appointments: HomeAppointment[],
@@ -101,7 +102,8 @@ export function useUpcomingAppointments(
   options: UseUpcomingAppointmentsOptions,
 ) {
   const mode = options.mode;
-  const children = mode === "parent" ? options.children : [];
+  const children =
+    mode === "parent" ? options.children : EMPTY_CHILDREN;
   const childIds = children.map((child) => child.childID).join(",");
   const [appointments, setAppointments] = useState<HomeAppointment[]>([]);
   const [loading, setLoading] = useState(true);

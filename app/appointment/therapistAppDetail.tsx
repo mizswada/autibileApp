@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,6 +14,8 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import ModalSelector from 'react-native-modal-selector';
+import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 import API from '../../api';
 
 interface AppointmentDetail {
@@ -29,9 +33,9 @@ interface AppointmentDetail {
     status: number;
     booked_by: string;
     time_slot: string;
-    parent_comment: string;
-    therapist_doctor_comment: string;
-    parent_rate: number;
+    parent_comment: string | null;
+    therapist_doctor_comment: string | null;
+    parent_rate: number | string | null;
     slot_ID: number;
     session_number: number;
   };
@@ -78,14 +82,54 @@ function getStatusColor(status: number): string {
   return statusMapping[status as keyof typeof statusMapping]?.color || '#666';
 }
 
+interface ServiceOption {
+  key: number;
+  label: string;
+  value: number;
+}
+
+function isFutureAppointment(start: string): boolean {
+  return new Date(start).getTime() > Date.now();
+}
+
 export default function TherapistAppDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const scrollRef = useRef<ScrollView>(null);
   const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [practitionerComment, setPractitionerComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [serviceOptions, setServiceOptions] = useState<ServiceOption[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [updatingService, setUpdatingService] = useState(false);
+  const [practitionerId, setPractitionerId] = useState<number | null>(null);
+
+  const fetchServices = async () => {
+    try {
+      setLoadingServices(true);
+      const response = await API('apps/therapyPlan/list', {}, 'GET', false);
+
+      if (response && Array.isArray(response)) {
+        setServiceOptions(
+          response.map((service: { id: number; name: string }) => ({
+            key: service.id,
+            label: service.name,
+            value: service.id,
+          })),
+        );
+      } else {
+        setServiceOptions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      setServiceOptions([]);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
 
   const fetchAppointmentDetail = async () => {
     try {
@@ -95,9 +139,10 @@ export default function TherapistAppDetail() {
         const data = JSON.parse(storedData);
         
         // Get practitioner ID from user data
-        const practitionerId = data.practitionerId || data.practitioner_id || data.userID || data.id;
+        const practitionerIdValue = data.practitionerId || data.practitioner_id || data.userID || data.id;
+        setPractitionerId(practitionerIdValue ? Number(practitionerIdValue) : null);
         
-        if (!practitionerId) {
+        if (!practitionerIdValue) {
           console.error('No practitioner ID found in user data');
           Alert.alert('Error', 'Unable to identify practitioner. Please log in again.');
           return;
@@ -105,7 +150,7 @@ export default function TherapistAppDetail() {
 
         // Fetch all appointments for this practitioner
         const appointmentResponse = await API('apps/appointment/childAppointment', {
-          practitioner_id: practitionerId
+          practitioner_id: practitionerIdValue
         }, 'GET', false);
 
         let allAppointments: AppointmentDetail[] = [];
@@ -122,6 +167,7 @@ export default function TherapistAppDetail() {
         
         if (foundAppointment) {
           setAppointment(foundAppointment);
+          setSelectedServiceId(foundAppointment.extendedProps.service_id);
           // Pre-fill practitioner comment if it exists
           if (foundAppointment.extendedProps.therapist_doctor_comment) {
             setPractitionerComment(foundAppointment.extendedProps.therapist_doctor_comment);
@@ -142,7 +188,65 @@ export default function TherapistAppDetail() {
 
   useEffect(() => {
     fetchAppointmentDetail();
+    fetchServices();
   }, [id]);
+
+  const handleUpdateService = async (serviceId?: number) => {
+    const nextServiceId = serviceId ?? selectedServiceId;
+
+    if (!appointment || nextServiceId === null) {
+      Alert.alert('Error', 'Please select a service');
+      return;
+    }
+
+    if (nextServiceId === appointment.extendedProps.service_id) {
+      return;
+    }
+
+    try {
+      setUpdatingService(true);
+      setSelectedServiceId(nextServiceId);
+
+      const response = await API('apps/appointment/updateAppointmentService', {
+        appointment_id: appointment.id,
+        service_id: nextServiceId,
+        practitioner_id: practitionerId,
+      }, 'POST');
+
+      if (response && (response as any).success === true) {
+        const updatedService = (response as any).data;
+        const nextServiceName =
+          updatedService?.service_name ||
+          serviceOptions.find((option) => option.value === nextServiceId)?.label ||
+          appointment.extendedProps.service_name;
+
+        setAppointment((prev) =>
+          prev
+            ? {
+                ...prev,
+                extendedProps: {
+                  ...prev.extendedProps,
+                  service_id: nextServiceId,
+                  service_name: nextServiceName,
+                },
+              }
+            : null,
+        );
+
+        Alert.alert('Success', 'Appointment service updated successfully');
+      } else {
+        const errorMessage =
+          response?.message || (response as any)?.error || 'Failed to update service';
+        Alert.alert('Error', errorMessage);
+        setSelectedServiceId(appointment.extendedProps.service_id);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update appointment service');
+      setSelectedServiceId(appointment.extendedProps.service_id);
+    } finally {
+      setUpdatingService(false);
+    }
+  };
 
   const handleSubmitComment = async () => {
     if (!practitionerComment.trim()) {
@@ -257,6 +361,18 @@ export default function TherapistAppDetail() {
     );
   }
 
+  const scrollToComment = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  };
+
+  const canEditService = isFutureAppointment(appointment.start);
+  const selectedServiceLabel =
+    serviceOptions.find((option) => option.value === selectedServiceId)?.label ||
+    appointment.extendedProps.service_name ||
+    '-- Select service --';
+
   return (
     <View style={styles.container}>
       {/* Standardised Header */}
@@ -267,7 +383,17 @@ export default function TherapistAppDetail() {
         <Text style={styles.headerTitle}>Appointment Detail</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+        >
         {/* Appointment Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>APPOINTMENT {appointment.extendedProps.session_number}</Text>
@@ -294,7 +420,37 @@ export default function TherapistAppDetail() {
           
           <View style={styles.detailRow}>
             <Text style={styles.label}>Service: </Text>
-            <Text style={styles.value}>{appointment.extendedProps.service_name}</Text>
+            {canEditService ? (
+              <View style={styles.serviceValue}>
+                {loadingServices || updatingService ? (
+                  <ActivityIndicator size="small" color="#4db5ff" />
+                ) : (
+                  <ModalSelector
+                    data={serviceOptions}
+                    initValue={selectedServiceLabel}
+                    onChange={(option: ServiceOption) => handleUpdateService(option.value)}
+                    style={styles.serviceSelector}
+                    initValueTextStyle={{
+                      color: selectedServiceId ? '#555' : '#999',
+                    }}
+                    selectTextStyle={{ fontSize: 14 }}
+                    disabled={updatingService}
+                  >
+                    <View style={styles.serviceDropdown}>
+                      <TextInput
+                        style={styles.inlineServiceInput}
+                        editable={false}
+                        placeholder="Select service"
+                        value={selectedServiceLabel}
+                      />
+                      <Ionicons name="chevron-down" size={18} color="#666" />
+                    </View>
+                  </ModalSelector>
+                )}
+              </View>
+            ) : (
+              <Text style={styles.value}>{appointment.extendedProps.service_name}</Text>
+            )}
           </View>
           
           <View style={styles.detailRow}>
@@ -317,44 +473,18 @@ export default function TherapistAppDetail() {
             <Text style={styles.value}>{appointment.extendedProps.session_number}</Text>
           </View>
           
-          {appointment.extendedProps.parent_comment && (
-            <View style={styles.detailRow}>
-              <Text style={styles.label}>Parent Comment: </Text>
-              <Text style={styles.value}>{appointment.extendedProps.parent_comment}</Text>
-            </View>
-          )}
-          
           {appointment.extendedProps.therapist_doctor_comment && (
             <View style={styles.detailRow}>
               <Text style={styles.label}>Your Comment: </Text>
               <Text style={styles.value}>{appointment.extendedProps.therapist_doctor_comment}</Text>
             </View>
           )}
-          
-          {/* Parent Rating Section */}
-          {appointment.extendedProps.parent_rate && (
-            <View style={styles.feedbackSectionInCard}>
-              <Text style={styles.feedbackTitleInCard}>Parent Rating</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.label}>Rating: </Text>
-                <View style={styles.starsContainer}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Ionicons
-                      key={star}
-                      name={appointment.extendedProps.parent_rate >= star ? "star" : "star-outline"}
-                      size={16}
-                      color={appointment.extendedProps.parent_rate >= star ? "#FFD700" : "#ccc"}
-                    />
-                  ))}
-                </View>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.label}></Text>
-                <Text style={styles.ratingText}>{appointment.extendedProps.parent_rate} out of 5 stars</Text>
-              </View>
-            </View>
-          )}
         </View>
+
+        <ParentFeedbackDisplay
+          rating={appointment.extendedProps.parent_rate}
+          comment={appointment.extendedProps.parent_comment}
+        />
 
         {/* Status Update Section */}
         <View style={styles.statusSection}>
@@ -391,6 +521,7 @@ export default function TherapistAppDetail() {
             placeholder="Add your comment about this session..."
             value={practitionerComment}
             onChangeText={setPractitionerComment}
+            onFocus={scrollToComment}
             multiline
             numberOfLines={4}
           />
@@ -416,13 +547,15 @@ export default function TherapistAppDetail() {
         {submitted && (
           <Text style={styles.submittedMsg}>Your comment has been submitted!</Text>
         )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E1F5FF' },
+  keyboardAvoid: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -453,7 +586,7 @@ const styles = StyleSheet.create({
     color: '#F44336',
     marginTop: 16,
   },
-  scrollContainer: { padding: 16 },
+  scrollContainer: { padding: 16, paddingBottom: 48 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -468,6 +601,31 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', marginBottom: 12, flexWrap: 'wrap' },
   label: { fontSize: 14, fontWeight: '600', color: '#333', minWidth: 120 },
   value: { fontSize: 14, color: '#555', flex: 1 },
+  serviceValue: {
+    flex: 1,
+  },
+  serviceSelector: {
+    flex: 1,
+  },
+  serviceDropdown: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    paddingRight: 10,
+  },
+  inlineServiceInput: {
+    flex: 1,
+    borderWidth: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 14,
+    backgroundColor: 'transparent',
+    color: '#555',
+  },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -564,27 +722,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginTop: 16,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
-  feedbackSectionInCard: {
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  feedbackTitleInCard: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 12,
   },
 });

@@ -5,6 +5,7 @@ export default function profilePageLayout() {
     <Stack>
       <Stack.Screen name="parentsReport" options={{ headerShown: false }} />
       <Stack.Screen name="practitionerReport" options={{ headerShown: false }} />
+      <Stack.Screen name="practitionerPatientReport" options={{ headerShown: false }} />
     </Stack>
   );
 } 

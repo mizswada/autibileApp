@@ -14,6 +14,7 @@ import {
   View
 } from 'react-native';
 import ModalSelector from 'react-native-modal-selector';
+import IcNumberInput from '@/components/IcNumberInput';
 import API from '../../api';
 
 type Option = { key: string; label: string; value: string };
@@ -327,9 +328,15 @@ export default function ChildProfile() {
     }
   };
 
+  const closeAddChildModal = () => {
+    setShowAddChildModal(false);
+    setNewChildIC('');
+  };
+
   const handleAddNewChild = async () => {
-    if (!newChildIC.trim()) {
-      Alert.alert('Error', 'Please enter an IC number');
+    const digits = newChildIC.replace(/\D/g, '');
+    if (digits.length !== 12) {
+      Alert.alert('Error', 'Please enter a complete 12-digit IC number');
       return;
     }
 
@@ -337,7 +344,7 @@ export default function ChildProfile() {
     try {
       // First, check if the IC exists
       const searchResponse = await API('apps/children/searchIc', {
-        icNumber: newChildIC.trim()
+        icNumber: digits
       }, 'GET');
 
       if (searchResponse.statusCode === 200 && searchResponse.data && Array.isArray(searchResponse.data as any[]) && (searchResponse.data as any[]).length > 0) {
@@ -404,7 +411,7 @@ export default function ChildProfile() {
         fullname: newChildData.fullname,
         nickname: newChildData.nickname,
         gender: newChildData.gender,
-        icNumber: newChildIC.trim(),
+        icNumber: newChildIC.replace(/\D/g, ''),
         dateOfBirth: newChildData.dateOfBirth,
         autismDiagnose: newChildData.autismDiagnose,
         diagnosedDate: newChildData.diagnosedDate,
@@ -724,12 +731,17 @@ export default function ChildProfile() {
        </Modal>
 
       {/* Add Child Modal */}
-      <Modal visible={showAddChildModal} transparent animationType="slide">
+      <Modal
+        visible={showAddChildModal}
+        transparent
+        animationType="slide"
+        onRequestClose={closeAddChildModal}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Child</Text>
-              <TouchableOpacity onPress={() => setShowAddChildModal(false)}>
+              <TouchableOpacity onPress={closeAddChildModal}>
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
@@ -741,13 +753,14 @@ export default function ChildProfile() {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>IC Number</Text>
-                <TextInput
-                  style={styles.input}
-                  value={newChildIC}
-                  onChangeText={setNewChildIC}
-                  placeholder="Enter child's IC number"
-                  keyboardType="numeric"
-                />
+                <View style={styles.icInputWrapper}>
+                  <IcNumberInput
+                    key={showAddChildModal ? "add-child-ic-open" : "add-child-ic-closed"}
+                    value={newChildIC}
+                    onChange={setNewChildIC}
+                    autoFocus
+                  />
+                </View>
               </View>
 
               <TouchableOpacity 
@@ -1078,6 +1091,10 @@ const styles = StyleSheet.create({
   inputGroup: {
     gap: 8,
     marginBottom: 20,
+  },
+  icInputWrapper: {
+    width: "100%",
+    overflow: "hidden",
   },
   label: {
     fontSize: 14,

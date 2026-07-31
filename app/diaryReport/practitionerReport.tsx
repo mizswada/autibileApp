@@ -1,93 +1,43 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import API from "../../api";
-import {
-  DIARY_CATEGORIES,
-  isLegacyDiaryEntry,
-  OPTIONAL_NOTES_LABEL,
-} from "./constants";
 
 interface DiaryReport {
   diary_id: number;
   patient_id: number;
-  description: string | null;
-  two_way_communication?: string | null;
-  emotional_regulation?: string | null;
-  focus_and_comprehension?: string | null;
-  feeding_and_sensory?: string | null;
-  sleep_and_daily_routines?: string | null;
-  socialisation_self_confidence?: string | null;
   date: string;
   created_at: string;
-  updated_at: string;
   patient: {
     patient_id: number;
     fullname: string;
     nickname: string;
-    patient_ic: string;
-    gender: string;
-    dob: string;
-    autism_diagnose: string;
-    diagnosed_on: string;
-    status: string;
-    available_session: number;
-    created_at: string;
-    update_at: string;
   } | null;
+}
+
+interface PatientSummary {
+  patient_id: number;
+  fullname: string;
+  nickname: string;
+  reportCount: number;
 }
 
 export default function PractitionerReport() {
   const [loading, setLoading] = useState(true);
   const [diaryReports, setDiaryReports] = useState<DiaryReport[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<any>(null);
-  const [showDateModal, setShowDateModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedDateEntries, setSelectedDateEntries] = useState<DiaryReport[]>(
-    [],
-  );
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-
-  const renderEntryContent = (entry: DiaryReport) => {
-    if (isLegacyDiaryEntry(entry)) {
-      return (
-        <Text style={styles.modalEntryContent}>{entry.description}</Text>
-      );
-    }
-
-    return (
-      <View>
-        {DIARY_CATEGORIES.map(({ key, label }) => {
-          const value = entry[key]?.trim();
-          if (!value) return null;
-
-          return (
-            <View key={key} style={styles.categoryBlock}>
-              <Text style={styles.categoryLabel}>{label}</Text>
-              <Text style={styles.modalEntryContent}>{value}</Text>
-            </View>
-          );
-        })}
-        {entry.description?.trim() ? (
-          <View style={styles.categoryBlock}>
-            <Text style={styles.categoryLabel}>{OPTIONAL_NOTES_LABEL}</Text>
-            <Text style={styles.modalEntryContent}>{entry.description}</Text>
-          </View>
-        ) : null}
-      </View>
-    );
-  };
 
   useEffect(() => {
     fetchDiaryReports();
@@ -104,16 +54,10 @@ export default function PractitionerReport() {
         return;
       }
 
-      const userData = JSON.parse(storedData);
-
-      // For practitioners, we need to get all diary reports
-      // You might need to adjust this based on how you identify practitioners
       const response = await API(
         "apps/diaryReport/listAll",
         {
-          // If you have a practitioner ID, use it here
-          // For now, we'll fetch all reports (you may need to adjust this)
-          limit: 100,
+          limit: 200,
           offset: 0,
         },
         "GET",
@@ -122,48 +66,68 @@ export default function PractitionerReport() {
 
       if (response.statusCode === 200 && response.data) {
         setDiaryReports(response.data as DiaryReport[]);
-        setPagination((response as any).pagination);
       } else {
         setError(response.message || "Failed to fetch diary reports");
       }
-    } catch (err) {
+    } catch {
       setError("Network error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  // Group entries by patient first, then by date
-  const groupedByPatient = diaryReports.reduce(
-    (acc, entry) => {
-      const patientName =
-        entry.patient?.fullname || `Patient ${entry.patient_id}`;
-      if (!acc[patientName]) acc[patientName] = {};
+  const patients = useMemo(() => {
+    const map = new Map<number, PatientSummary>();
 
-      const date = new Date(entry.date || entry.created_at).toDateString();
-      if (!acc[patientName][date]) acc[patientName][date] = [];
-      acc[patientName][date].push(entry);
+    diaryReports.forEach((entry) => {
+      const id = entry.patient_id;
+      const existing = map.get(id);
 
-      return acc;
-    },
-    {} as Record<string, Record<string, DiaryReport[]>>,
-  );
+      if (existing) {
+        existing.reportCount += 1;
+        return;
+      }
 
-  const handleDatePress = (
-    patientName: string,
-    date: string,
-    entries: DiaryReport[],
-  ) => {
-    setSelectedDate(`${patientName} - ${date}`);
-    setSelectedDateEntries(entries);
-    setShowDateModal(true);
+      map.set(id, {
+        patient_id: id,
+        fullname: entry.patient?.fullname || `Patient ${id}`,
+        nickname: entry.patient?.nickname || "",
+        reportCount: 1,
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.fullname.localeCompare(b.fullname),
+    );
+  }, [diaryReports]);
+
+  const filteredPatients = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return patients;
+
+    return patients.filter(
+      (patient) =>
+        patient.fullname.toLowerCase().includes(query) ||
+        patient.nickname.toLowerCase().includes(query),
+    );
+  }, [patients, searchQuery]);
+
+  const handlePatientPress = (patient: PatientSummary) => {
+    router.push({
+      pathname: "/diaryReport/practitionerPatientReport",
+      params: {
+        patientId: String(patient.patient_id),
+        patientName: patient.fullname,
+        patientNickname: patient.nickname,
+      },
+    });
   };
 
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4db5ff" />
-        <Text>Loading diary reports...</Text>
+        <Text style={styles.loadingText}>Loading patients...</Text>
       </View>
     );
   }
@@ -189,93 +153,84 @@ export default function PractitionerReport() {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>All Patient Diary Reports</Text>
       </View>
 
-      <ScrollView style={styles.container}>
-        {Object.keys(groupedByPatient).length === 0 ? (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="#64748B"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name or nickname..."
+            placeholderTextColor="#94A3B8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              style={styles.clearButton}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={20} color="#94A3B8" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <Text style={styles.listHint}>
+          Select a patient to view their diary report history.
+        </Text>
+
+        {patients.length === 0 ? (
           <Text style={styles.noDataText}>No diary reports found.</Text>
+        ) : filteredPatients.length === 0 ? (
+          <Text style={styles.noDataText}>
+            No patients match &quot;{searchQuery.trim()}&quot;.
+          </Text>
         ) : (
-          Object.keys(groupedByPatient).map((patientName) => (
-            <View key={patientName} style={styles.patientCard}>
-              <Text style={styles.patientName}>{patientName}</Text>
-              {Object.keys(groupedByPatient[patientName]).map((date) => (
-                <TouchableOpacity
-                  key={date}
-                  style={styles.dateCard}
-                  onPress={() =>
-                    handleDatePress(
-                      patientName,
-                      date,
-                      groupedByPatient[patientName][date],
-                    )
-                  }
-                >
-                  <Text style={styles.dateHeader}>{date}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          filteredPatients.map((patient) => (
+            <TouchableOpacity
+              key={patient.patient_id}
+              style={styles.patientCard}
+              onPress={() => handlePatientPress(patient)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.patientAvatar}>
+                <Text style={styles.patientAvatarText}>
+                  {patient.fullname.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.patientInfo}>
+                <Text style={styles.patientName}>{patient.fullname}</Text>
+                {patient.nickname ? (
+                  <Text style={styles.patientNickname}>
+                    {patient.nickname}
+                  </Text>
+                ) : null}
+                <Text style={styles.reportCount}>
+                  {patient.reportCount} report
+                  {patient.reportCount === 1 ? "" : "s"}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#4db5ff" />
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
-
-      {/* Date Modal */}
-      <Modal
-        visible={showDateModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowDateModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                Diary Reports - {selectedDate}
-              </Text>
-              <TouchableOpacity onPress={() => setShowDateModal(false)}>
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              style={styles.modalScrollView}
-              showsVerticalScrollIndicator={true}
-              contentContainerStyle={styles.modalScrollContent}
-            >
-              {selectedDateEntries.map((entry: DiaryReport) => (
-                <View key={entry.diary_id} style={styles.modalEntryCard}>
-                  <View style={styles.modalEntryHeader}>
-                    <Text style={styles.modalPatientName}>
-                      {entry.patient?.fullname || `Patient ${entry.patient_id}`}
-                    </Text>
-                    <Text style={styles.modalEntryTime}>
-                      {new Date(
-                        entry.date || entry.created_at,
-                      ).toLocaleTimeString()}
-                    </Text>
-                  </View>
-                  {renderEntryContent(entry)}
-                  {entry.patient && (
-                    <View style={styles.modalPatientInfo}>
-                      <Text style={styles.modalPatientDetail}>
-                        Age:{" "}
-                        {entry.patient.dob
-                          ? new Date(entry.patient.dob).getFullYear()
-                          : "N/A"}
-                      </Text>
-                      <Text style={styles.modalPatientDetail}>
-                        Status: {entry.patient.status || "N/A"}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -291,122 +246,91 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff" },
-  container: { flex: 1, padding: 16 },
+  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", flex: 1 },
+  container: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 32 },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#4db5ff",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchIcon: { marginRight: 8 },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: "#1E293B",
+  },
+  clearButton: { marginLeft: 4 },
+  listHint: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 16,
+    textAlign: "center",
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#E1F5FF",
   },
-  errorText: { color: "#F16742", marginBottom: 10 },
+  loadingText: { marginTop: 12, color: "#64748B" },
+  errorText: { color: "#F16742", marginBottom: 10, textAlign: "center" },
   retryButton: { backgroundColor: "#4db5ff", padding: 10, borderRadius: 12 },
   retryButtonText: { color: "#fff", fontWeight: "bold" },
   noDataText: { color: "#9CA3AF", textAlign: "center", marginTop: 40 },
   patientCard: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 15,
-    marginBottom: 15,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: "#4db5ff",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  patientName: {
+  patientAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#4db5ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  patientAvatarText: {
+    color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 8,
-    color: "#4db5ff",
   },
-  dateCard: {
-    backgroundColor: "#E1F5FF",
-    borderRadius: 12,
-    padding: 10,
-    marginTop: 8,
-    alignItems: "center",
-  },
-  dateHeader: { fontSize: 16, fontWeight: "bold", color: "#4db5ff" },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    width: "90%",
-    maxHeight: "80%",
-    shadowColor: "#4db5ff",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E1F5FF",
-  },
-  modalTitle: {
-    fontSize: 20,
+  patientInfo: { flex: 1 },
+  patientName: {
+    fontSize: 17,
     fontWeight: "bold",
     color: "#1E293B",
   },
-  modalScrollView: {
-    maxHeight: "80%",
-    padding: 15,
-  },
-  modalScrollContent: {
-    paddingBottom: 20,
-  },
-  modalEntryCard: {
-    backgroundColor: "#E1F5FF",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
-    elevation: 1,
-  },
-  modalEntryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  modalPatientName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#4db5ff",
-  },
-  modalEntryTime: {
+  patientNickname: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: "#64748B",
+    marginTop: 2,
   },
-  modalEntryContent: {
-    fontSize: 15,
-    color: "#1E293B",
-    marginBottom: 5,
-  },
-  categoryBlock: {
-    marginBottom: 8,
-  },
-  categoryLabel: {
+  reportCount: {
     fontSize: 13,
-    fontWeight: "600",
     color: "#4db5ff",
-    marginBottom: 2,
-  },
-  modalPatientInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  modalPatientDetail: {
-    fontSize: 13,
-    color: "#9CA3AF",
+    marginTop: 4,
+    fontWeight: "600",
   },
 });

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,6 +32,30 @@ import {
 } from "./constants";
 
 const { width: screenWidth } = Dimensions.get("window");
+
+const daysShort = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"];
+
+function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfWeek(year: number, month: number): number {
+  const d = new Date(year, month, 1);
+  return (d.getDay() + 6) % 7;
+}
+
+function toDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatHistoryDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 type DiaryEntry = DiaryEntryData & {
   timestamp: string;
@@ -60,6 +85,7 @@ export default function ParentsReport() {
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<string | null>(
     null,
   );
+  const [currentHistoryMonth, setCurrentHistoryMonth] = useState(new Date());
   const [currentHistorySlide, setCurrentHistorySlide] = useState(0);
   const historyFlatListRef = useRef<FlatList>(null);
 
@@ -257,6 +283,7 @@ export default function ParentsReport() {
         // Show the new entry under History for today.
         setActiveTab("history");
         setSelectedHistoryDate(todayDateString);
+        setCurrentHistoryMonth(new Date());
         setCurrentHistorySlide(0);
         setModalVisible(true);
 
@@ -285,7 +312,34 @@ export default function ParentsReport() {
     ),
   ].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  const historyDates = allHistoryDates.slice(0, 5);
+  const historyYear = currentHistoryMonth.getFullYear();
+  const historyMonth = currentHistoryMonth.getMonth();
+  const historyDaysInMonth = getDaysInMonth(historyYear, historyMonth);
+  const historyFirstDayOfWeek = getFirstDayOfWeek(historyYear, historyMonth);
+
+  const historyCalendarDays: (number | null)[] = [];
+  for (let i = 0; i < historyFirstDayOfWeek; i++) historyCalendarDays.push(null);
+  for (let d = 1; d <= historyDaysInMonth; d++) historyCalendarDays.push(d);
+
+  const diaryEntryDates = [
+    ...new Set(entries.map((entry) => toDateKey(new Date(entry.timestamp)))),
+  ];
+
+  const handleHistoryDayPress = (day: number) => {
+    const calendarDate = new Date(historyYear, historyMonth, day);
+    const dateString = calendarDate.toDateString();
+
+    setSelectedHistoryDate(dateString);
+    setCurrentHistorySlide(0);
+    historyFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  };
+
+  const selectedDateEntries = selectedHistoryDate
+    ? entries.filter(
+        (entry) =>
+          new Date(entry.timestamp).toDateString() === selectedHistoryDate,
+      )
+    : [];
 
   const handleGeneratePDF = async (forAllEntries = false) => {
     try {
@@ -444,8 +498,12 @@ export default function ParentsReport() {
             ]}
             onPress={() => {
               setActiveTab("history");
-              if (!selectedHistoryDate && historyDates.length > 0) {
-                setSelectedHistoryDate(historyDates[0]);
+              if (!selectedHistoryDate && allHistoryDates.length > 0) {
+                const firstDate = new Date(allHistoryDates[0]);
+                setSelectedHistoryDate(allHistoryDates[0]);
+                setCurrentHistoryMonth(
+                  new Date(firstDate.getFullYear(), firstDate.getMonth(), 1),
+                );
               }
             }}
           >
@@ -536,78 +594,142 @@ export default function ParentsReport() {
               </Text>
             </View>
 
-            <ScrollView style={{ width: "100%" }}>
-              {historyDates.map((date) => (
+            <ScrollView style={{ width: "100%" }} showsVerticalScrollIndicator={false}>
+              <View style={styles.monthCard}>
                 <TouchableOpacity
-                  key={date}
-                  style={[
-                    styles.entryCard,
-                    {
-                      backgroundColor:
-                        selectedHistoryDate === date ? "#CDE" : "#fff",
-                    },
-                  ]}
                   onPress={() =>
-                    setSelectedHistoryDate(
-                      selectedHistoryDate === date ? null : date,
+                    setCurrentHistoryMonth(
+                      new Date(historyYear, historyMonth - 1, 1),
                     )
                   }
+                  style={styles.monthNavButton}
                 >
-                  <Text style={{ fontWeight: "bold" }}>{date}</Text>
+                  <Ionicons name="chevron-back" size={24} color="#fff" />
                 </TouchableOpacity>
-              ))}
+                <Text style={styles.monthTitle}>
+                  {currentHistoryMonth.toLocaleDateString("en-US", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setCurrentHistoryMonth(
+                      new Date(historyYear, historyMonth + 1, 1),
+                    )
+                  }
+                  style={styles.monthNavButton}
+                >
+                  <Ionicons name="chevron-forward" size={24} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.calendarCard}>
+                <View style={styles.daysRow}>
+                  {daysShort.map((day, index) => (
+                    <Text key={index} style={styles.dayShort}>
+                      {day}
+                    </Text>
+                  ))}
+                </View>
+                <View style={styles.daysGrid}>
+                  {historyCalendarDays.map((day, idx) => {
+                    if (!day) {
+                      return <View key={idx} style={styles.dayCell} />;
+                    }
+
+                    const calendarDate = new Date(historyYear, historyMonth, day);
+                    const dateKey = toDateKey(calendarDate);
+                    const hasEntry = diaryEntryDates.includes(dateKey);
+                    const isSelected =
+                      selectedHistoryDate === calendarDate.toDateString();
+
+                    return (
+                      <Pressable
+                        key={idx}
+                        style={[
+                          styles.dayCell,
+                          hasEntry && styles.dayCellEntry,
+                          isSelected && styles.dayCellSelected,
+                          isSelected && !hasEntry && styles.dayCellSelectedEmpty,
+                        ]}
+                        onPress={() => handleHistoryDayPress(day)}
+                      >
+                        <Text
+                          style={[
+                            styles.dayNum,
+                            hasEntry && styles.dayNumEntry,
+                            isSelected && !hasEntry && styles.dayNumSelectedEmpty,
+                            isSelected && hasEntry && styles.dayNumSelected,
+                          ]}
+                        >
+                          {day}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {selectedHistoryDate && (
+                <View style={styles.selectedDateBanner}>
+                  <Ionicons name="calendar-outline" size={18} color="#1565A8" />
+                  <Text style={styles.selectedDateText}>
+                    {formatHistoryDate(selectedHistoryDate)}
+                  </Text>
+                </View>
+              )}
 
               {selectedHistoryDate && (
                 <>
-                  <Text style={styles.cardTitle}>
-                    Report for {selectedHistoryDate}
-                  </Text>
+                  {selectedDateEntries.length > 0 ? (
+                    <>
+                      <Text style={styles.historyReportTitle}>Diary Entries</Text>
 
-                  <FlatList
-                    data={entries.filter(
-                      (entry) =>
-                        new Date(entry.timestamp).toDateString() ===
-                        selectedHistoryDate,
-                    )}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    keyExtractor={(item, index) => index.toString()}
-                    renderItem={({ item: entry }) => (
-                      <View style={styles.pagedHistoryEntryCard}>
-                        <DiaryEntryContent entry={entry} />
-                        <Text style={styles.historyEntryTime}>
-                          {new Date(entry.timestamp).toLocaleTimeString()}
-                        </Text>
+                      <FlatList
+                        data={selectedDateEntries}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(item, index) => index.toString()}
+                        renderItem={({ item: entry }) => (
+                          <View style={styles.pagedHistoryEntryCard}>
+                            <DiaryEntryContent entry={entry} />
+                            <Text style={styles.historyEntryTime}>
+                              {new Date(entry.timestamp).toLocaleTimeString()}
+                            </Text>
+                          </View>
+                        )}
+                        onScroll={(e) => {
+                          const index = Math.round(
+                            e.nativeEvent.contentOffset.x /
+                              e.nativeEvent.layoutMeasurement.width,
+                          );
+                          setCurrentHistorySlide(index);
+                        }}
+                        ref={historyFlatListRef}
+                      />
+
+                      <View style={styles.pagination}>
+                        {selectedDateEntries.map((_, index) => (
+                          <View
+                            key={index}
+                            style={[
+                              styles.dot,
+                              currentHistorySlide === index && styles.activeDot,
+                            ]}
+                          />
+                        ))}
                       </View>
-                    )}
-                    onScroll={(e) => {
-                      const index = Math.round(
-                        e.nativeEvent.contentOffset.x /
-                          e.nativeEvent.layoutMeasurement.width,
-                      );
-                      setCurrentHistorySlide(index);
-                    }}
-                    ref={historyFlatListRef}
-                  />
-
-                  <View style={styles.pagination}>
-                    {entries
-                      .filter(
-                        (entry) =>
-                          new Date(entry.timestamp).toDateString() ===
-                          selectedHistoryDate,
-                      )
-                      .map((_, index) => (
-                        <View
-                          key={index}
-                          style={[
-                            styles.dot,
-                            currentHistorySlide === index && styles.activeDot,
-                          ]}
-                        />
-                      ))}
-                  </View>
+                    </>
+                  ) : (
+                    <View style={styles.emptyDateCard}>
+                      <Ionicons name="document-text-outline" size={40} color="#ccc" />
+                      <Text style={styles.emptyDateText}>
+                        No diary report for this date.
+                      </Text>
+                    </View>
+                  )}
                 </>
               )}
 
@@ -846,7 +968,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E1F5FF",
+    backgroundColor: "#99C5E8",
     marginHorizontal: 4,
   },
   activeDot: {
@@ -870,6 +992,133 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     marginBottom: 16,
+  },
+  monthCard: {
+    backgroundColor: "#4db5ff",
+    borderRadius: 16,
+    padding: 12,
+    alignItems: "center",
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  monthNavButton: {
+    padding: 8,
+  },
+  monthTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  calendarCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    paddingTop: 20,
+    marginBottom: 16,
+    alignItems: "center",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    height: 270,
+  },
+  daysRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 4,
+  },
+  dayShort: {
+    width: "14.2%",
+    textAlign: "center",
+    color: "#1E293B",
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  daysGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
+  },
+  dayCell: {
+    width: "14.2%",
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 2,
+  },
+  dayNum: {
+    fontSize: 16,
+    color: "#1E293B",
+    fontWeight: "500",
+  },
+  dayCellEntry: {
+    backgroundColor: "#4db5ff",
+    borderRadius: 10,
+  },
+  dayNumEntry: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  dayCellSelected: {
+    backgroundColor: "#1565A8",
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  dayCellSelectedEmpty: {
+    backgroundColor: "#fff",
+    borderColor: "#4db5ff",
+  },
+  dayNumSelected: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  dayNumSelectedEmpty: {
+    color: "#1565A8",
+    fontWeight: "bold",
+  },
+  selectedDateBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#4db5ff",
+  },
+  selectedDateText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1565A8",
+    flexShrink: 1,
+  },
+  historyReportTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1E293B",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptyDateCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    marginTop: 8,
+    marginBottom: 12,
+    alignItems: "center",
+  },
+  emptyDateText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#777",
+    textAlign: "center",
   },
   generateAllBtn: {
     backgroundColor: "#4db5ff",
