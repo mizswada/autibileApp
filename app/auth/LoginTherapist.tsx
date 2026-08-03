@@ -1,4 +1,7 @@
 import { Ionicons } from "@expo/vector-icons"; // for back icon and eye icon
+import { AuthFormScroll } from "@/components/AuthFormScroll";
+import { ScreenBackButton } from "@/components/ScreenHeader";
+import { useScreenInsets } from "@/hooks/useScreenInsets";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -6,7 +9,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +20,7 @@ import API from "../../api";
 const DELETE_ACCOUNT_URL = "https://autibile.my/delete-account";
 
 export default function LoginTherapist() {
+  const { authPaddingTop } = useScreenInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -94,15 +97,53 @@ export default function LoginTherapist() {
   const isButtonDisabled = !email || !password;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <AuthFormScroll
+      paddingTop={authPaddingTop}
+      contentContainerStyle={styles.container}
+      footer={
+        <>
+          <TouchableOpacity
+            style={styles.rememberMeContainer}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              {rememberMe && (
+                <Ionicons name="checkmark" size={16} color="#4db5ff" />
+              )}
+            </View>
+            <Text style={styles.checkboxText}>Remember me for 30 days</Text>
+          </TouchableOpacity>
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#4db5ff" />
+          ) : (
+            <TouchableOpacity
+              style={[styles.button, isButtonDisabled && styles.buttonDisabled]}
+              onPress={handleSignIn}
+              disabled={isButtonDisabled}
+            >
+              <Text style={styles.buttonText}>Sign In</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity onPress={handleSignUp}>
+            <Text style={styles.signUpLink}>
+              Don&apos;t have an account?{" "}
+              <Text style={styles.signUpText}>Sign Up</Text>
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountLink}>
+            <Text style={styles.deleteAccountText}>Request account deletion</Text>
+          </TouchableOpacity>
+        </>
+      }
+    >
       {/* Back Icon */}
       <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.replace("/userType")}
-        >
-          <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.backButton}>
+          <ScreenBackButton onPress={() => router.replace("/userType")} variant="surface" />
+        </View>
         <Text style={styles.welcome}>Welcome</Text>
       </View>
 
@@ -144,54 +185,13 @@ export default function LoginTherapist() {
         <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.rememberMeContainer}
-        onPress={() => setRememberMe(!rememberMe)}
-      >
-        <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-          {rememberMe && (
-            <Ionicons name="checkmark" size={16} color="#4db5ff" />
-          )}
-        </View>
-        <Text style={styles.checkboxText}>Remember me for 30 days</Text>
-      </TouchableOpacity>
-
-      {/* <TouchableOpacity style={styles.homePage} onPress={handleHomePage}>
-          <Text style={styles.homePageText}>Home Page</Text>
-        </TouchableOpacity> */}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#4db5ff" />
-      ) : (
-        <TouchableOpacity
-          style={[styles.button, isButtonDisabled && styles.buttonDisabled]}
-          onPress={handleSignIn}
-          disabled={isButtonDisabled}
-        >
-          <Text style={styles.buttonText}>Sign In</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity onPress={handleSignUp}>
-        <Text style={styles.signUpLink}>
-          Don&apos;t have an account?{" "}
-          <Text style={styles.signUpText}>Sign Up</Text>
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountLink}>
-        <Text style={styles.deleteAccountText}>Request account deletion</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </AuthFormScroll>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 24,
-    paddingTop: 80,
-    backgroundColor: "#E1F5FF",
+    paddingHorizontal: 24,
   },
   headerContainer: {
     position: "relative",
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: "flex-end",
-    marginBottom: 60,
+    marginBottom: 8,
   },
   forgotPasswordText: {
     color: "#4db5ff",
@@ -279,7 +279,9 @@ const styles = StyleSheet.create({
   rememberMeContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 24,
+    justifyContent: "center",
+    marginBottom: 16,
+    width: "100%",
   },
   checkbox: {
     width: 20,
@@ -298,6 +300,7 @@ const styles = StyleSheet.create({
   },
   checkboxText: {
     fontSize: 14,
+    lineHeight: 20,
     color: "#1E293B",
     fontWeight: "500",
   },
@@ -336,9 +339,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   deleteAccountLink: {
-    marginTop: 20,
+    marginTop: 12,
     alignItems: "center",
-    paddingBottom: 12,
   },
   deleteAccountText: {
     fontSize: 14,
@@ -349,6 +351,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
     textAlign: "center",
+    marginTop: 12,
   },
   signUpText: {
     color: "#4db5ff",

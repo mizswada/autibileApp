@@ -18,7 +18,14 @@
       "bundleIdentifier": "app.autibile.my",
       "buildNumber": "3",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSApplicationQueriesSchemes": [
+          "tel",
+          "mailto",
+          "sms",
+          "https",
+          "http"
+        ]
       }
     },
     "android": {
@@ -27,6 +34,7 @@
         "backgroundColor": "#99DBFD"
       },
       "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
       "package": "my.autibile.app"
     },
     "web": {
@@ -58,7 +66,9 @@
             "enableShrinkResourcesInReleaseBuilds": true
           }
         }
-      ]
+      ],
+      "./plugins/withDisablePredictiveBack.js",
+      "./plugins/withExternalLinkQueries.js"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,59 +1,47 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import React from "react";
 import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
 export default function DisclaimerScreen() {
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
-      {/* Header - NOT affected by ScrollView padding */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Disclaimer</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <ScreenHeader title="Disclaimer" />
 
       {/* Scrollable Content */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Important Note for M-CHAT R/F</Text>
+        <Text style={styles.title}>Important Note</Text>
 
         <View style={styles.box}>
           <Text style={styles.bold}>Important Notice:</Text>
           <Text style={styles.text}>
-            The M-CHAT-R/F is a screening tool—not a diagnostic test—for
-            identifying children who may be at risk for autism spectrum disorder
-            (ASD). This application is not intended to provide a medical
-            diagnosis.
+            The questionnaires in this application are screening tools—not
+            diagnostic tests—used to identify children who may be at risk for
+            autism spectrum disorder (ASD) and other developmental concerns.
+            This application is not intended to provide a medical diagnosis.
           </Text>
           <Text style={styles.text}>
-            The M-CHAT-R/F should be used alongside the M-CHAT-R and is
-            validated for screening toddlers between the ages of 16 and 30
-            months. However, several studies have extended its use up to 48
-            months of age. Therefore, this tool may be used to screen children
-            between 16 and 48 months.
+            Each screening tool is validated for a specific age range and
+            purpose, and some are designed to be used together as part of a
+            staged screening process. Please follow the age guidance and any
+            follow-up steps shown with each questionnaire.
           </Text>
           <Text style={styles.text}>
             Please note that a significant number of children who screen
-            positive on the M-CHAT-R/F may not be diagnosed with autism.
+            positive may not be diagnosed with the condition being screened for.
             Nonetheless, these children are at increased risk for other
             developmental delays or disorders. Any child who screens positive
             should be referred for further developmental evaluation.
           </Text>
           <Text style={styles.text}>
             Conversely, if your child screens normally, it does not mean the
-            absence of ASD. If you have concerns after a normal screening, speak
-            with your healthcare provider about additional assessments
-            available. The M-CHAT is not 100% accurate in detecting ASD.
+            absence of a condition. If you have concerns after a normal
+            screening, speak with your healthcare provider about additional
+            assessments available. No screening tool is 100% accurate.
           </Text>
           {/* truncated for brevity */}
         </View>
@@ -96,54 +84,12 @@ export default function DisclaimerScreen() {
             </Text>
           </View>
         </View>
-
-        {/* Result / Interpretation of M CHAT-R/F */}
-        <Text style={styles.sectionTitle}>
-          Result / Interpretation of M CHAT-R/F
-        </Text>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.tableHeader]}>
-              POSITIVE (Score ≥2)
-            </Text>
-            <Text style={styles.tableCell}>
-              HISK RISK Referred for early intervention and diagnostic
-              testing{" "}
-            </Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.tableHeader]}>
-              NEGATIVE (Score 0 or 1)
-            </Text>
-            <Text style={styles.tableCell}>
-              LOW RISK However, if the parent has concerns about autism,
-              children should be referred for evaluation regardless of the
-              score.
-            </Text>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#99DBFD",
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,

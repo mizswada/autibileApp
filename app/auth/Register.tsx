@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { AuthFormScroll } from "@/components/AuthFormScroll";
+import { ScreenBackButton } from "@/components/ScreenHeader";
+import { useScreenInsets } from "@/hooks/useScreenInsets";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +15,7 @@ import {
 import API from "../../api";
 
 export default function Register() {
+  const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
 
   const [username, setUsername] = useState("");
@@ -22,6 +25,8 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errors, setErrors] = useState({
@@ -169,14 +174,50 @@ export default function Register() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <>
+    <AuthFormScroll
+      paddingTop={authPaddingTop}
+      contentContainerStyle={styles.container}
+      footer={
+        <>
+          <View style={styles.termsRow}>
+            <TouchableOpacity
+              style={[styles.checkboxBase, acceptTerms && styles.checkboxChecked]}
+              onPress={() => {
+                setAcceptTerms(!acceptTerms);
+                if (!acceptTerms)
+                  setErrors((prev) => ({ ...prev, acceptTerms: "" }));
+              }}
+            >
+              {acceptTerms && <View style={styles.checkboxInner} />}
+            </TouchableOpacity>
+            <Text style={styles.termsText}>I accept terms and condition</Text>
+          </View>
+          {errors.acceptTerms ? (
+            <Text style={styles.footerErrorText}>{errors.acceptTerms}</Text>
+          ) : null}
+
+          <TouchableOpacity
+            style={[styles.button, !isFormValid && styles.buttonDisabled]}
+            onPress={handleSignUp}
+            disabled={!isFormValid}
+          >
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push("/auth/LoginParents")}>
+            <Text style={styles.signInLink}>
+              Already have an account?{" "}
+              <Text style={styles.signInText}>Sign In</Text>
+            </Text>
+          </TouchableOpacity>
+        </>
+      }
+    >
       <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.backButton}>
+          <ScreenBackButton onPress={() => router.back()} variant="surface" />
+        </View>
         <Text style={styles.create}>Create New Account</Text>
       </View>
 
@@ -257,75 +298,63 @@ export default function Register() {
 
       {/** Password */}
       <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Password (Min: 8 characters)"
-        secureTextEntry
-        value={password}
-        onChangeText={(text) => {
-          setPassword(text);
-          validateField("password", text);
-        }}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Enter Password (Min: 8 characters)"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            validateField("password", text);
+          }}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye" : "eye-off"}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
       {errors.password ? (
         <Text style={styles.errorText}>{errors.password}</Text>
       ) : null}
 
       {/** Confirm Password */}
       <Text style={styles.label}>Confirm Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Reenter Password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={(text) => {
-          setConfirmPassword(text);
-          validateField("confirmPassword", text);
-        }}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Reenter Password"
+          secureTextEntry={!showConfirmPassword}
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            validateField("confirmPassword", text);
+          }}
+        />
+        <TouchableOpacity
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+        >
+          <Ionicons
+            name={showConfirmPassword ? "eye" : "eye-off"}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
       {errors.confirmPassword ? (
         <Text style={styles.errorText}>{errors.confirmPassword}</Text>
       ) : null}
 
-      {/** Terms */}
-      <View style={styles.termsRow}>
-        <TouchableOpacity
-          style={[styles.checkboxBase, acceptTerms && styles.checkboxChecked]}
-          onPress={() => {
-            setAcceptTerms(!acceptTerms);
-            if (!acceptTerms)
-              setErrors((prev) => ({ ...prev, acceptTerms: "" }));
-          }}
-        >
-          {acceptTerms && <View style={styles.checkboxInner} />}
-        </TouchableOpacity>
-        <Text style={styles.termsText}>I accept terms and condition</Text>
-      </View>
-      {errors.acceptTerms ? (
-        <Text style={styles.errorText}>{errors.acceptTerms}</Text>
-      ) : null}
-
-      {/** Sign Up button */}
-      <TouchableOpacity
-        style={[styles.button, !isFormValid && styles.buttonDisabled]}
-        onPress={handleSignUp}
-        disabled={!isFormValid}
-      >
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-
-      {/** Sign In redirect */}
-      <TouchableOpacity onPress={() => router.push("/auth/LoginParents")}>
-        <Text style={styles.signInLink}>
-          Already have an account?{" "}
-          <Text style={styles.signInText}>Sign In</Text>
-        </Text>
-      </TouchableOpacity>
+    </AuthFormScroll>
 
       {/** Success Modal */}
       <Modal
         animationType="fade"
         transparent={true}
+        statusBarTranslucent
         visible={showSuccessModal}
         onRequestClose={handleSuccessModalClose}
       >
@@ -344,7 +373,7 @@ export default function Register() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </>
   );
 }
 
@@ -352,12 +381,8 @@ const styles = StyleSheet.create({
   // [styles remain unchanged as per your latest version]
   // include your styles here
   container: {
-    flexGrow: 1,
-    justifyContent: "center",
     alignItems: "center",
-    padding: 24,
-    paddingTop: 80,
-    backgroundColor: "#E1F5FF",
+    paddingHorizontal: 24,
   },
   headerContainer: {
     position: "relative",
@@ -389,13 +414,41 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+  passwordContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#E1F5FF",
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "#fff",
+    shadowColor: "#4db5ff",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 52,
+    fontSize: 16,
+    color: "#1E293B",
+  },
   termsRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
     width: "100%",
   },
-  termsText: { marginLeft: 8, fontSize: 14, color: "#1E293B" },
+  termsText: {
+    marginLeft: 8,
+    fontSize: 14,
+    lineHeight: 22,
+    color: "#1E293B",
+  },
   button: {
     width: "100%",
     height: 52,
@@ -411,7 +464,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  signInLink: { fontSize: 14, color: "#9CA3AF" },
+  signInLink: { fontSize: 14, color: "#9CA3AF", textAlign: "center", marginTop: 12 },
   signInText: { color: "#4db5ff", fontWeight: "bold" },
   checkboxBase: {
     width: 22,
@@ -443,6 +496,13 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginBottom: 8,
     marginTop: -12,
+    fontSize: 13,
+  },
+  footerErrorText: {
+    color: "#F16742",
+    alignSelf: "flex-start",
+    width: "100%",
+    marginBottom: 8,
     fontSize: 13,
   },
   modalOverlay: {

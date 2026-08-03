@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { AuthenticatedLayout } from '@/components/AuthenticatedLayout';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -151,15 +153,14 @@ export default function ChangePassword() {
   const isButtonDisabled = !email || !password || !confirmPassword || loading;
 
   return (
+    <AuthenticatedLayout>
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Change Password</Text>
-      </View>
+      <ScreenHeader title="Change Password" />
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Reset Your Password</Text>
           {userRole && (
@@ -241,29 +242,14 @@ export default function ChangePassword() {
         </View>
       </ScrollView>
     </View>
+    </AuthenticatedLayout>
   );
 }
 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    backgroundColor: 'transparent',
   },
   container: {
     flexGrow: 1,
@@ -274,6 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
     marginTop: 30,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,

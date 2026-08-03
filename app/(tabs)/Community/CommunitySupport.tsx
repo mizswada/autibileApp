@@ -1,3 +1,4 @@
+import { ScreenHeader } from '@/components/ScreenHeader';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -22,12 +23,7 @@ export default function CommunitySupport() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={handleBack}><Text style={styles.backArrow}>{'<'}</Text></TouchableOpacity>
-        <Text style={styles.headerTitle}>Community Support</Text>
-        <View style={{ width: 32 }} />
-      </View>
+      <ScreenHeader title="Community Support" onBack={handleBack} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {topics.map((item) => (
           <View key={item.id} style={styles.topicBox}>

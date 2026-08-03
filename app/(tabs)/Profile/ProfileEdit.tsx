@@ -1,3 +1,4 @@
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { router } from 'expo-router';
 import React from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -5,6 +6,7 @@ import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 const DELETE_ACCOUNT_URL = 'https://autibile.my/delete-account';
 
 export default function ProfileEdit() {
+  const tabBarPadding = useTabBarPadding();
   const handleMenuPress = (action: string) => {
     switch (action) {
       case 'settings':
@@ -54,7 +56,7 @@ export default function ProfileEdit() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { paddingBottom: tabBarPadding }]}>
       {/* Profile Card */}
       <View style={styles.profileCard}>
         <View style={styles.avatar}><Text style={styles.avatarText}>H</Text></View>
@@ -123,6 +125,7 @@ const styles = StyleSheet.create({
     marginTop: -30,
     marginBottom: 32,
     width: '90%',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -174,6 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingVertical: 8,
     paddingHorizontal: 0,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,

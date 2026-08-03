@@ -11,4 +11,9 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
+# react-native-screens — required for Android back navigation in release builds
+-keep class com.swmansion.rnscreens.** { *; }
+-keep class com.facebook.react.views.** { *; }
+-keepattributes *Annotation*
+
 # Add any project specific keep options here:

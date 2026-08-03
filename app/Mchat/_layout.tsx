@@ -1,10 +1,16 @@
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
 export default function MchatLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="MChatR" options={{ headerShown: false }} />
-      <Stack.Screen name="MChatRNextLevel" options={{ headerShown: false }} />
-    </Stack>
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="MChatR" />
+        <Stack.Screen name="MChatRNextLevel" />
+      </Stack>
+    </AuthenticatedLayout>
   );
-} 
+}

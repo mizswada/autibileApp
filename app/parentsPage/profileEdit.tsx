@@ -207,7 +207,7 @@ function Divider() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: "#E1F5FF",
+    backgroundColor: "transparent",
   },
   topBackground: {
     height: 200,

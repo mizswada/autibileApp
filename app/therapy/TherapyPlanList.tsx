@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -64,12 +65,7 @@ export default function TherapyPlanList() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Therapy Plans</Text>
-      </View>
+      <ScreenHeader title="Therapy Plans" />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {loading ? (
@@ -130,23 +126,7 @@ export default function TherapyPlanList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4db5ff',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    backgroundColor: 'transparent',
   },
   scrollContainer: {
     padding: 16,

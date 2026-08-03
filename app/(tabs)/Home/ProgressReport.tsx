@@ -43,6 +43,7 @@ export default function ProgressReport() {
       <Modal
         visible={modalVisible}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
@@ -81,6 +82,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -135,6 +137,7 @@ const styles = StyleSheet.create({
     padding: 32,
     minWidth: 180,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,

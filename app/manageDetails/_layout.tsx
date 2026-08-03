@@ -1,10 +1,16 @@
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
-export default function manageDetailsLayout() {
+export default function ManageDetailsLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="parentsInformation" options={{ headerShown: false }} />
-      <Stack.Screen name="practitionerInformation" options={{ headerShown: false }} />
-    </Stack>
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="parentsInformation" />
+        <Stack.Screen name="practitionerInformation" />
+      </Stack>
+    </AuthenticatedLayout>
   );
-} 
+}

@@ -165,7 +165,7 @@ export default function CommunityFeed() {
                pathname: '/community-feed/addFeed',
                params: { returnPath: '/doctorPage/community' }
              })}>
-               <Ionicons name="add" size={26} color="#333" />
+               <Ionicons name="add" size={26} color="#FFFFFF" />
              </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -219,6 +219,7 @@ export default function CommunityFeed() {
       <Modal
         visible={isMenuVisible}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={closeMenu}
       >
@@ -247,7 +248,7 @@ export default function CommunityFeed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#FFFFFF',
   },
   feedContainer: {
     paddingHorizontal: 18,
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
   },
   loadingText: {
     fontSize: 16,

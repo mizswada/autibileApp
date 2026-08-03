@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
+import { pickImageFromLibrary } from '@/utils/pickImage';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -50,42 +50,32 @@ export default function PractitionerProfile() {
 
   const pickSignatureImage = async () => {
     try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      const result = await pickImageFromLibrary({
         base64: true,
-        quality: 0.3, // Reduced quality to minimize file size
+        quality: 0.3,
         allowsEditing: true,
-        aspect: [4, 1], // Signature aspect ratio
+        aspect: [4, 1],
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        console.log('Selected image URI:', asset.uri);
-        console.log('Selected image base64 length:', asset.base64?.length || 0);
-        
-        if (practitionerData && asset.base64) {
-          // Check if base64 string is too large (> 1MB)
-          const base64Size = asset.base64.length;
-          const maxSize = 1000000; // 1MB limit
-          
-          if (base64Size > maxSize) {
-            Alert.alert(
-              'Image Too Large', 
-              'The selected image is too large. Please choose a smaller image or reduce the quality.',
-              [{ text: 'OK' }]
-            );
-            return;
-          }
-          
-          // Store with data:image/png;base64, prefix for database
-          const fullSignature = `data:image/png;base64,${asset.base64}`;
-          setPractitionerData({...practitionerData, signature: fullSignature});
-          setSignaturePreview(asset.uri);
-          console.log('Signature updated successfully');
-        }
-      } else {
-        console.log('Image selection canceled or failed');
+      if (result.canceled || !practitionerData || !result.base64) {
+        return;
       }
+
+      const base64Size = result.base64.length;
+      const maxSize = 1000000;
+
+      if (base64Size > maxSize) {
+        Alert.alert(
+          'Image Too Large',
+          'The selected image is too large. Please choose a smaller image or reduce the quality.',
+          [{ text: 'OK' }],
+        );
+        return;
+      }
+
+      const fullSignature = `data:image/png;base64,${result.base64}`;
+      setPractitionerData({ ...practitionerData, signature: fullSignature });
+      setSignaturePreview(result.uri);
     } catch (error) {
       console.error('Error picking signature image:', error);
       Alert.alert('Error', 'Failed to select signature image');
@@ -257,14 +247,9 @@ export default function PractitionerProfile() {
   }
 
   return (
-    <ScrollView style={styles.scroll}>
+    <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-      </View>
+      <ScreenHeader title="Edit Profile" />
 
       {/* Practitioner Information */}
       <View style={styles.section}>
@@ -424,7 +409,7 @@ export default function PractitionerProfile() {
               onChangeText={(text) => setPractitionerData({...practitionerData, experience: text})}
               editable={isEditingPractitioner}
               placeholder="Enter years of experience"
-              keyboardType="numeric"
+              keyboardType="number-pad"
             />
           </View>
 
@@ -482,7 +467,7 @@ export default function PractitionerProfile() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
@@ -493,22 +478,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
   },
   section: {
     backgroundColor: '#fff',

@@ -1,12 +1,18 @@
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
 export default function parentsAppointmentLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="parentsAppointment" options={{ headerShown: false }} />
-      <Stack.Screen name="appointmentDetail" options={{ headerShown: false }} />
-      <Stack.Screen name="practitionerAppointment" options={{ headerShown: false }} />
-      <Stack.Screen name="therapistAppDetail" options={{ headerShown: false }} />
-    </Stack>
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="parentsAppointment" />
+        <Stack.Screen name="appointmentDetail" />
+        <Stack.Screen name="practitionerAppointment" />
+        <Stack.Screen name="therapistAppDetail" />
+      </Stack>
+    </AuthenticatedLayout>
   );
-} 
+}

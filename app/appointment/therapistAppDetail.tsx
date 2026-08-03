@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -330,12 +331,7 @@ export default function TherapistAppDetail() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Appointment Detail</Text>
-        </View>
+        <ScreenHeader title="Appointment Detail" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4db5ff" />
           <Text style={styles.loadingText}>Loading appointment details...</Text>
@@ -347,12 +343,7 @@ export default function TherapistAppDetail() {
   if (!appointment) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Appointment Detail</Text>
-        </View>
+        <ScreenHeader title="Appointment Detail" />
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={48} color="#F44336" />
           <Text style={styles.errorText}>Appointment not found</Text>
@@ -376,16 +367,11 @@ export default function TherapistAppDetail() {
   return (
     <View style={styles.container}>
       {/* Standardised Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Appointment Detail</Text>
-      </View>
+      <ScreenHeader title="Appointment Detail" />
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           ref={scrollRef}
@@ -554,18 +540,8 @@ export default function TherapistAppDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E1F5FF' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   keyboardAvoid: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#000' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -592,6 +568,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -642,6 +619,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -681,6 +659,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,

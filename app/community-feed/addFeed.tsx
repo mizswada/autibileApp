@@ -1,9 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../api';
 
 export default function addFeed() {
@@ -71,22 +70,13 @@ export default function addFeed() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={{backgroundColor: '#E1F5FF', justifyContent: 'flex-end'}}>
-        <SafeAreaView edges={['top']}>
-          <View style={styles.headerRow}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-              <TouchableOpacity onPress={() => router.back()}>
-                <Ionicons name="chevron-back" size={24} color="#333" />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>Create Feed</Text>
-            </View>
-          </View>
-        </SafeAreaView>
-      </View>
+      <ScreenHeader title="Create Feed" />
 
       {/* Card Form */}
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
       <View style={styles.card}>
         <TextInput
           style={styles.titleInput}
@@ -101,6 +91,7 @@ export default function addFeed() {
           placeholder="What's on your mind? Share your thoughts..."
           placeholderTextColor="#A0A0A0"
           multiline
+          textAlignVertical="top"
           value={content}
           onChangeText={setContent}
           maxLength={500}
@@ -132,7 +123,7 @@ export default function addFeed() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e3f3fc',
+    backgroundColor: 'transparent',
     paddingHorizontal: 0,
     paddingTop: 0,
   },
@@ -161,9 +152,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 16,
     backgroundColor: '#e3f3fc',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#0077B6',
     shadowOpacity: 0.08,
     shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: 22,
@@ -220,6 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 10,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#0077B6',
     shadowOpacity: 0.13,
     shadowRadius: 6,

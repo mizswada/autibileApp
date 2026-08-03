@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Print from "expo-print";
 import { useRouter } from "expo-router";
-import * as Sharing from "expo-sharing";
+import { sharePdfDocument } from "../../utils/sharePdfDocument";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +18,14 @@ import {
 } from "react-native";
 import API from "../../api";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
+import {
+  buildBambiDetailedHtml,
+  buildIntegratedReportFilename,
+  buildIntegratedScreeningReportHtml,
+  buildMchatDetailedHtml,
+  buildScreenDetailedHtml,
+  buildSleepDetailedHtml,
+} from "../../utils/screeningReportTemplate";
 import { getQuestionnaireLockInfo } from "./access";
 
 function getNumericAnswerValue(answer: any): string | null {
@@ -547,6 +556,19 @@ export default function QuestionnaireIndex() {
         return;
       }
 
+      // Helper: find most recent response for a questionnaire ID
+      const findMostRecentByQuestionnaireId = (questionnaireId: number) => {
+        const matches = childResponses.filter(
+          (r: any) => r.questionnaire_id === questionnaireId,
+        );
+        if (matches.length === 0) return null;
+        matches.sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+        return matches[0];
+      };
+
       // Helper: find most recent response matching keywords
       const findMostRecentByKeywords = (keywords: string[]) => {
         const matches = childResponses.filter((r: any) =>
@@ -563,9 +585,7 @@ export default function QuestionnaireIndex() {
       };
 
       // Find most recent per domain
-      const mchatResponse = childResponses.find(
-        (r: any) => r.questionnaire_id === 1,
-      );
+      const mchatResponse = findMostRecentByQuestionnaireId(1);
       const bambiResponse = findMostRecentByKeywords([
         "meal",
         "bambi",
@@ -670,245 +690,64 @@ export default function QuestionnaireIndex() {
       const screenRecommendation =
         (screenResponse as any)?.score_analysis?.recommendation || "";
 
-      // Build HTML with conditional bold for interpretations
-      const getMchatDetailedText = () => {
-        const score =
-          typeof mchatScore === "number" ? mchatScore : parseInt(mchatScore);
-        let html = `<div class="domain-section"><h3>Autism Screening (M-CHAT-R) [Score: ${mchatScore} / 20]</h3>`;
-        html += "<ul>";
-        if (score <= 2) {
-          html += `<li><span class="highlight">LOW RISK.</span> If child &lt;2 years old, repeat after 2 years old. No further action is required unless surveillance indicates likelihood for autism.</li>`;
-        } else if (score >= 3 && score <= 7) {
-          html += `<li><span class="highlight">MODERATE RISK.</span> Please arrange a face-to-face consultation to continue with the M-CHAT-R Follow-Up Interview.</li>`;
-        } else if (score >= 8) {
-          html += `<li><span class="highlight">HIGH RISK.</span> Proceed to diagnostic evaluation. Highly recommended for early intervention.</li>`;
-        }
-        html += "</ul></div>";
-        return html;
-      };
-
-      const getBambiDetailedText = () => {
-        if (bambiScore === "N/A")
-          return '<div class="domain-section"><h3>Feeding (BAMBI) [Not assessed]</h3><p>Not assessed — no screening completed</p></div>';
-        const score =
-          typeof bambiScore === "number" ? bambiScore : parseInt(bambiScore);
-        let html = `<div class="domain-section"><h3>Feeding (BAMBI) [Score: ${bambiScore}]</h3>`;
-        html += "<ul>";
-        if (score <= 34) {
-          html += `<li><span class="highlight">Within typical limits.</span></li>`;
-        } else {
-          html += `<li><span class="highlight">Feeding concerns.</span></li>`;
-        }
-        html +=
-          "<li>Recommendation: Refer if clinically indicated.</li></ul></div>";
-        return html;
-      };
-
-      const getSleepDetailedText = () => {
-        if (sleepScore === "N/A")
-          return '<div class="domain-section"><h3>Sleep (CSHQ-SF) [Not assessed]</h3><p>Not assessed — no screening completed</p></div>';
-        const score =
-          typeof sleepScore === "number" ? sleepScore : parseInt(sleepScore);
-        let html = `<div class="domain-section"><h3>Sleep (CSHQ-SF) [Score: ${sleepScore}]</h3>`;
-        html += "<ul>";
-        if (score >= 30) {
-          html += `<li><span class="highlight">Risk for sleep problems.</span></li>`;
-        } else {
-          html += `<li><span class="highlight">Low risk.</span></li>`;
-        }
-        html +=
-          "<li>Recommendation: Maintain sleep hygiene or assess.</li></ul></div>";
-        return html;
-      };
-
-      const getScreenDetailedText = () => {
-        if (screenScore === "N/A")
-          return '<div class="domain-section"><h3>Screen Time (SEQ) [Not assessed]</h3><p>Not assessed — no screening completed</p></div>';
-        // Interpretation and recommendation are driven by the admin-configured
-        // scoring thresholds, so nothing about the cutoffs is hardcoded here.
-        let html = `<div class="domain-section"><h3>Screen Time (SEQ) [Score: ${screenScore}]</h3>`;
-        html += "<ul>";
-        if (screenInterpretation && screenInterpretation !== "Not assessed") {
-          html += `<li><span class="highlight">${screenInterpretation}</span></li>`;
-        } else {
-          html += `<li>Score recorded.</li>`;
-        }
-        if (screenRecommendation) {
-          html += `<li>Recommendation: ${screenRecommendation}</li>`;
-        }
-        html += "</ul></div>";
-        return html;
-      };
-
-      // Load logo
-      let logoHTML = "";
+      let logoUri: string | null = null;
       try {
-        const logoUri = await getLogoBase64();
-        if (logoUri) {
-          logoHTML = `<img src="${logoUri}" alt="NeuroSpa Therapy Logo" class="header-logo" style="max-width: 180px; height: auto; margin-bottom: 15px;">`;
-        }
+        logoUri = await getLogoBase64();
       } catch (error) {
         console.warn("Logo loading error:", error);
       }
 
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Integrated Developmental Screening Report</title>
-          <style>
-            @page { margin: 20px; size: A4; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #333; line-height: 1.7; font-size: 12px; }
-            .header { text-align: center; border-bottom: 2px solid #1565C0; padding-bottom: 16px; margin-bottom: 16px; }
-            .header-logo { max-width: 140px; height: auto; margin-bottom: 8px; }
-            .header-title { font-size: 22px; font-weight: bold; color: #1565C0; margin: 0; }
-            .header-subtitle { font-size: 12.5px; color: #666; margin: 5px 0 0 0; }
-            .report-meta { background: #f9f9f9; padding: 12px; border-radius: 3px; margin-bottom: 14px; font-size: 11px; color: #666; }
-            .report-meta-item { display: inline-block; margin-right: 30px; }
-            h1 { text-align: center; font-size: 16px; margin: 14px 0 16px 0; font-weight: 600; color: #000; }
-            h3 { font-size: 13px; margin-top: 14px; margin-bottom: 8px; font-weight: 600; color: #1565C0; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; }
-            .section { margin: 14px 0; }
-            .section-title { font-weight: 600; color: #1565C0; margin-bottom: 10px; }
-            .two-col { display: flex; justify-content: space-between; gap: 30px; }
-            .two-col > div { flex: 1; }
-            p { margin: 6px 0; }
-            .label { font-weight: 600; display: inline; color: #333; }
-            .value { text-decoration: underline; display: inline; min-width: 100px; }
-            table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
-            th, td { border: 1px solid #999; padding: 9px; text-align: left; }
-            th { background: #1565C0; color: white; font-weight: 600; }
-            tr:nth-child(even) { background: #f9f9f9; }
-            .highlight { font-weight: 600; color: #d9534f; }
-            .domain-section { margin: 10px 0; padding: 10px; background: #fafafa; border-left: 3px solid #1565C0; font-size: 12px; }
-            .domain-section h4 { margin: 0 0 7px 0; font-size: 12px; color: #1565C0; }
-            .domain-section ul { margin: 7px 0; padding-left: 24px; }
-            .domain-section li { margin: 5px 0; font-size: 12px; }
-            .domain-section p { margin: 6px 0; font-size: 12px; color: #666; }
-            .notes-box { background: #fff3cd; border-left: 3px solid #ffc107; padding: 12px; margin: 14px 0; border-radius: 2px; font-size: 12px; }
-            .notes-box h4 { margin-top: 0; margin-bottom: 7px; color: #856404; font-weight: 600; font-size: 12px; }
-            .notes-box ul { margin: 7px 0; padding-left: 24px; }
-            .notes-box li { margin: 5px 0; color: #856404; font-size: 11.5px; }
-            .bottom-section { display: flex; justify-content: space-between; gap: 30px; margin-top: 16px; }
-            .assessor-block { flex: 1; }
-            .assessor-block h4 { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: #1565C0; }
-            .assessor-block p { margin: 7px 0; font-size: 11.5px; }
-            .signature-line { border-bottom: 1px solid #000; display: inline-block; min-width: 120px; }
-            .footer { text-align: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e0e0e0; font-size: 9.5px; color: #999; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${logoHTML}
-            <h2 class="header-title">Integrated Developmental Screening Report</h2>
-            <p class="header-subtitle">Comprehensive Multi-Domain Assessment</p>
-          </div>
+      const detailedSectionsHtml = [
+        buildMchatDetailedHtml(mchatScore),
+        buildBambiDetailedHtml(bambiScore),
+        buildSleepDetailedHtml(sleepScore),
+        buildScreenDetailedHtml(
+          screenScore,
+          screenInterpretation,
+          screenRecommendation,
+        ),
+      ].join("");
 
-          <div class="report-meta">
-            <div class="report-meta-item"><strong>Report Generated:</strong> ${new Date().toLocaleDateString("en-MY", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
-            <div class="report-meta-item"><strong>Report Type:</strong> Developmental Screening</div>
-          </div>
+      const htmlContent = buildIntegratedScreeningReportHtml({
+        logoUri,
+        childName,
+        childDOB,
+        childAge,
+        childGender,
+        screeningDate,
+        parentName,
+        parentRelationship,
+        summaryRows: [
+          {
+            domain: "Autism (M-CHAT-R)",
+            score: `${mchatScore}/20`,
+            interpretation: mchatInterpretation,
+          },
+          {
+            domain: "Feeding (BAMBI)",
+            score: String(bambiScore),
+            interpretation: bambiInterpretation,
+          },
+          {
+            domain: "Sleep (CSHQ-SF)",
+            score: String(sleepScore),
+            interpretation: sleepInterpretation,
+          },
+          {
+            domain: "Screen Time (SEQ)",
+            score: String(screenScore),
+            interpretation: screenInterpretation,
+          },
+        ],
+        detailedSectionsHtml,
+      });
 
-          <div class="section">
-            <h3>Child Information</h3>
-            <div class="two-col">
-              <div>
-                <p><span class="label">Child's Name:</span> <span class="value">${childName}</span></p>
-                <p><span class="label">Age at Screening:</span> <span class="value">${childAge}</span></p>
-              </div>
-              <div>
-                <p><span class="label">Date of Birth:</span> <span class="value">${childDOB}</span></p>
-                <p><span class="label">Gender:</span> <span class="value">${childGender}</span></p>
-                <p><span class="label">Date of Screening:</span> <span class="value">${screeningDate}</span></p>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Parent / Caregiver Information</h3>
-            <div class="two-col">
-              <div>
-                <p><span class="label">Name:</span> <span class="value">${parentName}</span></p>
-              </div>
-              <div>
-                <p><span class="label">Relationship to Child:</span> <span class="value">${parentRelationship}</span></p>
-              </div>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>Summary Table</h3>
-            <table>
-              <tr>
-                <th>Domain</th>
-                <th>Score</th>
-                <th>Interpretation</th>
-              </tr>
-              <tr>
-                <td>Autism (M-CHAT-R)</td>
-                <td>${mchatScore}/20</td>
-                <td>${mchatInterpretation}</td>
-              </tr>
-              <tr>
-                <td>Feeding (BAMBI)</td>
-                <td>${bambiScore}</td>
-                <td>${bambiInterpretation}</td>
-              </tr>
-              <tr>
-                <td>Sleep (CSHQ-SF)</td>
-                <td>${sleepScore}</td>
-                <td>${sleepInterpretation}</td>
-              </tr>
-              <tr>
-                <td>Screen Time (SEQ)</td>
-                <td>${screenScore}</td>
-                <td>${screenInterpretation}</td>
-              </tr>
-            </table>
-          </div>
-
-          <div class="section">
-            <h3>Detailed Scoring Breakdowns</h3>
-            ${getMchatDetailedText()}
-            ${getBambiDetailedText()}
-            ${getSleepDetailedText()}
-            ${getScreenDetailedText()}
-          </div>
-
-          <div class="notes-box">
-            <h4>Important Notes</h4>
-            <ul>
-              <li>This screening is not a diagnosis</li>
-              <li>Further clinical evaluation required</li>
-              <li>Early intervention improves outcomes</li>
-            </ul>
-          </div>
-
-          <div class="bottom-section">
-            <div></div>
-            <div class="assessor-block">
-              <h4>Assessor's Information</h4>
-              <p><span class="label">Name:</span> <span class="signature-line"></span></p>
-              <p><span class="label">Designation:</span> <span class="signature-line"></span></p>
-              <p><span class="label">Institution:</span> <span class="signature-line"></span></p>
-              <p><span class="label">Signature:</span> <span class="signature-line"></span></p>
-              <p><span class="label">Date:</span> <span class="signature-line"></span></p>
-            </div>
-          </div>
-
-          <div class="footer">
-            <p>This report is confidential and intended for the parent/guardian and authorized healthcare providers only.</p>
-            <p>© NeuroSpa Therapy. All rights reserved.</p>
-          </div>
-        </body>
-        </html>
-      `;
-
-      // Generate PDF and share
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
-      await Sharing.shareAsync(uri, {
-        mimeType: "application/pdf",
+      await sharePdfDocument(uri, {
         dialogTitle: "Share Integrated Screening Report",
+        fileName: buildIntegratedReportFilename(childName),
+        unavailableMessage:
+          "Your screening report PDF was created, but sharing is not available on this device.",
       });
 
       setGeneratingReport(false);
@@ -921,15 +760,7 @@ export default function QuestionnaireIndex() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Autism Screening</Text>
-      </View>
+      <ScreenHeader title="Autism Screening" />
 
       {/* Tabs */}
       <View style={styles.topTabs}>
@@ -1166,6 +997,7 @@ export default function QuestionnaireIndex() {
       <Modal
         visible={showDetailedAnswers}
         transparent
+        statusBarTranslucent
         animationType="slide"
         onRequestClose={() => setShowDetailedAnswers(false)}
       >
@@ -1381,6 +1213,7 @@ export default function QuestionnaireIndex() {
       <Modal
         visible={showChildSelector}
         transparent
+        statusBarTranslucent
         animationType="slide"
         onRequestClose={() => setShowChildSelector(false)}
       >
@@ -1464,23 +1297,7 @@ export default function QuestionnaireIndex() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#99DBFD",
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-  },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
   topTabs: {
     flexDirection: "row",
     width: "100%",
@@ -1548,6 +1365,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 4,

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -65,14 +65,7 @@ export default function AppointmentManagement() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#2A2A2A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Appointment</Text>
-      </View>
-
-
+      <ScreenHeader title="Appointment" />
       <View style={styles.calendarCard}>
         <Text style={styles.monthTitle}>May 2025</Text>
         <View style={styles.daysRow}>
@@ -101,6 +94,7 @@ export default function AppointmentManagement() {
       <Modal
         visible={modalVisible}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
@@ -121,7 +115,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#E1F5FF',
     alignItems: 'center',
-    paddingTop: 80,
   },
   headerRow: {
     width: '100%',
@@ -135,6 +128,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 4,
     marginRight: 8,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -153,6 +147,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -214,6 +209,7 @@ const styles = StyleSheet.create({
     padding: 24,
     minWidth: 260,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,

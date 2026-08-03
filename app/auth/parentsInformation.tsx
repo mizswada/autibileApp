@@ -37,7 +37,10 @@ export default function parentsInformation() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Parent Details</Text>
 
       <TextInput

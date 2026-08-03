@@ -1,5 +1,5 @@
 import { MchatImportanceNoteModal } from '@/components/MchatImportanceNoteModal';
-import { Ionicons } from '@expo/vector-icons'; // ✅ use icons
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -55,13 +55,10 @@ export default function MChatR() {
         visible={showMchatImportanceNote}
         onContinue={() => setShowMchatImportanceNote(false)}
       />
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/parentsPage')}>
-          <Ionicons name="chevron-back" size={28} color="#2A2A2A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>M-CHAT-R</Text>
-      </View>
+      <ScreenHeader
+        title="M-CHAT-R"
+        onBack={() => router.replace('/parentsPage')}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {questions.map((q, idx) => (
@@ -95,7 +92,7 @@ export default function MChatR() {
       </ScrollView>
 
       {/* Score Modal */}
-      <Modal visible={showScore} transparent animationType="fade" onRequestClose={() => setShowScore(false)}>
+      <Modal visible={showScore} transparent statusBarTranslucent animationType="fade" onRequestClose={() => setShowScore(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>M-CHAT-R Score</Text>
@@ -123,7 +120,7 @@ export default function MChatR() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
     paddingTop: 40,
   },
   header: {
@@ -142,6 +139,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 4,
     marginRight: 8,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -162,6 +160,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     marginBottom: 18,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -211,6 +210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
     marginBottom: 32,
+    shadowOffset: { width: 0, height: 3 },
     shadowColor: '#48B2E8',
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -233,6 +233,7 @@ const styles = StyleSheet.create({
     padding: 24,
     minWidth: 260,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,

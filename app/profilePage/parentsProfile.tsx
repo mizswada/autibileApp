@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
+import { DatePickerField } from '@/components/DatePickerField';
+import { formatDateString } from '@/utils/formatLocalDate';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -92,27 +93,7 @@ export default function ParentsProfile() {
       }
     }, [relationshipOptions, nationalityOptions, stateOptions, parentData, originalParentData]);
 
-  // Helper function to format date from ISO string to YYYY-MM-DD
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  // Helper function to handle date picker changes
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (parentData && selectedDate) {
-      const formattedDate = selectedDate.toISOString().split('T')[0];
-      setParentData({...parentData, dateOfBirth: formattedDate});
-      setShowDatePicker(false);
-    } else {
-      setShowDatePicker(false);
-    }
-  };
+  const formatDate = formatDateString;
 
   const fetchDropdownOptions = async () => {
     try {
@@ -290,14 +271,9 @@ export default function ParentsProfile() {
   }
 
   return (
-    <ScrollView style={styles.scroll}>
+    <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-      </View>
+      <ScreenHeader title="Edit Profile" />
 
       {/* Parent Information */}
       <View style={styles.section}>
@@ -402,6 +378,7 @@ export default function ParentsProfile() {
               editable={isEditingParent}
               placeholder="Enter address line 1"
               multiline
+              textAlignVertical="top"
             />
           </View>
 
@@ -414,6 +391,7 @@ export default function ParentsProfile() {
               editable={isEditingParent}
               placeholder="Enter address line 2"
               multiline
+              textAlignVertical="top"
             />
           </View>
 
@@ -426,6 +404,7 @@ export default function ParentsProfile() {
               editable={isEditingParent}
               placeholder="Enter address line 3"
               multiline
+              textAlignVertical="top"
             />
           </View>
 
@@ -543,15 +522,14 @@ export default function ParentsProfile() {
         </View>
       </View>
 
-      {/* Date Picker */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={parentData?.dateOfBirth ? new Date(parentData.dateOfBirth) : new Date()}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
+      <DatePickerField
+        visible={showDatePicker}
+        value={parentData?.dateOfBirth ?? ''}
+        onChange={(date) =>
+          parentData && setParentData({ ...parentData, dateOfBirth: date })
+        }
+        onClose={() => setShowDatePicker(false)}
+      />
     </ScrollView>
   );
 }
@@ -559,7 +537,7 @@ export default function ParentsProfile() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
@@ -570,22 +548,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
   },
   section: {
     backgroundColor: '#fff',

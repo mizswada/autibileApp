@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -148,15 +149,7 @@ export default function PractitionerReport() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Patient Diary Reports</Text>
-      </View>
+      <ScreenHeader title="All Patient Diary Reports" />
 
       <ScrollView
         style={styles.container}
@@ -178,7 +171,6 @@ export default function PractitionerReport() {
             onChangeText={setSearchQuery}
             autoCapitalize="none"
             autoCorrect={false}
-            clearButtonMode="while-editing"
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity
@@ -236,17 +228,7 @@ export default function PractitionerReport() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4db5ff",
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", flex: 1 },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
   container: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 32 },
   searchContainer: {

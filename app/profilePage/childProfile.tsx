@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
+import { DatePickerField } from '@/components/DatePickerField';
+import { formatDateString } from '@/utils/formatLocalDate';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -170,39 +173,7 @@ export default function ChildProfile() {
     }
   };
 
-  // Helper function to format date from ISO string to YYYY-MM-DD
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  // Helper function to handle date picker changes
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (selectedDate) {
-      const formattedDate = selectedDate.toISOString().split('T')[0];
-      if (datePickerMode === 'dateOfBirth') {
-        if (showNewChildDataModal) {
-          setNewChildData({...newChildData, dateOfBirth: formattedDate});
-        } else if (selectedChild) {
-          setSelectedChild({...selectedChild, dateOfBirth: formattedDate});
-        }
-      } else {
-        if (showNewChildDataModal) {
-          setNewChildData({...newChildData, diagnosedDate: formattedDate});
-        } else if (selectedChild) {
-          setSelectedChild({...selectedChild, diagnosedDate: formattedDate});
-        }
-      }
-    }
-    // Always hide the picker after selection or cancellation
-    setShowDatePicker(false);
-    setShowDiagnosedDatePicker(false);
-  };
+  const formatDate = formatDateString;
 
   // Helper function to open date picker
   const openDatePicker = (mode: 'dateOfBirth' | 'diagnosedDate') => {
@@ -502,14 +473,9 @@ export default function ChildProfile() {
   }
 
   return (
-    <ScrollView style={styles.scroll}>
+    <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Children Profile</Text>
-      </View>
+      <ScreenHeader title="Children Profile" />
 
       {/* Children Information */}
       <View style={styles.section}>
@@ -568,8 +534,17 @@ export default function ChildProfile() {
       </View>
 
       {/* Child Edit Modal */}
-      <Modal visible={showChildModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+      <Modal
+        visible={showChildModal}
+        transparent
+        statusBarTranslucent
+        animationType="slide"
+        onRequestClose={() => setShowChildModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Child Information</Text>
@@ -579,7 +554,11 @@ export default function ChildProfile() {
             </View>
 
             {selectedChild && (
-              <ScrollView style={styles.modalForm} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.modalForm}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Full Name</Text>
                   <TextInput
@@ -632,18 +611,6 @@ export default function ChildProfile() {
                      <Ionicons name="calendar-outline" size={20} color="#666" />
                    </TouchableOpacity>
                    
-                   {/* Date Picker for Date of Birth */}
-                   {showDatePicker && (
-                     <DateTimePicker
-                       value={
-                         selectedChild?.dateOfBirth ? new Date(selectedChild.dateOfBirth) : 
-                         new Date()
-                       }
-                       mode="date"
-                       display="spinner"
-                       onChange={handleDateChange}
-                     />
-                   )}
                  </View>
 
                 <View style={styles.inputGroup}>
@@ -668,18 +635,6 @@ export default function ChildProfile() {
                      <Ionicons name="calendar-outline" size={20} color="#666" />
                    </TouchableOpacity>
                    
-                   {/* Date Picker for Diagnosed Date */}
-                   {showDiagnosedDatePicker && (
-                     <DateTimePicker
-                       value={
-                         selectedChild?.diagnosedDate ? new Date(selectedChild.diagnosedDate) : 
-                         new Date()
-                       }
-                       mode="date"
-                       display="spinner"
-                       onChange={handleDateChange}
-                     />
-                   )}
                  </View>
 
                  <View style={styles.inputGroup}>
@@ -727,13 +682,14 @@ export default function ChildProfile() {
              )}
 
             </View>
-         </View>
+         </KeyboardAvoidingView>
        </Modal>
 
       {/* Add Child Modal */}
       <Modal
         visible={showAddChildModal}
         transparent
+        statusBarTranslucent
         animationType="slide"
         onRequestClose={closeAddChildModal}
       >
@@ -778,8 +734,17 @@ export default function ChildProfile() {
       </Modal>
 
       {/* New Child Data Modal */}
-      <Modal visible={showNewChildDataModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
+      <Modal
+        visible={showNewChildDataModal}
+        transparent
+        statusBarTranslucent
+        animationType="slide"
+        onRequestClose={() => setShowNewChildDataModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add New Child</Text>
@@ -788,7 +753,11 @@ export default function ChildProfile() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalForm} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.modalForm}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.modalDescription}>
                 This IC number is not registered. Please provide the child's information to create a new record.
               </Text>
@@ -835,18 +804,6 @@ export default function ChildProfile() {
                    <Ionicons name="calendar-outline" size={20} color="#666" />
                  </TouchableOpacity>
                  
-                 {/* Date Picker for Date of Birth */}
-                 {showDatePicker && (
-                   <DateTimePicker
-                     value={
-                       newChildData.dateOfBirth ? new Date(newChildData.dateOfBirth) : 
-                       new Date()
-                     }
-                     mode="date"
-                     display="spinner"
-                     onChange={handleDateChange}
-                   />
-                 )}
                </View>
 
               <View style={styles.inputGroup}>
@@ -871,18 +828,6 @@ export default function ChildProfile() {
                    <Ionicons name="calendar-outline" size={20} color="#666" />
                  </TouchableOpacity>
                  
-                 {/* Date Picker for Diagnosed Date */}
-                 {showDiagnosedDatePicker && (
-                   <DateTimePicker
-                     value={
-                       newChildData.diagnosedDate ? new Date(newChildData.diagnosedDate) : 
-                       new Date()
-                     }
-                     mode="date"
-                     display="spinner"
-                     onChange={handleDateChange}
-                   />
-                 )}
                </View>
 
                <View style={styles.inputGroup}>
@@ -934,11 +879,38 @@ export default function ChildProfile() {
                </TouchableOpacity>
              </ScrollView>
            </View>
-         </View>
+         </KeyboardAvoidingView>
 
                </Modal>
 
-                               
+      <DatePickerField
+        visible={showDatePicker && showChildModal && !showNewChildDataModal}
+        value={selectedChild?.dateOfBirth ?? ''}
+        onChange={(date) =>
+          selectedChild && setSelectedChild({ ...selectedChild, dateOfBirth: date })
+        }
+        onClose={() => setShowDatePicker(false)}
+      />
+      <DatePickerField
+        visible={showDiagnosedDatePicker && showChildModal && !showNewChildDataModal}
+        value={selectedChild?.diagnosedDate ?? ''}
+        onChange={(date) =>
+          selectedChild && setSelectedChild({ ...selectedChild, diagnosedDate: date })
+        }
+        onClose={() => setShowDiagnosedDatePicker(false)}
+      />
+      <DatePickerField
+        visible={showDatePicker && showNewChildDataModal}
+        value={newChildData.dateOfBirth}
+        onChange={(date) => setNewChildData({ ...newChildData, dateOfBirth: date })}
+        onClose={() => setShowDatePicker(false)}
+      />
+      <DatePickerField
+        visible={showDiagnosedDatePicker && showNewChildDataModal}
+        value={newChildData.diagnosedDate}
+        onChange={(date) => setNewChildData({ ...newChildData, diagnosedDate: date })}
+        onClose={() => setShowDiagnosedDatePicker(false)}
+      />
      </ScrollView>
    );
  }
@@ -946,7 +918,7 @@ export default function ChildProfile() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
@@ -957,22 +929,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
   },
   section: {
     backgroundColor: '#fff',

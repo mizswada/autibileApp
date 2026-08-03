@@ -1,4 +1,6 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@expo/vector-icons";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -9,7 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import API from "../api";
 
 interface FAQ {
@@ -57,18 +58,9 @@ export default function FAQ() {
   };
 
   return (
+    <AuthenticatedLayout>
     <View style={styles.mainContainer}>
-      {/* Header */}
-      <View style={{ backgroundColor: "#E1F5FF", justifyContent: "flex-end" }}>
-        <SafeAreaView edges={["top"]}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>FAQ</Text>
-          </View>
-        </SafeAreaView>
-      </View>
+      <ScreenHeader title="FAQ" onBack={handleBack} />
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -115,11 +107,12 @@ export default function FAQ() {
         </ScrollView>
       )}
     </View>
+    </AuthenticatedLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -161,6 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -190,7 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E1F5FF",
+    backgroundColor: "transparent",
   },
   loadingText: {
     fontSize: 16,
@@ -201,7 +195,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E1F5FF",
+    backgroundColor: "transparent",
     paddingHorizontal: 32,
   },
   errorText: {

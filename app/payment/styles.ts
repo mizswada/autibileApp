@@ -1,23 +1,23 @@
 import { StyleSheet } from "react-native";
+import { appTheme } from "@/constants/appTheme";
 
 export const paymentTheme = {
-  primary: "#4db5ff",
-  background: "#E1F5FF",
-  text: "#1E293B",
+  primary: appTheme.primary,
+  background: appTheme.background,
+  text: appTheme.text,
   muted: "#9CA3AF",
-  white: "#fff",
+  white: appTheme.white,
 };
 
 export const paymentStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: paymentTheme.background,
+    backgroundColor: "transparent",
   },
   stackHeader: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: paymentTheme.primary,
-    paddingTop: 70,
     paddingBottom: 16,
     paddingHorizontal: 16,
   },
@@ -40,15 +40,16 @@ export const paymentStyles = StyleSheet.create({
   tabHeaderTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: paymentTheme.text,
+    color: paymentTheme.white,
   },
   headerAction: {
     fontSize: 15,
     fontWeight: "600",
-    color: paymentTheme.text,
+    color: paymentTheme.white,
   },
   content: {
     paddingHorizontal: 18,
+    paddingTop: 18,
     paddingBottom: 100,
   },
   introText: {
@@ -206,7 +207,7 @@ export const paymentStyles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: paymentTheme.background,
+    backgroundColor: "transparent",
   },
   loadingText: {
     marginTop: 12,

@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     alignItems: 'flex-start',
     padding: 32,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,

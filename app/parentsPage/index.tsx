@@ -1,13 +1,12 @@
 ﻿import AsyncStorage from "@react-native-async-storage/async-storage";
 import HomeAppointmentPager from "@/components/HomeAppointmentPager";
 import { useUpcomingAppointments } from "@/hooks/useUpcomingAppointments";
-import { LinearGradient } from "expo-linear-gradient";
+import { useTabBarPadding } from "@/hooks/useTabBarPadding";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Image,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import API from "../../api";
 
 const features = [
@@ -45,6 +45,7 @@ const features = [
 ];
 
 export default function HomeScreen() {
+  const tabBarPadding = useTabBarPadding();
   const router = useRouter();
   const [showNoChildrenModal, setShowNoChildrenModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -265,14 +266,12 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <LinearGradient
-        colors={["#E1F5FF", "#FFFFFF"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.backgroundGradient}
-      />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeContainer} edges={["top"]}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: tabBarPadding }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
@@ -419,6 +418,7 @@ export default function HomeScreen() {
       <Modal
         visible={showNoChildrenModal}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={() => setShowNoChildrenModal(false)}
       >
@@ -469,6 +469,7 @@ export default function HomeScreen() {
       <Modal
         visible={showChildSelectorModal}
         transparent
+        statusBarTranslucent
         animationType="slide"
         onRequestClose={() => setShowChildSelectorModal(false)}
       >
@@ -525,16 +526,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#F0FDFD",
+    backgroundColor: "transparent",
   } as ViewStyle,
-  backgroundGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-  },
   container: {
     flex: 1,
     backgroundColor: "transparent",

@@ -1,11 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
+import { AuthFormScroll } from '@/components/AuthFormScroll';
+import { ScreenBackButton } from '@/components/ScreenHeader';
+import { useScreenInsets } from '@/hooks/useScreenInsets';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import ModalSelector from 'react-native-modal-selector';
 import API from '../../api';
 
 export default function DoctorRegister() {
+  const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
 
   const [username, setUsername] = useState('');
@@ -15,6 +19,8 @@ export default function DoctorRegister() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [workplace, setWorkplace] = useState('');
   const [department, setDepartment] = useState('');
   const [departmentOptions, setDepartmentOptions] = useState<any[]>([]);
@@ -179,11 +185,47 @@ export default function DoctorRegister() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <>
+    <AuthFormScroll
+      backgroundColor="#fff"
+      paddingTop={authPaddingTop}
+      contentContainerStyle={styles.container}
+      footer={
+        <>
+          <View style={styles.termsRow}>
+            <TouchableOpacity
+              style={[styles.checkboxBase, acceptTerms && styles.checkboxChecked]}
+              onPress={() => {
+                setAcceptTerms(!acceptTerms);
+                if (!acceptTerms) setErrors(prev => ({ ...prev, acceptTerms: '' }));
+              }}
+            >
+              {acceptTerms && <View style={styles.checkboxInner} />}
+            </TouchableOpacity>
+            <Text style={styles.termsText}>I accept terms and condition</Text>
+          </View>
+          {errors.acceptTerms ? <Text style={styles.footerErrorText}>{errors.acceptTerms}</Text> : null}
+
+          <TouchableOpacity
+            style={[styles.button, !isFormValid && styles.buttonDisabled]}
+            onPress={handleSignUp}
+            disabled={!isFormValid}
+          >
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.push('/auth/LoginDoctor')}>
+            <Text style={styles.signInLink}>
+              Already have an account? <Text style={styles.signInText}>Sign In</Text>
+            </Text>
+          </TouchableOpacity>
+        </>
+      }
+    >
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.backButton}>
+          <ScreenBackButton onPress={() => router.back()} variant="surface" />
+        </View>
         <Text style={styles.create}>Create New Account</Text>
       </View>
 
@@ -291,66 +333,54 @@ export default function DoctorRegister() {
 
       {/** Password */}
       <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Password (Min: 8 characters)"
-        secureTextEntry
-        value={password}
-        onChangeText={(text) => {
-          setPassword(text);
-          validateField('password', text);
-        }}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Enter Password (Min: 8 characters)"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            validateField('password', text);
+          }}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? 'eye' : 'eye-off'}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
       {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
 
       {/** Confirm Password */}
       <Text style={styles.label}>Confirm Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Reenter Password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={(text) => {
-          setConfirmPassword(text);
-          validateField('confirmPassword', text);
-        }}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Reenter Password"
+          secureTextEntry={!showConfirmPassword}
+          value={confirmPassword}
+          onChangeText={(text) => {
+            setConfirmPassword(text);
+            validateField('confirmPassword', text);
+          }}
+        />
+        <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+          <Ionicons
+            name={showConfirmPassword ? 'eye' : 'eye-off'}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
       {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
 
-      {/** Terms */}
-      <View style={styles.termsRow}>
-        <TouchableOpacity
-          style={[styles.checkboxBase, acceptTerms && styles.checkboxChecked]}
-          onPress={() => {
-            setAcceptTerms(!acceptTerms);
-            if (!acceptTerms) setErrors(prev => ({ ...prev, acceptTerms: '' }));
-          }}
-        >
-          {acceptTerms && <View style={styles.checkboxInner} />}
-        </TouchableOpacity>
-        <Text style={styles.termsText}>I accept terms and condition</Text>
-      </View>
-      {errors.acceptTerms ? <Text style={styles.errorText}>{errors.acceptTerms}</Text> : null}
-
-      {/** Sign Up button */}
-      <TouchableOpacity
-        style={[styles.button, !isFormValid && styles.buttonDisabled]}
-        onPress={handleSignUp}
-        disabled={!isFormValid}
-      >
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-
-
-      {/** Sign In redirect */}
-      <TouchableOpacity onPress={() => router.push('/auth/LoginDoctor')}>
-        <Text style={styles.signInLink}>
-          Already have an account? <Text style={styles.signInText}>Sign In</Text>
-        </Text>
-      </TouchableOpacity>
+    </AuthFormScroll>
 
       {/** Success Modal */}
-      <Modal animationType="fade" transparent={true} visible={showSuccessModal} onRequestClose={handleSuccessModalClose}>
+      <Modal animationType="fade" transparent={true} statusBarTranslucent visible={showSuccessModal} onRequestClose={handleSuccessModalClose}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Sign Up Complete</Text>
@@ -361,29 +391,47 @@ export default function DoctorRegister() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   // [styles remain unchanged as per your latest version]
   // include your styles here
-  container: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 24, paddingTop: 80, backgroundColor: '#fff' },
+  container: { alignItems: 'center', paddingHorizontal: 24 },
   headerContainer: { position: 'relative', width: '100%', alignItems: 'center', marginBottom: 8 },
   backButton: { position: 'absolute', left: 0 },
   create: { fontSize: 26, fontWeight: 'bold', color: '#0B8FAC', marginBottom: 20 },
   input: { width: '100%', height: 52, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, marginBottom: 16, fontSize: 16, backgroundColor: '#E1F5FF', color: '#1E293B' },
-  termsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, width: '100%' },
-  termsText: { marginLeft: 8, fontSize: 14, color: '#555' },
+  passwordContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    backgroundColor: '#E1F5FF',
+  },
+  passwordInput: {
+    flex: 1,
+    height: 52,
+    fontSize: 16,
+    color: '#1E293B',
+  },
+  termsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16, width: '100%' },
+  termsText: { marginLeft: 8, fontSize: 14, lineHeight: 22, color: '#555' },
   button: { width: '100%', height: 48, backgroundColor: '#4db5ff', borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  signInLink: { fontSize: 14, color: '#555' },
+  signInLink: { fontSize: 14, color: '#555', textAlign: 'center', marginTop: 12 },
   signInText: { color: '#4db5ff', fontWeight: 'bold' },
   checkboxBase: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: '#4db5ff', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   checkboxChecked: { backgroundColor: '#4db5ff22' },
   checkboxInner: { width: 12, height: 12, backgroundColor: '#4db5ff', borderRadius: 2 },
   label: { alignSelf: 'flex-start', fontSize: 16, color: '#000', marginBottom: 4, marginTop: 4, fontWeight: '600' },
   errorText: { color: 'red', alignSelf: 'flex-start', marginBottom: 8, marginTop: -12, fontSize: 13 },
+  footerErrorText: { color: 'red', alignSelf: 'flex-start', width: '100%', marginBottom: 8, fontSize: 13 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { backgroundColor: 'white', borderRadius: 12, padding: 24, width: '80%', alignItems: 'center' },
   modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 12, color: '#222' },

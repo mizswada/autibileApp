@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -26,7 +27,6 @@ export default function ContactUs() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const fetchTechSupportList = async () => {
     try {
@@ -99,12 +99,7 @@ export default function ContactUs() {
   if (loading) {
     return (
       <View style={styles.mainContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Contact Us</Text>
-        </View>
+        <ScreenHeader title="Contact Us" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4db5ff" />
           <Text style={styles.loadingText}>Loading contacts...</Text>
@@ -116,12 +111,7 @@ export default function ContactUs() {
   if (error) {
     return (
       <View style={styles.mainContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Contact Us</Text>
-        </View>
+        <ScreenHeader title="Contact Us" />
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={48} color="#F44336" />
           <Text style={styles.errorText}>{error}</Text>
@@ -135,12 +125,7 @@ export default function ContactUs() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Contact Us</Text>
-      </View>
+      <ScreenHeader title="Contact Us" />
 
       <ScrollView 
         contentContainerStyle={styles.container}
@@ -209,23 +194,7 @@ export default function ContactUs() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    backgroundColor: 'transparent',
   },
   container: {
     flexGrow: 1,
@@ -236,6 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
     marginTop: 30,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -300,11 +270,14 @@ const styles = StyleSheet.create({
   contactItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   contactText: {
     fontSize: 14,
     color: '#555',
-    marginLeft: 8,
+    lineHeight: 16,
+    flex: 1,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false, textAlignVertical: 'center' as const } : {}),
   },
   emptyContainer: {
     alignItems: 'center',

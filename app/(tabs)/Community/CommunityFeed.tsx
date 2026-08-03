@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useRouter } from 'expo-router';
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,6 +26,7 @@ interface CommunityPost {
 }
 
 export default function CommunityFeed() {
+  const tabBarPadding = useTabBarPadding();
   const router = useRouter();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,16 +89,16 @@ export default function CommunityFeed() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={handleBack}>
-            <Text style={styles.backArrow}>{'<'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>News Update</Text>
-          <TouchableOpacity onPress={handleSupport}>
-            <Text style={styles.supportBtn}>Support</Text>
-          </TouchableOpacity>
-        </View>
+      <SafeAreaView style={{ flex: 1 }} edges={[]}>
+        <ScreenHeader
+          title="News Update"
+          onBack={handleBack}
+          right={
+            <TouchableOpacity onPress={handleSupport}>
+              <Text style={styles.supportBtn}>Support</Text>
+            </TouchableOpacity>
+          }
+        />
 
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -120,7 +123,7 @@ export default function CommunityFeed() {
               </View>
             )}
             keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.feedContainer}
+            contentContainerStyle={[styles.feedContainer, { paddingBottom: tabBarPadding }]}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -150,30 +153,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#e3f3fc',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 16,
-    paddingHorizontal: 18,
-    backgroundColor: '#e3f3fc',
-    borderBottomWidth: 0,
-    justifyContent: 'space-between',
-  },
-  backArrow: {
-    fontSize: 26,
-    color: '#222',
-    fontWeight: 'bold',
-    width: 32,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#222',
-    flex: 1,
-    textAlign: 'center',
-    marginLeft: -32,
   },
   feedContainer: {
     padding: 18,
@@ -213,6 +192,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 18,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 4,

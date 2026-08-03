@@ -17,6 +17,7 @@ export function MchatImportanceNoteModal ({ visible, onContinue }: Props) {
       visible={visible}
       animationType="fade"
       transparent
+      statusBarTranslucent
       onRequestClose={onContinue}
     >
       <View style={styles.backdrop}>
@@ -49,6 +50,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     maxHeight: '80%',
+    shadowOffset: { width: 0, height: 6 },
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 12,

@@ -1,5 +1,6 @@
+import { ScreenHeader } from '@/components/ScreenHeader';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
 interface ChildData {
@@ -49,10 +50,11 @@ export default function ManageChildScreen() {
 
   // Show form for adding or editing child
   return (
-    <KeyboardAvoidingView style={styles.container} behavior="padding">
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Manage Child</Text>
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScreenHeader title="Manage Child" showBack={false} />
       <View style={styles.form}>
         <Text style={styles.label}>Fullname</Text>
         <TextInput
@@ -100,7 +102,7 @@ export default function ManageChildScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#D6F0FF', justifyContent: 'center', alignItems: 'center' },
-  card: { backgroundColor: '#fff', padding: 24, borderRadius: 24, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  card: { backgroundColor: '#fff', padding: 24, borderRadius: 24, alignItems: 'center', shadowOffset: { width: 0, height: 5 }, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
   title: { fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
   subtitle: { color: '#888', marginBottom: 24 },
   button: { backgroundColor: '#22A7F0', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 8, marginTop: 16, width: '100%', alignItems: 'center' },

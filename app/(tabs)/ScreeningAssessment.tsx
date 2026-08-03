@@ -8,7 +8,10 @@ export default function ScreeningAssessment() {
   const [q2, setQ2] = useState('');
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Screening & Assessment</Text>
       <Text style={styles.label}>Child's Name</Text>
       <TextInput
@@ -21,7 +24,7 @@ export default function ScreeningAssessment() {
       <TextInput
         style={styles.input}
         placeholder="Enter child's age"
-        keyboardType="numeric"
+        keyboardType="number-pad"
         value={childAge}
         onChangeText={setChildAge}
       />

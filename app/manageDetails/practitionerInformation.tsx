@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
+import { useScreenInsets } from '@/hooks/useScreenInsets';
+import { pickImageFromLibrary } from '@/utils/pickImage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -14,6 +15,7 @@ import {
 import API from '../../api';
 
 export default function PractitionerInformation() {
+  const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
   const { practitionerID: routePractitionerID } = useLocalSearchParams();
 
@@ -41,16 +43,10 @@ export default function PractitionerInformation() {
   }, []);
 
   const pickSignatureImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64: true,
-      quality: 0.7,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      setSignature(asset.base64 || '');
-      setSignaturePreview(asset.uri);
+    const result = await pickImageFromLibrary({ base64: true, quality: 0.7 });
+    if (!result.canceled) {
+      setSignature(result.base64 || '');
+      setSignaturePreview(result.uri);
     }
   };
 
@@ -100,7 +96,10 @@ export default function PractitionerInformation() {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={[styles.container, { paddingTop: authPaddingTop }]}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Practitioner Information</Text>
 
       <Text style={styles.label}>Registration No</Text>
@@ -162,10 +161,9 @@ export default function PractitionerInformation() {
 
 const styles = StyleSheet.create({
   container: { 
-    flexGrow: 1, 
-    padding: 24, 
-    paddingTop: 80, 
-    backgroundColor: '#fff' 
+    flexGrow: 1,
+    padding: 24,
+    backgroundColor: '#fff'
   },
   loaderContainer: { 
     flex: 1, 

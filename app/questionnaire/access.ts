@@ -20,12 +20,31 @@ export function getQuestionnaireLockInfo(
         access.access_reason || "This screening is currently unavailable.";
       const lowerReason = reason.toLowerCase();
 
-      // Age hard-lock takes precedence: a child may have completed the
-      // screening before but is now outside the eligible age range.
+      // Completion lock takes precedence — e.g. after submit, access is disabled
+      // but age_in_range may still be false for warning-only questionnaires.
+      if (access.has_completed) {
+        const completedMessage =
+          lowerReason.includes("age") ||
+          lowerReason.includes("month") ||
+          reason === "Questionnaire is locked. Contact admin to unlock." ||
+          reason === "This screening is currently unavailable."
+            ? "This screening has already been completed for this child."
+            : reason;
+
+        return {
+          badge: "✓ Already completed",
+          alertTitle: "Screening Completed",
+          alertMessage: completedMessage,
+        };
+      }
+
+      // Age hard-lock applies to M-CHAT-R (and when the server reason says so).
       const isAgeLock =
-        access.age_in_range === false ||
-        lowerReason.includes("age") ||
-        lowerReason.includes("month");
+        questionnaireId === 1
+          ? access.age_in_range === false ||
+            lowerReason.includes("age") ||
+            lowerReason.includes("month")
+          : lowerReason.includes("age") || lowerReason.includes("month");
 
       if (isAgeLock) {
         return {
@@ -37,16 +56,6 @@ export function getQuestionnaireLockInfo(
               : `This child is outside the recommended age range${
                   access.age_range_label ? ` (${access.age_range_label})` : ""
                 } for this screening.`,
-        };
-      }
-
-      if (access.has_completed) {
-        return {
-          badge: "✓ Already completed",
-          alertTitle: "Screening Completed",
-          alertMessage:
-            access.access_reason ||
-            "This screening has already been completed for this child.",
         };
       }
 

@@ -27,7 +27,10 @@ export default function AppointmentDetail() {
   const details = appointmentDetails[idNum as keyof typeof appointmentDetails] || appointmentDetails[1];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
         <Text style={styles.backArrow}>{'<'}</Text>
       </TouchableOpacity>
@@ -49,6 +52,7 @@ export default function AppointmentDetail() {
         value={feedback}
         onChangeText={setFeedback}
         multiline
+        textAlignVertical="top"
       />
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.submitBtn}>
@@ -86,6 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     marginBottom: 18,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,

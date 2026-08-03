@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import * as Print from "expo-print";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as Sharing from "expo-sharing";
+import { sharePdfDocument } from "../../utils/sharePdfDocument";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,7 +26,12 @@ import {
 } from "./numberConfig";
 import API from "../../api";
 import { MchatImportanceNoteModal } from "../../components/MchatImportanceNoteModal";
+import { HtmlContent } from "../../components/HtmlContent";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
+import {
+  buildIndividualResultFilename,
+  buildIndividualScreeningResultHtml,
+} from "../../utils/screeningReportTemplate";
 
 export default function QuestionnaireForm() {
   const { id } = useLocalSearchParams();
@@ -802,147 +808,42 @@ export default function QuestionnaireForm() {
   }
 
   const handleDownloadResult = async () => {
+    if (!result || !questionnaire) return;
+
     try {
       setIsGeneratingPdf(true);
 
-      const now = new Date();
-      const formattedDate = now.toLocaleDateString("en-MY", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-      const formattedTime = now.toLocaleTimeString("en-MY", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      let logoHTML = "";
+      let logoUri: string | null = null;
       try {
-        const logoUri = await getLogoBase64();
-        if (logoUri) {
-          logoHTML = `<img src="${logoUri}" alt="NeuroSpa Therapy Logo" class="header-logo" style="max-width: 180px; height: auto; margin-bottom: 15px;">`;
-        }
+        logoUri = await getLogoBase64();
       } catch (error) {
         console.warn("Logo loading error:", error);
       }
 
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${questionnaire.title} Screening Result</title>
-          <style>
-            @page { margin: 15px; size: A4; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #333; line-height: 1.4; font-size: 11px; }
-            .header { text-align: center; border-bottom: 2px solid #1565C0; padding-bottom: 10px; margin-bottom: 8px; }
-            .header-logo { max-width: 120px; height: auto; margin-bottom: 4px; }
-            .header-title { font-size: 18px; font-weight: bold; color: #1565C0; margin: 0; }
-            .header-subtitle { font-size: 11px; color: #666; margin: 2px 0 0 0; }
-            .report-meta { background: #f9f9f9; padding: 8px; border-radius: 3px; margin-bottom: 8px; font-size: 10px; color: #666; }
-            .report-meta-item { display: inline-block; margin-right: 20px; }
-            h1 { text-align: center; font-size: 14px; margin: 8px 0 8px 0; font-weight: 600; color: #000; }
-            h3 { font-size: 12px; margin-top: 8px; margin-bottom: 4px; font-weight: 600; color: #1565C0; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px; }
-            .section { margin: 6px 0; }
-            .section-title { font-weight: 600; color: #1565C0; margin-bottom: 6px; }
-            .two-col { display: flex; justify-content: space-between; gap: 20px; }
-            .two-col > div { flex: 1; }
-            p { margin: 3px 0; }
-            .label { font-weight: 600; display: inline; color: #333; }
-            .value { text-decoration: underline; display: inline; min-width: 100px; }
-            .score-box { background: #f0f0f0; padding: 10px; border-radius: 4px; text-align: center; margin: 6px 0; border-left: 4px solid #1565C0; }
-            .score-number { font-size: 28px; font-weight: bold; color: #d9534f; margin: 4px 0; }
-            .content-box { background: #f9f9f9; padding: 8px; border-radius: 4px; margin: 6px 0; border-left: 3px solid #1565C0; }
-            .content-label { font-weight: 600; color: #666; margin-bottom: 3px; font-size: 11px; }
-            .content-text { color: #333; line-height: 1.4; font-size: 10.5px; }
-            .divider { height: 1px; background: #ddd; margin: 6px 0; }
-            .ai-section { margin-top: 4px; padding-top: 4px; }
-            .ai-label { font-size: 10px; color: #999; font-weight: 600; }
-            .ai-text { font-size: 10px; color: #666; line-height: 1.4; }
-            .notes-box { background: #fff3cd; border-left: 3px solid #ffc107; padding: 8px; margin: 8px 0; border-radius: 2px; font-size: 11px; }
-            .notes-box h4 { margin-top: 0; margin-bottom: 4px; color: #856404; font-weight: 600; font-size: 11px; }
-            .notes-box ul { margin: 4px 0; padding-left: 20px; }
-            .notes-box li { margin: 2px 0; color: #856404; font-size: 10px; }
-            .next-steps { background: #e3f2fd; border-left: 3px solid #0B8FAC; padding: 8px; margin: 8px 0; border-radius: 2px; font-size: 10.5px; color: #01579b; }
-            .footer { text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0; font-size: 9px; color: #999; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${logoHTML}
-            <h2 class="header-title">${questionnaire.title} Screening Result</h2>
-            <p class="header-subtitle">Individual Assessment Report</p>
-          </div>
-
-          <div class="report-meta">
-            <div class="report-meta-item"><strong>Report Generated:</strong> ${formattedDate} ${formattedTime}</div>
-            <div class="report-meta-item"><strong>Assessment:</strong> ${questionnaire.title}</div>
-          </div>
-
-          <div class="section">
-            <h3>Child Information</h3>
-            <p><span class="label">Child's Name:</span> <span class="value">${selectedChild?.name || "N/A"}</span></p>
-            <p><span class="label">Patient ID:</span> <span class="value">${selectedChild?.patientId || "N/A"}</span></p>
-          </div>
-
-          <div class="score-box">
-            <p style="margin: 0; font-size: 14px; color: #666;">Your Score</p>
-            <div class="score-number">${result.score}</div>
-          </div>
-
-          <div class="content-box">
-            <div class="content-label">Prediction</div>
-            ${result.interpretation && result.interpretation !== "No prediction available" ? `<p class="content-text"><strong>Based on Score (${result.score}):</strong> ${result.interpretation}</p>` : ""}
-            ${result.interpretation_bm ? `<p class="content-text" style="font-style: italic;">${result.interpretation_bm}</p>` : ""}
-            ${result.aiAnalysis ? `
-              <div class="divider"></div>
-              <div class="ai-section">
-                <div class="ai-label">AI Analysis</div>
-                <p class="ai-text">${result.aiAnalysis.explanation || ""}</p>
-              </div>
-            ` : ""}
-          </div>
-
-          <div class="content-box">
-            <div class="content-label">Recommendation</div>
-            ${result.recommendation && result.recommendation !== "No recommendation available" ? `<p class="content-text">${result.recommendation}</p>` : ""}
-            ${result.recommendation_bm ? `<p class="content-text" style="font-style: italic;">${result.recommendation_bm}</p>` : ""}
-            ${result.aiAnalysis && result.aiAnalysis.result ? `
-              <div class="divider"></div>
-              <div class="ai-section">
-                <div class="ai-label">AI Recommendation</div>
-                <p class="ai-text">${result.aiAnalysis.result}</p>
-              </div>
-            ` : ""}
-          </div>
-
-          ${id === "1" && result.score >= 3 && result.score <= 7 ? `
-            <div class="next-steps">
-              <strong>Next Steps:</strong> Based on your score, the patient needs to take the next level questionnaire (MCHATRF). Please contact our administrator for the next process.
-            </div>
-          ` : ""}
-
-          <div class="notes-box">
-            <h4>Important Notes</h4>
-            <ul>
-              <li>This screening is not a diagnosis</li>
-              <li>Further clinical evaluation required</li>
-              <li>Early intervention improves outcomes</li>
-            </ul>
-          </div>
-
-          <div class="footer">
-            <p>This report is confidential and intended for the parent/guardian and authorized healthcare providers only.</p>
-            <p>© NeuroSpa Therapy. All rights reserved.</p>
-          </div>
-        </body>
-        </html>
-      `;
+      const htmlContent = buildIndividualScreeningResultHtml({
+        logoUri,
+        questionnaireTitle: questionnaire.title,
+        childName: selectedChild?.name || "N/A",
+        patientId: selectedChild?.patientId,
+        score: result.score,
+        interpretation: result.interpretation,
+        interpretation_bm: result.interpretation_bm,
+        recommendation: result.recommendation,
+        recommendation_bm: result.recommendation_bm,
+        aiAnalysis: result.aiAnalysis,
+        showMchatFollowUp:
+          id === "1" && result.score >= 3 && result.score <= 7,
+      });
 
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
-      await Sharing.shareAsync(uri, {
-        mimeType: "application/pdf",
+      await sharePdfDocument(uri, {
         dialogTitle: "Save Screening Result",
+        fileName: buildIndividualResultFilename(
+          questionnaire.title,
+          selectedChild?.name || "Child",
+        ),
+        unavailableMessage:
+          "Your screening result PDF was created, but sharing is not available on this device.",
       });
 
       setIsGeneratingPdf(false);
@@ -955,43 +856,39 @@ export default function QuestionnaireForm() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{questionnaire.title}</Text>
+      <ScreenHeader
+        title={questionnaire.title}
+        right={
+          id === "1" && questionnaire?.mchatr_eligibility ? (
+            <View style={styles.statusIndicator}>
+              {(() => {
+                const status = questionnaire.mchatr_eligibility.mchatr_status;
+                const isEnabled = status === "Enable" || status === null;
 
-        {id === "1" && questionnaire?.mchatr_eligibility && (
-          <View style={styles.statusIndicator}>
-            {(() => {
-              const status = questionnaire.mchatr_eligibility.mchatr_status;
-              const isEnabled = status === "Enable" || status === null;
+                return (
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: isEnabled ? "#4CAF50" : "#F44336" },
+                    ]}
+                  >
+                    {isEnabled ? "✓ Enabled" : "✗ Disabled"}
+                  </Text>
+                );
+              })()}
+            </View>
+          ) : undefined
+        }
+      />
 
-              return (
-                <Text
-                  style={[
-                    styles.statusText,
-                    { color: isEnabled ? "#4CAF50" : "#F44336" },
-                  ]}
-                >
-                  {isEnabled ? "✓ Enabled" : "✗ Disabled"}
-                </Text>
-              );
-            })()}
-          </View>
-        )}
-      </View>
-
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         {questionnaire.header && (
           <View style={styles.notesContainer}>
             <Text style={styles.notesTitle}>Instructions:</Text>
-            <Text style={styles.notesText}>
-              <Text style={styles.important}>{questionnaire.header}</Text>
-            </Text>
+            <HtmlContent html={questionnaire.header} />
           </View>
         )}
 
@@ -1392,6 +1289,7 @@ export default function QuestionnaireForm() {
       <Modal
         visible={showResult}
         transparent
+        statusBarTranslucent
         animationType="slide"
         onRequestClose={() => setShowResult(false)}
       >
@@ -1631,6 +1529,7 @@ export default function QuestionnaireForm() {
       <Modal
         visible={showChildSelector}
         transparent
+        statusBarTranslucent
         animationType="slide"
         onRequestClose={() => setShowChildSelector(false)}
       >
@@ -1744,23 +1643,7 @@ export default function QuestionnaireForm() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E1F5FF",
-    paddingTop: 70, // For status bar spacing
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#000",
-  },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
   container: { padding: 16 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   questionBlock: {
@@ -1923,6 +1806,7 @@ const styles = StyleSheet.create({
     minHeight: 80,
     paddingTop: 12,
     paddingBottom: 12,
+    textAlignVertical: "top",
   },
   button: {
     backgroundColor: "#4db5ff",
@@ -1941,6 +1825,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -2043,15 +1928,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 4,
     fontSize: 16,
-    color: "#333",
-  },
-  notesText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  important: {
-    color: "#D32F2F", // red
-    fontWeight: "bold",
+    color: "#D32F2F",
   },
   optionContainer: {
     marginTop: 10,

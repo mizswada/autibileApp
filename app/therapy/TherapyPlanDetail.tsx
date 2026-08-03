@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -36,12 +37,7 @@ export default function TherapyPlanDetail() {
   if (!plan) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Therapy Plan Details</Text>
-        </View>
+        <ScreenHeader title="Therapy Plan Details" />
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={48} color="#F44336" />
           <Text style={styles.errorText}>Plan not found</Text>
@@ -53,12 +49,7 @@ export default function TherapyPlanDetail() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Therapy Plan Details</Text>
-      </View>
+      <ScreenHeader title="Therapy Plan Details" />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Single Card with All Information */}
@@ -95,23 +86,7 @@ export default function TherapyPlanDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4db5ff',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: {
-    marginRight: 30,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    backgroundColor: 'transparent',
   },
   errorContainer: {
     flex: 1,

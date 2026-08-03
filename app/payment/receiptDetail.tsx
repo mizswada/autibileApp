@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams } from "expo-router";
 import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
+import { sharePdfDocument } from "../../utils/sharePdfDocument";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -60,9 +60,11 @@ export default function ReceiptDetail() {
 
       const html = buildReceiptHtml(payment, logoUri);
       const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, {
-        mimeType: "application/pdf",
+      await sharePdfDocument(uri, {
         dialogTitle: "Share receipt",
+        fileName: `Receipt_${formatPaymentId(payment.payment_id)}`,
+        unavailableMessage:
+          "Your receipt PDF was created, but sharing is not available on this device.",
       });
     } catch (error) {
       Alert.alert("Error", "Failed to generate receipt");

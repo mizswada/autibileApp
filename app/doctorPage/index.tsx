@@ -1,12 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import HomeAppointmentPager from "@/components/HomeAppointmentPager";
 import { useUpcomingAppointments } from "@/hooks/useUpcomingAppointments";
-import { LinearGradient } from "expo-linear-gradient";
+import { useTabBarPadding } from "@/hooks/useTabBarPadding";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +13,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const features = [
   {
@@ -31,6 +31,7 @@ const features = [
 ];
 
 export default function HomeScreen() {
+  const tabBarPadding = useTabBarPadding();
   const router = useRouter();
   const [userName, setUserName] = useState("Doctor");
   const { appointments } = useUpcomingAppointments({ mode: "practitioner" });
@@ -51,14 +52,12 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <LinearGradient
-        colors={["#E1F5FF", "#F0FDFD"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.backgroundGradient}
-      />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeContainer} edges={["top"]}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: tabBarPadding }}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.logoBox}>
@@ -129,16 +128,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#E1F5FF",
+    backgroundColor: "transparent",
   } as ViewStyle,
-  backgroundGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-  },
   container: {
     flex: 1,
     backgroundColor: "transparent",

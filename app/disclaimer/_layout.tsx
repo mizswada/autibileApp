@@ -1,14 +1,15 @@
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
 export default function DisclaimerLayout() {
   return (
-    <Stack>
-      <Stack.Screen 
-        name="index" 
-        options={{ 
-          headerShown: false 
-        }} 
-      />
-    </Stack>
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="index" />
+      </Stack>
+    </AuthenticatedLayout>
   );
-} 
+}

@@ -1,3 +1,4 @@
+import { ScreenHeader } from '@/components/ScreenHeader';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -42,12 +43,7 @@ export default function MChatRNextLevel() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backArrow}>{'<'}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>M-Chat-R Next Level</Text>
-      </View>
+      <ScreenHeader title="M-Chat-R Next Level" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {questions.map((q, idx) => (
           <View key={idx} style={styles.card}>
@@ -76,6 +72,7 @@ export default function MChatRNextLevel() {
       <Modal
         visible={showScore}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={() => setShowScore(false)}
       >
@@ -98,7 +95,7 @@ export default function MChatRNextLevel() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E1F5FF',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -135,6 +132,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 18,
     marginBottom: 18,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -202,6 +200,7 @@ const styles = StyleSheet.create({
     padding: 24,
     minWidth: 260,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,

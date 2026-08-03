@@ -110,7 +110,10 @@ export default function PaymentForm() {
   return (
     <View style={paymentStyles.container}>
       <PaymentHeader title="Submit Payment" />
-      <ScrollView contentContainerStyle={paymentStyles.content}>
+      <ScrollView
+        contentContainerStyle={paymentStyles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={paymentStyles.detailSection}>
           <Text style={paymentStyles.detailLabel}>Invoice</Text>
           <Text style={paymentStyles.detailValue}>{formatInvoiceId(invoice.invoice_id)}</Text>

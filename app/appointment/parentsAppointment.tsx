@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { formatLocalDate } from '@/utils/formatLocalDate';
 import API from '../../api';
 
 interface Appointment {
@@ -95,8 +97,8 @@ export default function ParentsAppointment() {
         const data = JSON.parse(storedData);
         
                  // Get appointments for the current month
-         const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-         const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+         const startDate = formatLocalDate(new Date(year, month, 1));
+         const endDate = formatLocalDate(new Date(year, month + 1, 0));
          
          
         
@@ -227,12 +229,7 @@ export default function ParentsAppointment() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Appointment</Text>
-        </View>
+        <ScreenHeader title="Appointment" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4db5ff" />
           <Text style={styles.loadingText}>Loading appointments...</Text>
@@ -244,12 +241,7 @@ export default function ParentsAppointment() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Appointment</Text>
-      </View>
+      <ScreenHeader title="Appointment" />
 
       <ScrollView 
         contentContainerStyle={styles.scrollContainer}
@@ -343,6 +335,7 @@ export default function ParentsAppointment() {
        <Modal
          visible={modalVisible}
          transparent
+         statusBarTranslucent
          animationType="fade"
          onRequestClose={() => setModalVisible(false)}
        >
@@ -370,6 +363,7 @@ export default function ParentsAppointment() {
         <Modal
           visible={showAppointmentList}
           transparent
+          statusBarTranslucent
           animationType="fade"
           onRequestClose={() => setShowAppointmentList(false)}
         >
@@ -407,17 +401,7 @@ export default function ParentsAppointment() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E1F5FF' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4db5ff',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',

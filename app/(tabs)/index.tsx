@@ -1,3 +1,4 @@
+import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
@@ -30,6 +31,7 @@ const features = [
 ];
 
 export default function HomeScreen() {
+  const tabBarPadding = useTabBarPadding();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const router = useRouter();
@@ -41,7 +43,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: tabBarPadding }]}>
       {/* Header background */}
       <View style={styles.headerBg}>
         <Image source={require('../../assets/images/Autibilelogo.png')} style={styles.logo} />
@@ -199,7 +201,6 @@ const styles = StyleSheet.create({
   },
   featureBtn: {
     width: '40%',
-    height: 10,
     aspectRatio: 1,
     backgroundColor: '#fff',
     borderRadius: 30,

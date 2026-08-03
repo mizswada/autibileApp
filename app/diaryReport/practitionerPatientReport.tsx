@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { ScreenHeader } from "@/components/ScreenHeader";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -98,7 +99,6 @@ function DiaryEntryContent({ entry }: { entry: DiaryReport }) {
 }
 
 export default function PractitionerPatientReport() {
-  const router = useRouter();
   const params = useLocalSearchParams<{
     patientId?: string;
     patientName?: string;
@@ -227,21 +227,7 @@ export default function PractitionerPatientReport() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Patient Diary Report</Text>
-          <Text style={styles.headerSubtitle} numberOfLines={1}>
-            {patientName}
-            {patientNickname ? ` (${patientNickname})` : ""}
-          </Text>
-        </View>
-      </View>
+      <ScreenHeader title="Patient Diary Report" />
 
       <View style={styles.patientBanner}>
         <View style={styles.patientAvatar}>
@@ -432,19 +418,7 @@ export default function PractitionerPatientReport() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4db5ff",
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: { marginRight: 12 },
-  headerTextWrap: { flex: 1 },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff" },
-  headerSubtitle: { fontSize: 14, color: "#E1F5FF", marginTop: 2 },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
   patientBanner: {
     flexDirection: "row",
     alignItems: "center",

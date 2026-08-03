@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as FileSystem from "expo-file-system";
+import * as Print from "expo-print";
 import { useRouter } from "expo-router";
-import * as Sharing from "expo-sharing";
+import { sharePdfDocument } from "../../utils/sharePdfDocument";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -21,6 +22,11 @@ import {
 } from "react-native";
 // @ts-ignore
 import API from "../../api";
+import { getLogoBase64 } from "../../utils/getLogoBase64";
+import {
+  buildDiaryReportFilename,
+  buildDiaryReportHtml,
+} from "./diaryReportTemplate";
 import {
   DIARY_CATEGORIES,
   EMPTY_CATEGORIES,
@@ -93,6 +99,7 @@ export default function ParentsReport() {
   const [showChildSelector, setShowChildSelector] = useState(false);
   const [selectedChild, setSelectedChild] = useState<any>(null);
   const [children, setChildren] = useState<any[]>([]);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const router = useRouter();
 
@@ -342,6 +349,8 @@ export default function ParentsReport() {
     : [];
 
   const handleGeneratePDF = async (forAllEntries = false) => {
+    if (generatingPdf) return;
+
     try {
       let entriesToProcess;
       let title;
@@ -354,7 +363,9 @@ export default function ParentsReport() {
           (item) =>
             new Date(item.timestamp).toDateString() === selectedHistoryDate,
         );
-        title = `Diary entries for ${selectedHistoryDate}`;
+        title = selectedHistoryDate
+          ? `Diary Report for ${formatHistoryDate(selectedHistoryDate)}`
+          : "Diary Report";
       }
 
       if (entriesToProcess.length === 0) {
@@ -367,94 +378,49 @@ export default function ParentsReport() {
         return;
       }
 
-      const groupedEntries = entriesToProcess.reduce(
-        (acc, entry) => {
-          const date = new Date(entry.timestamp).toDateString();
-          if (!acc[date]) {
-            acc[date] = [];
-          }
-          acc[date].push(entry);
-          return acc;
-        },
-        {} as Record<string, typeof entriesToProcess>,
-      );
+      setGeneratingPdf(true);
 
-      let htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${title}</title>
-          <style>
-            @page { margin: 1in; }
-            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-            h1 { color: #24A8FF; text-align: center; margin-bottom: 30px; }
-            .date-section { margin: 20px 0; page-break-inside: avoid; }
-            .date-header { background-color: #f0f0f0; padding: 10px; font-weight: bold; margin-bottom: 10px; }
-            .entry { margin: 10px 0; padding: 10px; border-left: 3px solid #24A8FF; }
-            .entry-number { font-weight: bold; color: #24A8FF; }
-            .generated-date { text-align: center; color: #666; margin-bottom: 20px; }
-          </style>
-        </head>
-        <body>
-          <h1>${title}</h1>
-          <div class="generated-date">Generated on: ${new Date().toLocaleString()}</div>
-      `;
+      let logoUri: string | null = null;
+      try {
+        logoUri = await getLogoBase64();
+      } catch (logoError) {
+        console.warn("Diary report logo loading error:", logoError);
+      }
 
-      Object.entries(groupedEntries).forEach(([date, dayEntries]) => {
-        htmlContent += `
-          <div class="date-section">
-            <div class="date-header">${date}</div>
-        `;
-        dayEntries.forEach((entry, index) => {
-          const lines = formatDiaryEntryLines(entry);
-          htmlContent += `
-            <div class="entry">
-              <span class="entry-number">${index + 1}.</span>
-              ${lines.map((line) => `<div>${line}</div>`).join("")}
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
+      const childName =
+        selectedChild?.fullname ||
+        selectedChild?.patientName ||
+        selectedChild?.name ||
+        undefined;
+      const childNickname = selectedChild?.nickname || undefined;
+
+      const html = buildDiaryReportHtml({
+        title,
+        childName,
+        childNickname,
+        entries: entriesToProcess,
+        logoUri,
+        reportScope: forAllEntries ? "all" : "date",
+        selectedDate: selectedHistoryDate,
       });
 
-      htmlContent += `</body></html>`;
+      const { uri } = await Print.printToFileAsync({ html });
 
-      const timestamp = new Date().toISOString().split("T")[0];
-      const filename = forAllEntries
-        ? `Diary_Report_${timestamp}.html`
-        : `Diary_${selectedHistoryDate?.replace(/\s/g, "_")}.html`;
-
-      const fileUri = `${FileSystem.documentDirectory}${filename}`;
-      await FileSystem.writeAsStringAsync(fileUri, htmlContent, {
-        encoding: FileSystem.EncodingType.UTF8,
+      await sharePdfDocument(uri, {
+        dialogTitle: "Share diary report",
+        fileName: buildDiaryReportFilename(
+          childName,
+          forAllEntries,
+          selectedHistoryDate,
+        ),
+        unavailableMessage:
+          "Your diary report PDF was created, but sharing is not available on this device.",
       });
-
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-
-      Alert.alert(
-        "PDF Report Saved Successfully",
-        `Your diary report has been saved!\n\nFile: ${filename}\n\nYou can find it in your device's Files app or share it to save to Downloads.`,
-        [
-          {
-            text: "Share File",
-            onPress: async () => {
-              if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(fileUri, {
-                  mimeType: "text/html",
-                  dialogTitle: "Diary Report",
-                });
-              }
-            },
-          },
-          {
-            text: "OK",
-          },
-        ],
-      );
     } catch (error) {
       console.error("PDF generation error:", error);
       Alert.alert("Error", "Failed to generate PDF report. Please try again.");
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -463,15 +429,7 @@ export default function ParentsReport() {
       style={styles.mainContainer}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Diary Report</Text>
-      </View>
+      <ScreenHeader title="Diary Report" />
 
       <View style={styles.container}>
         <View style={styles.topTabs}>
@@ -541,6 +499,7 @@ export default function ParentsReport() {
               style={styles.diaryFormScroll}
               contentContainerStyle={styles.diaryFormContent}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>New Diary Report</Text>
@@ -742,10 +701,16 @@ export default function ParentsReport() {
               )}
 
               <TouchableOpacity
-                style={styles.generateAllBtn}
+                style={[
+                  styles.generateAllBtn,
+                  generatingPdf && styles.generateAllBtnDisabled,
+                ]}
                 onPress={() => handleGeneratePDF(true)}
+                disabled={generatingPdf}
               >
-                <Text style={styles.generateAllBtnText}>Download Report</Text>
+                <Text style={styles.generateAllBtnText}>
+                  {generatingPdf ? "Generating PDF..." : "Download Report"}
+                </Text>
               </TouchableOpacity>
             </ScrollView>
           </>
@@ -753,7 +718,13 @@ export default function ParentsReport() {
       </View>
 
       {/* Child Selection Modal */}
-      <Modal visible={showChildSelector} transparent animationType="fade">
+      <Modal
+        visible={showChildSelector}
+        transparent
+        statusBarTranslucent
+        animationType="fade"
+        onRequestClose={() => setShowChildSelector(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -799,7 +770,13 @@ export default function ParentsReport() {
         </View>
       </Modal>
 
-      <Modal visible={modalVisible} transparent animationType="fade">
+      <Modal
+        visible={modalVisible}
+        transparent
+        statusBarTranslucent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalText}>Report saved successfully.</Text>
@@ -811,17 +788,7 @@ export default function ParentsReport() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4db5ff",
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff" },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
   tabContainer: { flex: 1, alignItems: "center" },
   container: { flex: 1, alignItems: "center", padding: 16 },
   card: {
@@ -891,7 +858,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   saveBtnDisabled: {
-    backgroundColor: "#A8DDD9",
+    backgroundColor: "#99C5E8",
   },
   saveBtnText: {
     color: "#fff",
@@ -1126,6 +1093,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
     marginTop: 16,
+  },
+  generateAllBtnDisabled: {
+    opacity: 0.7,
   },
   generateAllBtnText: {
     color: "#fff",

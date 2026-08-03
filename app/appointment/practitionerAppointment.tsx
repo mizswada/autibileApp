@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -15,6 +16,7 @@ import {
   View
 } from 'react-native';
 import API from '../../api';
+import { formatLocalDate } from '@/utils/formatLocalDate';
 import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 
 interface Appointment {
@@ -106,8 +108,8 @@ export default function PractitionerAppointment() {
         }
 
         // Get appointments for the current month
-        const startDate = new Date(year, month, 1).toISOString().split('T')[0];
-        const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+        const startDate = formatLocalDate(new Date(year, month, 1));
+        const endDate = formatLocalDate(new Date(year, month + 1, 0));
         
         // Fetch all appointments for this practitioner using the same API as parents
         const appointmentResponse = await API('apps/appointment/childAppointment', {
@@ -188,12 +190,7 @@ export default function PractitionerAppointment() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Appointments</Text>
-        </View>
+        <ScreenHeader title="Appointments" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4db5ff" />
           <Text style={styles.loadingText}>Loading appointments...</Text>
@@ -205,12 +202,7 @@ export default function PractitionerAppointment() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Appointments</Text>
-      </View>
+      <ScreenHeader title="Appointments" />
 
       <ScrollView 
         contentContainerStyle={styles.scrollContainer}
@@ -305,6 +297,7 @@ export default function PractitionerAppointment() {
       <Modal
         visible={modalVisible}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
@@ -341,6 +334,7 @@ export default function PractitionerAppointment() {
       <Modal
         visible={showAppointmentList}
         transparent
+        statusBarTranslucent
         animationType="fade"
         onRequestClose={() => setShowAppointmentList(false)}
       >
@@ -383,17 +377,7 @@ export default function PractitionerAppointment() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E1F5FF' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E1F5FF',
-    paddingTop: 70,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-  },
-  backButton: { marginRight: 30 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#000' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -423,6 +407,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     marginBottom: 16,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -444,6 +429,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
+    shadowOffset: { width: 0, height: 1 },
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -491,6 +477,7 @@ const styles = StyleSheet.create({
     padding: 24,
     minWidth: 260,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -520,6 +507,7 @@ const styles = StyleSheet.create({
     minWidth: 300,
     maxHeight: 400,
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,

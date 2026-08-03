@@ -1,10 +1,16 @@
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
-export default function therapyPageLayout() {
+export default function TherapyLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="TherapyPlanDetail" options={{ headerShown: false }} />
-      <Stack.Screen name="TherapyPlanList" options={{ headerShown: false }} />
-    </Stack>
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="TherapyPlanDetail" />
+        <Stack.Screen name="TherapyPlanList" />
+      </Stack>
+    </AuthenticatedLayout>
   );
-} 
+}

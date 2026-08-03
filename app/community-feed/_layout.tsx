@@ -1,13 +1,16 @@
-
-
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
 export default function CommunityLayout() {
-
-    return (
-        <Stack>
-          <Stack.Screen name="addFeed" options={{ headerShown: false }} />
-          <Stack.Screen name="editFeed" options={{ headerShown: false }} />
-        </Stack>
-    );
-  }
+  return (
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="addFeed" />
+        <Stack.Screen name="editFeed" />
+      </Stack>
+    </AuthenticatedLayout>
+  );
+}

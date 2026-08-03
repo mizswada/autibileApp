@@ -1,11 +1,17 @@
 import { Stack } from 'expo-router';
+import {
+  AuthenticatedLayout,
+  authenticatedStackScreenOptions,
+} from '@/components/AuthenticatedLayout';
 
-export default function profilePageLayout() {
+export default function DiaryReportLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="parentsReport" options={{ headerShown: false }} />
-      <Stack.Screen name="practitionerReport" options={{ headerShown: false }} />
-      <Stack.Screen name="practitionerPatientReport" options={{ headerShown: false }} />
-    </Stack>
+    <AuthenticatedLayout>
+      <Stack screenOptions={authenticatedStackScreenOptions}>
+        <Stack.Screen name="parentsReport" />
+        <Stack.Screen name="practitionerReport" />
+        <Stack.Screen name="practitionerPatientReport" />
+      </Stack>
+    </AuthenticatedLayout>
   );
-} 
+}

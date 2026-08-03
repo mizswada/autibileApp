@@ -1,12 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import { ScreenBackButton } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DatePickerField } from '@/components/DatePickerField';
+import { useScreenInsets } from '@/hooks/useScreenInsets';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -20,6 +20,7 @@ import API from '../../api';
 type Option = { key: string; label: string; value: string };
 
 export default function ParentsInformation() {
+  const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
   const { parentID } = useLocalSearchParams();
 
@@ -63,15 +64,6 @@ export default function ParentsInformation() {
     postcode: '',
     state: '',
   });
-
-  const onChangeDate = (event: any, selectedDate: any) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      const formatted = selectedDate.toISOString().split('T')[0];
-      setDateOfBirth(formatted);
-      validateField('dateOfBirth', formatted);
-    }
-  };
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -226,11 +218,14 @@ export default function ParentsInformation() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={[styles.container, { paddingTop: authPaddingTop }]}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
-        </TouchableOpacity>
+        <View style={styles.backButton}>
+          <ScreenBackButton onPress={() => router.back()} variant="surface" />
+        </View>
         <Text style={styles.title}>Parent Details</Text>
       </View>
 
@@ -290,15 +285,16 @@ export default function ParentsInformation() {
       </TouchableOpacity>
       {errors.dateOfBirth ? <Text style={styles.errorText}>{errors.dateOfBirth}</Text> : null}
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={dateOfBirth ? new Date(dateOfBirth) : new Date()}
-          mode="date"
-          display="default"
-          maximumDate={new Date()}
-          onChange={onChangeDate}
-        />
-      )}
+      <DatePickerField
+        visible={showDatePicker}
+        value={dateOfBirth}
+        onChange={(date) => {
+          setDateOfBirth(date);
+          validateField('dateOfBirth', date);
+        }}
+        onClose={() => setShowDatePicker(false)}
+        maximumDate={new Date()}
+      />
 
       {/* Nationality Picker */}
       <Text style={styles.label}>Nationality</Text>
@@ -425,7 +421,6 @@ const styles = StyleSheet.create({
   container: { 
     flexGrow: 1, 
     padding: 24, 
-    paddingTop: 80, 
     backgroundColor: '#fff' 
   },
   loaderContainer: { 

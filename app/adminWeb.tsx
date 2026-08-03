@@ -1,7 +1,9 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { ScreenHeader } from "@/components/ScreenHeader";
 import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
+import { sharePdfDocument } from "../utils/sharePdfDocument";
 import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,7 +12,6 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,6 +22,24 @@ import {
 } from "react-native-webview";
 
 const ADMIN_URL = "https://autibile.my/login";
+
+// iOS share targets rely on a UTI while Android relies on the MIME type, so the
+// downloaded admin exports need both to open in the same apps on each platform.
+const MIME_TO_UTI: Record<string, string> = {
+  "application/pdf": "com.adobe.pdf",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+    "org.openxmlformats.spreadsheetml.sheet",
+  "application/vnd.ms-excel": "com.microsoft.excel.xls",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    "org.openxmlformats.wordprocessingml.document",
+  "application/msword": "com.microsoft.word.doc",
+  "application/zip": "public.zip-archive",
+  "application/json": "public.json",
+  "text/csv": "public.comma-separated-values-text",
+  "text/plain": "public.plain-text",
+  "image/png": "public.png",
+  "image/jpeg": "public.jpeg",
+};
 
 // Injected into the admin website. The web app triggers file downloads with
 // browser-only mechanisms (jsPDF `pdf.save()` and blob + `<a download>` clicks)
@@ -154,10 +173,17 @@ export default function AdminWeb() {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      if (await Sharing.isAvailableAsync()) {
+      if (mimeType === "application/pdf") {
+        await sharePdfDocument(fileUri, {
+          dialogTitle: payload.filename || "Download",
+          fileName: payload.filename,
+        });
+      } else if (await Sharing.isAvailableAsync()) {
+        const uti = mimeType ? MIME_TO_UTI[mimeType] : undefined;
         await Sharing.shareAsync(fileUri, {
           mimeType,
           dialogTitle: payload.filename,
+          ...(Platform.OS === "ios" && uti ? { UTI: uti } : {}),
         });
       } else {
         Alert.alert("Saved", `File saved to ${fileUri}`);
@@ -168,15 +194,11 @@ export default function AdminWeb() {
   }, []);
 
   return (
+    <AuthenticatedLayout>
     <View style={styles.mainContainer}>
       <View style={styles.headerWrapper}>
-        <SafeAreaView edges={["top"]}>
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="#333" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Admin</Text>
-          </View>
+        <SafeAreaView edges={[]}>
+          <ScreenHeader title="Admin" onBack={handleBack} />
         </SafeAreaView>
       </View>
 
@@ -186,7 +208,8 @@ export default function AdminWeb() {
           source={{ uri: ADMIN_URL }}
           originWhitelist={["*"]}
           sharedCookiesEnabled
-          thirdPartyCookiesEnabled
+          thirdPartyCookiesEnabled={Platform.OS === "android"}
+          cacheEnabled
           domStorageEnabled
           javaScriptEnabled
           injectedJavaScript={DOWNLOAD_INTERCEPTOR_JS}
@@ -214,6 +237,7 @@ export default function AdminWeb() {
         )}
       </View>
     </View>
+    </AuthenticatedLayout>
   );
 }
 
@@ -232,17 +256,8 @@ function useFocusHardwareBack(handler: () => void) {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: "#E1F5FF" },
-  headerWrapper: { backgroundColor: "#E1F5FF", justifyContent: "flex-end" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 12,
-    paddingHorizontal: 18,
-  },
-  backButton: { marginRight: 12 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#222" },
+  mainContainer: { flex: 1, backgroundColor: "transparent" },
+  headerWrapper: { backgroundColor: "transparent", justifyContent: "flex-end" },
   webviewContainer: { flex: 1, backgroundColor: "#fff" },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
