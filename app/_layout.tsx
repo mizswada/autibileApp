@@ -5,10 +5,13 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { AndroidHardwareBack } from '../components/AndroidHardwareBack';
+import { UpdatePrompt } from '../components/UpdatePrompt';
+import { useAppUpdate } from '../hooks/useAppUpdate';
 import { useColorScheme } from '../hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { updateAvailable, dismiss, startUpdate } = useAppUpdate();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -44,6 +47,11 @@ export default function RootLayout() {
         <Stack.Screen name="disclaimer" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <UpdatePrompt
+        visible={updateAvailable}
+        onUpdate={startUpdate}
+        onDismiss={dismiss}
+      />
       <StatusBar style="auto" />
     </ThemeProvider>
   );
