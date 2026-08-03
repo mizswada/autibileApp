@@ -1,13 +1,82 @@
 import { ScreenHeader } from "@/components/ScreenHeader";
-import React from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
+import API from "../../api";
+
+type Threshold = {
+  threshold_id: number;
+  scoring_min: number | null;
+  scoring_max: number | null;
+  interpretation: string;
+  recommendation: string;
+};
+
+type ThresholdSection = {
+  questionnaire_id: number;
+  title: string;
+  thresholds: Threshold[];
+};
+
+/** The backend stores "no upper bound" as this sentinel instead of null. */
+const UNBOUNDED_MAX = 999999;
+
+function formatScoreRange(min: number | null, max: number | null): string {
+  const hasMin = typeof min === "number";
+  const hasMax = typeof max === "number" && max < UNBOUNDED_MAX;
+
+  if (hasMin && hasMax) {
+    if (min === max) return `Score ${min}`;
+    if (min <= 0) return `Score ≤ ${max}`;
+    return `Score ${min} – ${max}`;
+  }
+  if (hasMin) return `Score ≥ ${min}`;
+  if (hasMax) return `Score ≤ ${max}`;
+  return "";
+}
 
 export default function DisclaimerScreen() {
+  const [sections, setSections] = useState<ThresholdSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchThresholds = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await API(
+        "apps/questionnaire/thresholds",
+        {},
+        "GET",
+        false,
+      );
+
+      if (response.statusCode === 200 && Array.isArray(response.data)) {
+        setSections(response.data as ThresholdSection[]);
+      } else {
+        throw new Error(response.message || "Unexpected response");
+      }
+    } catch (err) {
+      console.error("Error fetching questionnaire thresholds:", err);
+      setError("Failed to load result interpretations. Please try again.");
+      setSections([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchThresholds();
+  }, [fetchThresholds]);
+
   return (
     <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <ScreenHeader title="Disclaimer" />
@@ -43,47 +112,60 @@ export default function DisclaimerScreen() {
             screening, speak with your healthcare provider about additional
             assessments available. No screening tool is 100% accurate.
           </Text>
-          {/* truncated for brevity */}
         </View>
 
-        {/* Result / Interpretation of M CHAT-R */}
-        <Text style={styles.sectionTitle}>
-          Result / Interpretation of M CHAT-R
-        </Text>
-        <View style={styles.table}>
-          {/* LOW RISK Row – spanning two lines in the right cell */}
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.tableHeader]}>
-              LOW RISK{"\n"}(Total score 0–2)
-            </Text>
-            <Text style={styles.tableCell}>
-              If child {"<"}2 years old, repeat after 2 years old.{"\n"}
-              No further action is required unless surveillance indicates
-              likelihood for autism.
+        {loading ? (
+          <View style={styles.stateContainer}>
+            <ActivityIndicator size="large" color="#48B2E8" />
+            <Text style={styles.stateText}>Loading interpretations...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.stateContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#e74c3c" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={fetchThresholds}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : sections.length === 0 ? (
+          <View style={styles.stateContainer}>
+            <Ionicons name="document-text-outline" size={48} color="#ccc" />
+            <Text style={styles.stateText}>
+              No result interpretations available
             </Text>
           </View>
+        ) : (
+          sections.map((section) => (
+            <View key={section.questionnaire_id}>
+              <Text style={styles.sectionTitle}>
+                Result / Interpretation of {section.title}
+              </Text>
+              <View style={styles.table}>
+                {section.thresholds.map((threshold) => {
+                  const range = formatScoreRange(
+                    threshold.scoring_min,
+                    threshold.scoring_max,
+                  );
 
-          {/* MODERATE RISK */}
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.tableHeader]}>
-              MODERATE RISK{"\n"}(Total score 3–7)
-            </Text>
-            <Text style={styles.tableCell}>
-              Proceed to second stage of M-CHAT R/F.
-            </Text>
-          </View>
-
-          {/* HIGH RISK */}
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, styles.tableHeader]}>
-              HIGH RISK{"\n"}(Total score 8–20)
-            </Text>
-            <Text style={styles.tableCell}>
-              Proceed to diagnostic evaluation. Highly recommended for early
-              intervention.
-            </Text>
-          </View>
-        </View>
+                  return (
+                    <View key={threshold.threshold_id} style={styles.tableRow}>
+                      <Text style={[styles.tableCell, styles.tableHeader]}>
+                        {threshold.interpretation}
+                        {range ? `\n(${range})` : ""}
+                      </Text>
+                      <Text style={styles.tableCell}>
+                        {threshold.recommendation}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -150,5 +232,35 @@ const styles = StyleSheet.create({
     flex: 0.7, // Make label column narrower
     borderRightWidth: 1,
     borderRightColor: "#999",
+  },
+  stateContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 12,
+  },
+  stateText: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#e74c3c",
+    textAlign: "center",
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: "#48B2E8",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
