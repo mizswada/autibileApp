@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DatePickerField } from '@/components/DatePickerField';
+import { DateInputField } from '@/components/DateInputField';
 import { formatDateString } from '@/utils/formatLocalDate';
 import React, { useEffect, useState } from 'react';
 import {
@@ -51,8 +51,6 @@ export default function ParentsProfile() {
   const [relationshipOptions, setRelationshipOptions] = useState<Option[]>([]);
   const [nationalityOptions, setNationalityOptions] = useState<Option[]>([]);
   const [stateOptions, setStateOptions] = useState<Option[]>([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
      useEffect(() => {
      fetchParentAndChildrenData();
      fetchDropdownOptions();
@@ -350,15 +348,15 @@ export default function ParentsProfile() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Date of Birth</Text>
             {isEditingParent ? (
-              <TouchableOpacity
-                style={styles.dateInput}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={styles.dateInputText}>
-                  {formatDate(parentData.dateOfBirth) || 'Select Date of Birth'}
-                </Text>
-                <Ionicons name="calendar-outline" size={20} color="#666" />
-              </TouchableOpacity>
+              <DateInputField
+                value={parentData.dateOfBirth}
+                onChange={(date) =>
+                  setParentData({ ...parentData, dateOfBirth: date })
+                }
+                maximumDate={new Date()}
+                containerStyle={styles.dateInput}
+                inputStyle={styles.dateInputText}
+              />
             ) : (
               <TextInput
                 style={[styles.input, styles.inputDisabled]}
@@ -522,14 +520,6 @@ export default function ParentsProfile() {
         </View>
       </View>
 
-      <DatePickerField
-        visible={showDatePicker}
-        value={parentData?.dateOfBirth ?? ''}
-        onChange={(date) =>
-          parentData && setParentData({ ...parentData, dateOfBirth: date })
-        }
-        onClose={() => setShowDatePicker(false)}
-      />
     </ScrollView>
   );
 }

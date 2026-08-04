@@ -1,9 +1,7 @@
 import { useTabBarPadding } from '@/hooks/useTabBarPadding';
 import { router } from 'expo-router';
 import React from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const DELETE_ACCOUNT_URL = 'https://autibile.my/delete-account';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileEdit() {
   const tabBarPadding = useTabBarPadding();
@@ -21,23 +19,14 @@ export default function ProfileEdit() {
         break;
       case 'delete':
         Alert.alert(
-          'Delete Account',
-          "You will be taken to Autibile's account deletion request page. Deletion is processed within 30 days after verification.",
+          'Account Request',
+          'Submit an account deletion request for administrator review.',
           [
             { text: 'Cancel', style: 'cancel' },
             {
               text: 'Continue',
               style: 'destructive',
-              onPress: async () => {
-                try {
-                  await Linking.openURL(DELETE_ACCOUNT_URL);
-                } catch {
-                  Alert.alert(
-                    'Unable to open link',
-                    `Please visit ${DELETE_ACCOUNT_URL} in your browser.`,
-                  );
-                }
-              },
+              onPress: () => router.push('/auth/AccountRequest'),
             },
           ]
         );

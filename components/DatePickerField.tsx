@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { formatLocalDate, parseLocalDate } from "@/utils/formatLocalDate";
+import { formatApiDate, parseAnyLocalDate } from "@/utils/formatLocalDate";
 
 type DatePickerFieldProps = {
   value: string;
@@ -30,12 +30,12 @@ export function DatePickerField({
   minimumDate,
 }: DatePickerFieldProps) {
   const [pendingDate, setPendingDate] = useState(
-    () => parseLocalDate(value) ?? new Date(),
+    () => parseAnyLocalDate(value) ?? new Date(),
   );
 
   useEffect(() => {
     if (visible) {
-      setPendingDate(parseLocalDate(value) ?? new Date());
+      setPendingDate(parseAnyLocalDate(value) ?? new Date());
     }
   }, [visible, value]);
 
@@ -43,7 +43,7 @@ export function DatePickerField({
     if (Platform.OS === "android") {
       onClose();
       if (event.type === "dismissed" || !selectedDate) return;
-      onChange(formatLocalDate(selectedDate));
+      onChange(formatApiDate(selectedDate));
       return;
     }
     if (selectedDate) {
@@ -52,7 +52,7 @@ export function DatePickerField({
   };
 
   const handleDone = () => {
-    onChange(formatLocalDate(pendingDate));
+    onChange(formatApiDate(pendingDate));
     onClose();
   };
 
@@ -93,7 +93,7 @@ export function DatePickerField({
 
   return (
     <DateTimePicker
-      value={parseLocalDate(value) ?? new Date()}
+      value={parseAnyLocalDate(value) ?? new Date()}
       mode="date"
       display="default"
       onChange={handleChange}

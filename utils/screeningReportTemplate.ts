@@ -1,3 +1,5 @@
+import { formatAppDateFromDate } from "@/utils/formatLocalDate";
+
 const THEME = {
   green: "#2E7D32",
   greenDark: "#1B5E20",
@@ -374,7 +376,7 @@ function buildNotesHtml(): string {
 }
 
 function buildFooterHtml(): string {
-  const generatedOn = new Date().toLocaleDateString("en-MY");
+  const generatedOn = formatAppDateFromDate(new Date());
   return `
     <div class="footer">
       <p>This report is confidential and intended for the parent/guardian and authorized healthcare providers only.</p>

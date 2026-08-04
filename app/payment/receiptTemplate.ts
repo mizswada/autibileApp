@@ -1,4 +1,5 @@
 import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./constants";
+import { formatAppDateFromDate } from "@/utils/formatLocalDate";
 
 // Theme colours derived from the NeuroSpa Therapy logo.
 // Kept in sync with the website receipt (pages/payment/history.vue).
@@ -47,7 +48,7 @@ export function buildReceiptHtml(payment: any, logoUri: string | null): string {
     { label: "Receipt No", value: formatPaymentId(payment.payment_id) },
     { label: "Invoice No", value: formatInvoiceId(payment.invoice_id) },
     { label: "Payment Date", value: formatDate(payment.created_at) },
-    { label: "Issued Date", value: new Date().toLocaleDateString("en-MY") },
+    { label: "Issued Date", value: formatAppDateFromDate(new Date()) },
   ]
     .map(
       (row) => `
@@ -353,7 +354,7 @@ export function buildReceiptHtml(payment: any, logoUri: string | null): string {
 
         <div class="footer">
           <p>Thank you for choosing <strong>${COMPANY.name}</strong>.</p>
-          <p>Generated on ${new Date().toLocaleDateString("en-MY")} &middot; This is a computer generated document.</p>
+          <p>Generated on ${formatAppDateFromDate(new Date())} &middot; This is a computer generated document.</p>
         </div>
       </div>
     </body>

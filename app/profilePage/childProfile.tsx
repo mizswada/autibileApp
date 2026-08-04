@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DatePickerField } from '@/components/DatePickerField';
+import { DateInputField } from '@/components/DateInputField';
 import { formatDateString } from '@/utils/formatLocalDate';
 import React, { useEffect, useState } from 'react';
 import {
@@ -44,9 +44,6 @@ export default function ChildProfile() {
   const [selectedChild, setSelectedChild] = useState<ChildData | null>(null);
   const [showChildModal, setShowChildModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showDiagnosedDatePicker, setShowDiagnosedDatePicker] = useState(false);
-  const [datePickerMode, setDatePickerMode] = useState<'dateOfBirth' | 'diagnosedDate'>('dateOfBirth');
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [newChildIC, setNewChildIC] = useState('');
   const [searchingChild, setSearchingChild] = useState(false);
@@ -174,16 +171,6 @@ export default function ChildProfile() {
   };
 
   const formatDate = formatDateString;
-
-  // Helper function to open date picker
-  const openDatePicker = (mode: 'dateOfBirth' | 'diagnosedDate') => {
-    setDatePickerMode(mode);
-    if (mode === 'dateOfBirth') {
-      setShowDatePicker(true);
-    } else {
-      setShowDiagnosedDatePicker(true);
-    }
-  };
 
   const fetchChildrenData = async () => {
     try {
@@ -601,16 +588,15 @@ export default function ChildProfile() {
 
                                  <View style={styles.inputGroup}>
                    <Text style={styles.label}>Date of Birth</Text>
-                   <TouchableOpacity
-                     style={styles.dateInput}
-                     onPress={() => openDatePicker('dateOfBirth')}
-                   >
-                     <Text style={styles.dateInputText}>
-                       {formatDate(selectedChild.dateOfBirth) || 'Select Date of Birth'}
-                     </Text>
-                     <Ionicons name="calendar-outline" size={20} color="#666" />
-                   </TouchableOpacity>
-                   
+                   <DateInputField
+                     value={selectedChild.dateOfBirth}
+                     onChange={(date) =>
+                       setSelectedChild({ ...selectedChild, dateOfBirth: date })
+                     }
+                     maximumDate={new Date()}
+                     containerStyle={styles.dateInput}
+                     inputStyle={styles.dateInputText}
+                   />
                  </View>
 
                 <View style={styles.inputGroup}>
@@ -625,16 +611,15 @@ export default function ChildProfile() {
 
                                  <View style={styles.inputGroup}>
                    <Text style={styles.label}>Diagnosed Date</Text>
-                   <TouchableOpacity
-                     style={styles.dateInput}
-                     onPress={() => openDatePicker('diagnosedDate')}
-                   >
-                     <Text style={styles.dateInputText}>
-                       {formatDate(selectedChild.diagnosedDate) || 'Select Diagnosed Date'}
-                     </Text>
-                     <Ionicons name="calendar-outline" size={20} color="#666" />
-                   </TouchableOpacity>
-                   
+                   <DateInputField
+                     value={selectedChild.diagnosedDate}
+                     onChange={(date) =>
+                       setSelectedChild({ ...selectedChild, diagnosedDate: date })
+                     }
+                     maximumDate={new Date()}
+                     containerStyle={styles.dateInput}
+                     inputStyle={styles.dateInputText}
+                   />
                  </View>
 
                  <View style={styles.inputGroup}>
@@ -794,16 +779,15 @@ export default function ChildProfile() {
 
                              <View style={styles.inputGroup}>
                  <Text style={styles.label}>Date of Birth *</Text>
-                 <TouchableOpacity
-                   style={styles.dateInput}
-                   onPress={() => openDatePicker('dateOfBirth')}
-                 >
-                   <Text style={styles.dateInputText}>
-                     {formatDate(newChildData.dateOfBirth) || 'Select Date of Birth'}
-                   </Text>
-                   <Ionicons name="calendar-outline" size={20} color="#666" />
-                 </TouchableOpacity>
-                 
+                 <DateInputField
+                   value={newChildData.dateOfBirth}
+                   onChange={(date) =>
+                     setNewChildData({ ...newChildData, dateOfBirth: date })
+                   }
+                   maximumDate={new Date()}
+                   containerStyle={styles.dateInput}
+                   inputStyle={styles.dateInputText}
+                 />
                </View>
 
               <View style={styles.inputGroup}>
@@ -818,16 +802,15 @@ export default function ChildProfile() {
 
                              <View style={styles.inputGroup}>
                  <Text style={styles.label}>Diagnosed Date *</Text>
-                 <TouchableOpacity
-                   style={styles.dateInput}
-                   onPress={() => openDatePicker('diagnosedDate')}
-                 >
-                   <Text style={styles.dateInputText}>
-                     {formatDate(newChildData.diagnosedDate) || 'Select Diagnosed Date'}
-                   </Text>
-                   <Ionicons name="calendar-outline" size={20} color="#666" />
-                 </TouchableOpacity>
-                 
+                 <DateInputField
+                   value={newChildData.diagnosedDate}
+                   onChange={(date) =>
+                     setNewChildData({ ...newChildData, diagnosedDate: date })
+                   }
+                   maximumDate={new Date()}
+                   containerStyle={styles.dateInput}
+                   inputStyle={styles.dateInputText}
+                 />
                </View>
 
                <View style={styles.inputGroup}>
@@ -883,34 +866,6 @@ export default function ChildProfile() {
 
                </Modal>
 
-      <DatePickerField
-        visible={showDatePicker && showChildModal && !showNewChildDataModal}
-        value={selectedChild?.dateOfBirth ?? ''}
-        onChange={(date) =>
-          selectedChild && setSelectedChild({ ...selectedChild, dateOfBirth: date })
-        }
-        onClose={() => setShowDatePicker(false)}
-      />
-      <DatePickerField
-        visible={showDiagnosedDatePicker && showChildModal && !showNewChildDataModal}
-        value={selectedChild?.diagnosedDate ?? ''}
-        onChange={(date) =>
-          selectedChild && setSelectedChild({ ...selectedChild, diagnosedDate: date })
-        }
-        onClose={() => setShowDiagnosedDatePicker(false)}
-      />
-      <DatePickerField
-        visible={showDatePicker && showNewChildDataModal}
-        value={newChildData.dateOfBirth}
-        onChange={(date) => setNewChildData({ ...newChildData, dateOfBirth: date })}
-        onClose={() => setShowDatePicker(false)}
-      />
-      <DatePickerField
-        visible={showDiagnosedDatePicker && showNewChildDataModal}
-        value={newChildData.diagnosedDate}
-        onChange={(date) => setNewChildData({ ...newChildData, diagnosedDate: date })}
-        onClose={() => setShowDiagnosedDatePicker(false)}
-      />
      </ScrollView>
    );
  }

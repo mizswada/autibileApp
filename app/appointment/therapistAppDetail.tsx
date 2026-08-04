@@ -18,6 +18,7 @@ import {
 import ModalSelector from 'react-native-modal-selector';
 import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 import API from '../../api';
+import { formatDateString } from '@/utils/formatLocalDate';
 
 interface AppointmentDetail {
   id: number;
@@ -43,13 +44,7 @@ interface AppointmentDetail {
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+  return formatDateString(dateString);
 }
 
 function formatTime(startTime: string, endTime: string): string {

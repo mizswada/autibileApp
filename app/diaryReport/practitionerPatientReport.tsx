@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+import { formatDateString } from "@/utils/formatLocalDate";
 import {
   DIARY_CATEGORIES,
   isLegacyDiaryEntry,
@@ -58,12 +59,7 @@ function toDateKey(date: Date): string {
 }
 
 function formatHistoryDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDateString(dateString);
 }
 
 function getEntryDateString(entry: DiaryReport): string {

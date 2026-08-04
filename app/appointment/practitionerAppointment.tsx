@@ -16,7 +16,7 @@ import {
   View
 } from 'react-native';
 import API from '../../api';
-import { formatLocalDate } from '@/utils/formatLocalDate';
+import { formatApiDate, formatDateString } from '@/utils/formatLocalDate';
 import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 
 interface Appointment {
@@ -54,12 +54,7 @@ function getFirstDayOfWeek(year: number, month: number): number {
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
+  return formatDateString(dateString);
 }
 
 function formatTime(startTime: string, endTime: string): string {
@@ -108,8 +103,8 @@ export default function PractitionerAppointment() {
         }
 
         // Get appointments for the current month
-        const startDate = formatLocalDate(new Date(year, month, 1));
-        const endDate = formatLocalDate(new Date(year, month + 1, 0));
+        const startDate = formatApiDate(new Date(year, month, 1));
+        const endDate = formatApiDate(new Date(year, month + 1, 0));
         
         // Fetch all appointments for this practitioner using the same API as parents
         const appointmentResponse = await API('apps/appointment/childAppointment', {

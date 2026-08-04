@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import { formatLocalDate } from '@/utils/formatLocalDate';
+import { formatApiDate, formatDateString } from '@/utils/formatLocalDate';
 import API from '../../api';
 
 interface Appointment {
@@ -53,12 +53,7 @@ function getFirstDayOfWeek(year: number, month: number): number {
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
+  return formatDateString(dateString);
 }
 
 function formatTime(startTime: string, endTime: string): string {
@@ -97,8 +92,8 @@ export default function ParentsAppointment() {
         const data = JSON.parse(storedData);
         
                  // Get appointments for the current month
-         const startDate = formatLocalDate(new Date(year, month, 1));
-         const endDate = formatLocalDate(new Date(year, month + 1, 0));
+         const startDate = formatApiDate(new Date(year, month, 1));
+         const endDate = formatApiDate(new Date(year, month + 1, 0));
          
          
         

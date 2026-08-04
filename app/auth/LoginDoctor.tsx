@@ -9,15 +9,12 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-
-const DELETE_ACCOUNT_URL = "https://autibile.my/delete-account";
 
 export default function LoginDoctor() {
   const { authPaddingTop } = useScreenInsets();
@@ -84,15 +81,8 @@ export default function LoginDoctor() {
     router.push("/auth/DoctorRegister");
   };
 
-  const handleDeleteAccount = async () => {
-    try {
-      await Linking.openURL(DELETE_ACCOUNT_URL);
-    } catch {
-      Alert.alert(
-        "Unable to open link",
-        `Please visit ${DELETE_ACCOUNT_URL} in your browser to request account deletion.`,
-      );
-    }
+  const handleDeleteAccount = () => {
+    router.push("/auth/AccountRequest");
   };
 
   const isButtonDisabled = !email || !password;
@@ -135,7 +125,7 @@ export default function LoginDoctor() {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteAccountLink}>
-            <Text style={styles.deleteAccountText}>Request account deletion</Text>
+            <Text style={styles.deleteAccountText}>Account request</Text>
           </TouchableOpacity>
         </>
       }

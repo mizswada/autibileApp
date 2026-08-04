@@ -21,11 +21,8 @@ export function formatPrice(amount: number | string | null | undefined) {
   return Number(amount || 0).toFixed(2);
 }
 
+import { formatAppDate as formatDateFromUtil } from "@/utils/formatLocalDate";
+
 export function formatDate(dateString?: string | null) {
-  if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleDateString("en-MY", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  return formatDateFromUtil(dateString);
 }

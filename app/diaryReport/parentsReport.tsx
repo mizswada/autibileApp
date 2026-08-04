@@ -36,6 +36,7 @@ import {
   type DiaryCategoryKey,
   type DiaryEntryData,
 } from "./constants";
+import { formatDateString } from "@/utils/formatLocalDate";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -55,12 +56,7 @@ function toDateKey(date: Date): string {
 }
 
 function formatHistoryDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDateString(dateString);
 }
 
 type DiaryEntry = DiaryEntryData & {

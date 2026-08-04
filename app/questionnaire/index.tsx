@@ -27,6 +27,7 @@ import {
   buildSleepDetailedHtml,
 } from "../../utils/screeningReportTemplate";
 import { getQuestionnaireLockInfo } from "./access";
+import { formatDateString, parseAnyLocalDate } from "@/utils/formatLocalDate";
 
 function getNumericAnswerValue(answer: any): string | null {
   if (
@@ -626,39 +627,26 @@ export default function QuestionnaireIndex() {
       console.log("Parent Details:", parentDetails);
       console.log("Child Data:", childData);
 
-      // Helper: format date
       const formatDate = (dateString: string) => {
         if (!dateString) return "N/A";
-        try {
-          return new Date(dateString).toLocaleDateString("en-MY", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          });
-        } catch {
-          return "N/A";
-        }
+        const formatted = formatDateString(dateString);
+        return formatted || "N/A";
       };
 
-      // Helper: calculate age
       const calculateAge = (dob: string) => {
         if (!dob) return "N/A";
-        try {
-          const birthDate = new Date(dob);
-          if (isNaN(birthDate.getTime())) return "N/A";
-          const today = new Date();
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          if (
-            monthDiff < 0 ||
-            (monthDiff === 0 && today.getDate() < birthDate.getDate())
-          ) {
-            age--;
-          }
-          return age.toString();
-        } catch {
-          return "N/A";
+        const birthDate = parseAnyLocalDate(dob);
+        if (!birthDate) return "N/A";
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (
+          monthDiff < 0 ||
+          (monthDiff === 0 && today.getDate() < birthDate.getDate())
+        ) {
+          age--;
         }
+        return age.toString();
       };
 
       // Extract data - use correct field names from API response
@@ -873,7 +861,7 @@ export default function QuestionnaireIndex() {
                   const response = q;
                   Alert.alert(
                     "Autism Screening Summary",
-                    `Autism Screening: ${response.questionnaire_title}\nPatient: ${response.patient_name}\nScore: ${response.total_score}\nCompleted: ${new Date(response.created_at).toLocaleDateString()}\n\nTap "View" to see detailed answers.`,
+                    `Autism Screening: ${response.questionnaire_title}\nPatient: ${response.patient_name}\nScore: ${response.total_score}\nCompleted: ${formatDateString(response.created_at)}\n\nTap "View" to see detailed answers.`,
                     [{ text: "OK" }],
                   );
                 }
@@ -937,7 +925,7 @@ export default function QuestionnaireIndex() {
                   <View style={styles.historyRow}>
                     <Text style={styles.scoreText}>Score: {q.total_score}</Text>
                     <Text style={styles.dateText}>
-                      {new Date(q.created_at).toLocaleDateString()}
+                      {formatDateString(q.created_at)}
                     </Text>
                   </View>
                   {q.score_analysis?.interpretation && (
@@ -1023,7 +1011,7 @@ export default function QuestionnaireIndex() {
               <Text style={styles.modalInfoText}>
                 Completed:{" "}
                 {selectedResponse?.created_at
-                  ? new Date(selectedResponse.created_at).toLocaleDateString()
+                  ? formatDateString(selectedResponse.created_at)
                   : ""}
               </Text>
             </View>

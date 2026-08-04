@@ -1,10 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import API from '../api';
-
-const DELETE_ACCOUNT_URL = 'https://autibile.my/delete-account';
 
 const userTypes = [
   { label: 'Parents', image: require('../assets/parents.png'), route: '/auth/LoginParents' },
@@ -131,18 +129,9 @@ export default function UserTypeSelect() {
 
       <TouchableOpacity
         style={styles.deleteAccountLink}
-        onPress={async () => {
-          try {
-            await Linking.openURL(DELETE_ACCOUNT_URL);
-          } catch {
-            Alert.alert(
-              'Unable to open link',
-              `Please visit ${DELETE_ACCOUNT_URL} in your browser to request account deletion.`,
-            );
-          }
-        }}
+        onPress={() => router.push('/auth/AccountRequest')}
       >
-        <Text style={styles.deleteAccountText}>Request account deletion</Text>
+        <Text style={styles.deleteAccountText}>Account request</Text>
       </TouchableOpacity>
     </View>
   );

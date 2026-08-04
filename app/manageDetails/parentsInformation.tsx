@@ -1,6 +1,6 @@
 import { ScreenBackButton } from '@/components/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DatePickerField } from '@/components/DatePickerField';
+import { DateInputField } from '@/components/DateInputField';
 import { useScreenInsets } from '@/hooks/useScreenInsets';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -24,7 +24,6 @@ export default function ParentsInformation() {
   const router = useRouter();
   const { parentID } = useLocalSearchParams();
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [relationship, setRelationship] = useState('');
   const [gender, setGender] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -275,26 +274,17 @@ export default function ParentsInformation() {
 
       {/* Date of Birth */}
       <Text style={styles.label}>Date of Birth</Text>
-      <TouchableOpacity
-        style={styles.input}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={{ color: dateOfBirth ? '#000' : '#999', fontSize: 16 }}>
-          {dateOfBirth || 'YYYY-MM-DD'}
-        </Text>
-      </TouchableOpacity>
-      {errors.dateOfBirth ? <Text style={styles.errorText}>{errors.dateOfBirth}</Text> : null}
-
-      <DatePickerField
-        visible={showDatePicker}
+      <DateInputField
         value={dateOfBirth}
         onChange={(date) => {
           setDateOfBirth(date);
           validateField('dateOfBirth', date);
         }}
-        onClose={() => setShowDatePicker(false)}
         maximumDate={new Date()}
+        containerStyle={[styles.input, styles.dateFieldContainer]}
+        inputStyle={styles.dateFieldInput}
       />
+      {errors.dateOfBirth ? <Text style={styles.errorText}>{errors.dateOfBirth}</Text> : null}
 
       {/* Nationality Picker */}
       <Text style={styles.label}>Nationality</Text>
@@ -461,6 +451,17 @@ const styles = StyleSheet.create({
     marginBottom: 16, 
     fontSize: 16, 
     backgroundColor: '#E1F5FF' 
+  },
+  dateFieldContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 8,
+  },
+  dateFieldInput: {
+    flex: 1,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
   },
   button: { 
     width: '100%', 

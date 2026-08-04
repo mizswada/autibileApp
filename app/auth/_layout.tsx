@@ -9,6 +9,7 @@ export default function AuthLayout() {
     >
       <Stack.Screen name="Register" options={{ headerShown: false }} />
       <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
+      <Stack.Screen name="AccountRequest" options={{ headerShown: false }} />
       <Stack.Screen name="LoginParents" options={{ headerShown: false }} />
       <Stack.Screen name="LoginTherapist" options={{ headerShown: false }} />
       <Stack.Screen name="LoginDoctor" options={{ headerShown: false }} />

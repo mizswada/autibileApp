@@ -1,3 +1,4 @@
+import { DateInputField } from '@/components/DateInputField';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
@@ -57,11 +58,12 @@ export default function parentsInformation() {
         onChangeText={setGender}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Date of Birth (YYYY-MM-DD)"
+      <DateInputField
         value={dateOfBirth}
-        onChangeText={setDateOfBirth}
+        onChange={setDateOfBirth}
+        maximumDate={new Date()}
+        containerStyle={styles.input}
+        inputStyle={styles.dateInput}
       />
 
       <TextInput
@@ -82,6 +84,7 @@ const styles = StyleSheet.create({
   container: { padding: 20 },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 16 },
+  dateInput: { flex: 1, paddingHorizontal: 0, paddingVertical: 0, backgroundColor: 'transparent' },
   button: { backgroundColor: '#4db5ff', padding: 16, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#fff', fontWeight: 'bold' },
 });
