@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons"; // for back icon and eye icon
 import { AuthFormScroll } from "@/components/AuthFormScroll";
+import { AuthLogo } from "@/components/AuthLogo";
 import { ScreenBackButton } from "@/components/ScreenHeader";
 import { useScreenInsets } from "@/hooks/useScreenInsets";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -134,7 +135,7 @@ export default function LoginTherapist() {
         <View style={styles.backButton}>
           <ScreenBackButton onPress={() => router.replace("/userType")} variant="surface" />
         </View>
-        <Text style={styles.welcome}>Welcome</Text>
+        <AuthLogo />
       </View>
 
       <Text style={styles.subtitle}>Sign In</Text>

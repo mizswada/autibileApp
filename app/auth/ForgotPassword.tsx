@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { AuthFormScroll } from "@/components/AuthFormScroll";
+import { AuthLogo } from "@/components/AuthLogo";
 import { ScreenBackButton } from "@/components/ScreenHeader";
 import { useScreenInsets } from "@/hooks/useScreenInsets";
 import { useRouter } from "expo-router";
@@ -148,6 +149,7 @@ export default function ForgotPassword() {
         <View style={styles.backButton}>
           <ScreenBackButton onPress={() => router.back()} variant="surface" />
         </View>
+        <AuthLogo />
         <Text style={styles.title}>Forgot Password</Text>
       </View>
 
@@ -191,7 +193,8 @@ const styles = StyleSheet.create({
     position: "relative",
     width: "100%",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 8,
+    paddingTop: 4,
   },
   backButton: {
     position: "absolute",
@@ -202,6 +205,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "700",
     color: "#1E293B",
+    marginTop: 12,
   },
   infoCard: {
     backgroundColor: "#fff",
