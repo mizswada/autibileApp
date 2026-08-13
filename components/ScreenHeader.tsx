@@ -55,6 +55,7 @@ export function ScreenHeader({
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backButton}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
@@ -88,6 +89,7 @@ export function ScreenBackButton({
     <TouchableOpacity
       onPress={onPress}
       style={styles.inlineBackButton}
+      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       accessibilityRole="button"
       accessibilityLabel="Go back"
     >

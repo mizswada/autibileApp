@@ -142,6 +142,8 @@ const styles = StyleSheet.create({
   },
   calendarCard: {
     width: '92%',
+    maxWidth: 480,
+    alignSelf: 'center',
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,

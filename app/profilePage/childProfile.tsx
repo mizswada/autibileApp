@@ -62,6 +62,12 @@ export default function ChildProfile() {
   const [okuCardOptions, setOkuCardOptions] = useState<Option[]>([]);
   const [treatmentTypeOptions, setTreatmentTypeOptions] = useState<Option[]>([]);
 
+  const genderOptions: Option[] = [
+    { key: 'default', label: '-- Please select --', value: '' },
+    { key: 'male', label: 'Male', value: 'Male' },
+    { key: 'female', label: 'Female', value: 'Female' },
+  ];
+
   useEffect(() => {
     fetchChildrenData();
     fetchDropdownOptions();
@@ -578,12 +584,21 @@ export default function ChildProfile() {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Gender</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={selectedChild.gender}
-                    onChangeText={(text) => setSelectedChild({...selectedChild, gender: text})}
-                    placeholder="Male/Female"
-                  />
+                  <ModalSelector
+                    data={genderOptions}
+                    initValue={selectedChild.gender || "-- Please select --"}
+                    onChange={(option: any) => setSelectedChild({...selectedChild, gender: option.label})}
+                    style={styles.selector}
+                    initValueTextStyle={{ color: selectedChild.gender ? '#000' : '#999' }}
+                    selectTextStyle={{ fontSize: 16 }}
+                  >
+                    <TextInput
+                      style={styles.input}
+                      editable={false}
+                      placeholder="-- Please select --"
+                      value={selectedChild.gender || ''}
+                    />
+                  </ModalSelector>
                 </View>
 
                                  <View style={styles.inputGroup}>
@@ -769,12 +784,21 @@ export default function ChildProfile() {
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Gender *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={newChildData.gender}
-                  onChangeText={(text) => setNewChildData({...newChildData, gender: text})}
-                  placeholder="Male/Female"
-                />
+                <ModalSelector
+                  data={genderOptions}
+                  initValue={genderOptions.find(o => o.value === newChildData.gender)?.label || "-- Please select --"}
+                  onChange={(option: any) => setNewChildData({...newChildData, gender: option.value})}
+                  style={styles.selector}
+                  initValueTextStyle={{ color: newChildData.gender ? '#000' : '#999' }}
+                  selectTextStyle={{ fontSize: 16 }}
+                >
+                  <TextInput
+                    style={styles.input}
+                    editable={false}
+                    placeholder="-- Please select --"
+                    value={genderOptions.find(o => o.value === newChildData.gender)?.label || newChildData.gender || ''}
+                  />
+                </ModalSelector>
               </View>
 
                              <View style={styles.inputGroup}>

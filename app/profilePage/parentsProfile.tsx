@@ -51,6 +51,12 @@ export default function ParentsProfile() {
   const [relationshipOptions, setRelationshipOptions] = useState<Option[]>([]);
   const [nationalityOptions, setNationalityOptions] = useState<Option[]>([]);
   const [stateOptions, setStateOptions] = useState<Option[]>([]);
+
+  const genderOptions: Option[] = [
+    { key: 'default', label: '-- Please select --', value: '' },
+    { key: 'male', label: 'Male', value: 'Male' },
+    { key: 'female', label: 'Female', value: 'Female' },
+  ];
      useEffect(() => {
      fetchParentAndChildrenData();
      fetchDropdownOptions();
@@ -336,13 +342,30 @@ export default function ParentsProfile() {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Gender</Text>
-            <TextInput
-              style={[styles.input, !isEditingParent && styles.inputDisabled]}
-              value={parentData.gender}
-              onChangeText={(text) => setParentData({...parentData, gender: text})}
-              editable={isEditingParent}
-              placeholder="Male/Female"
-            />
+            {isEditingParent ? (
+              <ModalSelector
+                data={genderOptions}
+                initValue={genderOptions.find(o => o.value === parentData.gender)?.label || "-- Please select --"}
+                onChange={(option: Option) => setParentData({...parentData, gender: option.value})}
+                style={styles.selector}
+                initValueTextStyle={{ color: parentData.gender ? '#000' : '#999' }}
+                selectTextStyle={{ fontSize: 16 }}
+              >
+                <TextInput
+                  style={[styles.input, !isEditingParent && styles.inputDisabled]}
+                  editable={false}
+                  placeholder="-- Please select --"
+                  value={genderOptions.find(o => o.value === parentData.gender)?.label || parentData.gender || ''}
+                />
+              </ModalSelector>
+            ) : (
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={genderOptions.find(o => o.value === parentData.gender)?.label || parentData.gender}
+                editable={false}
+                placeholder="-- Please select --"
+              />
+            )}
           </View>
 
           <View style={styles.inputGroup}>

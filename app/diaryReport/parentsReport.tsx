@@ -964,6 +964,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
   },
   monthNavButton: {
     padding: 8,
@@ -985,7 +988,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    height: 270,
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
   },
   daysRow: {
     flexDirection: "row",

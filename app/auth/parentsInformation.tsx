@@ -2,7 +2,16 @@ import { DateInputField } from '@/components/DateInputField';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
+import ModalSelector from 'react-native-modal-selector';
 import API from '../../api';
+
+type Option = { key: string; label: string; value: string };
+
+const genderOptions: Option[] = [
+  { key: 'default', label: '-- Please select --', value: '' },
+  { key: 'male', label: 'Male', value: 'Male' },
+  { key: 'female', label: 'Female', value: 'Female' },
+];
 
 export default function parentsInformation() {
   const router = useRouter();
@@ -51,12 +60,21 @@ export default function parentsInformation() {
         onChangeText={setRelationship}
       />
 
-      <TextInput
+      <ModalSelector
+        data={genderOptions}
+        initValue="-- Please select --"
+        onChange={(option: Option) => setGender(option.value)}
         style={styles.input}
-        placeholder="Gender"
-        value={gender}
-        onChangeText={setGender}
-      />
+        initValueTextStyle={{ color: gender ? '#000' : '#999' }}
+        selectTextStyle={{ fontSize: 16 }}
+      >
+        <TextInput
+          style={styles.input}
+          editable={false}
+          placeholder="-- Please select --"
+          value={genderOptions.find((o) => o.value === gender)?.label || ''}
+        />
+      </ModalSelector>
 
       <DateInputField
         value={dateOfBirth}
