@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useScreenInsets } from '@/hooks/useScreenInsets';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 
 export default function ProfileEdit() {
   const [userData, setUserData] = useState<any>(null);
+  const { bottomInset } = useScreenInsets();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -67,31 +69,56 @@ export default function ProfileEdit() {
   };
 
   return (
-    <ScrollView style={styles.scroll}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={{ paddingBottom: Math.max(bottomInset, 16) }}
+      contentInsetAdjustmentBehavior="never"
+    >
       {/* Top blue background */}
       <View style={styles.topBackground} />
 
       {/* Profile Card */}
       <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {userData?.username ? userData.username.charAt(0).toUpperCase() : 'D'}
-          </Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{userData?.username}</Text>
-          <Text style={styles.role}>Doctor</Text>
-          <View style={styles.buttonRow}>
-            <TouchableOpacity 
-              style={styles.pillButton}
-              onPress={() => router.push('/profilePage/practitionerProfile')}
-            >
-              <Text style={styles.pillButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.pillButton} onPress={() => router.push('/auth/changePassword')}>
-              <Text style={styles.pillButtonText}>Change Password</Text>
-            </TouchableOpacity>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {userData?.username ? userData.username.charAt(0).toUpperCase() : 'D'}
+            </Text>
           </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit>
+              {userData?.username}
+            </Text>
+            <Text style={styles.role}>Doctor</Text>
+          </View>
+        </View>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={styles.pillButton}
+            onPress={() => router.push('/profilePage/practitionerProfile')}
+          >
+            <Text
+              style={styles.pillButtonText}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              Edit Profile
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.pillButton}
+            onPress={() => router.push('/auth/changePassword')}
+          >
+            <Text
+              style={styles.pillButtonText}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+            >
+              Change Password
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -101,9 +128,9 @@ export default function ProfileEdit() {
         <Divider />
         <MenuItem icon="call-outline" label="Contact Us" onPress={() => handleMenuPress('contact')} />
         <Divider />
-        <MenuItem icon="person-remove-outline" label="Delete Account" danger onPress={() => handleMenuPress('delete')} />
-        <Divider />
         <MenuItem icon="log-out-outline" label="Log Out" danger onPress={() => handleMenuPress('logout')} />
+        <Divider />
+        <MenuItem icon="person-remove-outline" label="Request Delete" danger onPress={() => handleMenuPress('delete')} />
       </View>
     </ScrollView>
   );
@@ -123,7 +150,7 @@ function MenuItem({
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <Ionicons name={icon as any} size={22} color={danger ? '#e53935' : '#222'} style={{ width: 28 }} />
-      <Text style={[styles.menuLabel, danger && styles.danger]}>{label}</Text>
+      <Text style={[styles.menuLabel, danger && styles.danger]} numberOfLines={1}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -142,8 +169,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4db5ff',
   },
   profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 24,
     padding: 20,
@@ -156,17 +181,25 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: '#E1F5FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 18,
+    marginRight: 16,
   },
   avatarText: {
-    fontSize: 70,
+    fontSize: 56,
     fontWeight: 'bold',
     color: '#4db5ff',
   },
@@ -208,6 +241,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   menuLabel: {
+    flex: 1,
     fontSize: 16,
     color: '#1E293B',
     fontWeight: '500',
@@ -222,23 +256,32 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    alignItems: 'stretch',
     marginTop: 16,
-    gap: 10,
+    gap: 8,
+    width: '100%',
   },
   pillButton: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 128,
+    minWidth: 0,
     backgroundColor: '#E1F5FF',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: '#4db5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pillButtonText: {
     color: '#4db5ff',
     fontSize: 12,
     fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
   },
 });
 

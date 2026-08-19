@@ -1,7 +1,23 @@
+import { AuthLogo } from '@/components/AuthLogo';
+import { ScreenBackButton } from '@/components/ScreenHeader';
+import { useScreenInsets } from '@/hooks/useScreenInsets';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  BackHandler,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../api';
 
 const userTypes = [
@@ -13,6 +29,9 @@ const userTypes = [
 export default function UserTypeSelect() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { height } = useWindowDimensions();
+  const { bottomInset } = useScreenInsets();
+  const compact = height < 760;
 
   const getValidationEndpoint = (role: string) => {
     if (role === 'Doctor') return 'validateDoctor';
@@ -101,59 +120,149 @@ export default function UserTypeSelect() {
     checkUserType();
   }, []);
 
+  const goBackToSponsor = () => {
+    router.replace('/sponsor');
+  };
+
+  useEffect(() => {
+    if (Platform.OS !== 'android' || loading) return;
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      goBackToSponsor();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [loading, router]);
+
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <View style={styles.loading}>
+        <StatusBar style="dark" />
+        <ActivityIndicator size="large" color="#4db5ff" />
+      </View>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Select User Type</Text>
-      {userTypes.map((type) => (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <StatusBar style="dark" />
+      <View style={styles.headerWrap}>
+        <View style={styles.headerContainer}>
+          <View style={styles.backButton}>
+            <ScreenBackButton onPress={goBackToSponsor} variant="surface" />
+          </View>
+          <AuthLogo />
+        </View>
+      </View>
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.container,
+          {
+            paddingBottom: Math.max(bottomInset, 16) + 16,
+          },
+        ]}
+        contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>Select User Type</Text>
+        {userTypes.map((type) => (
+          <TouchableOpacity
+            key={type.label}
+            style={[styles.card, compact && styles.cardCompact]}
+            onPress={() => {
+              router.push(type.route as any);
+            }}
+          >
+            <Image
+              source={type.image}
+              style={[styles.image, compact && styles.imageCompact]}
+            />
+            <Text style={styles.label}>{type.label}</Text>
+          </TouchableOpacity>
+        ))}
+
         <TouchableOpacity
-          key={type.label}
-          style={styles.card}
-          onPress={() => {
-            router.push(type.route as any)}}
+          style={styles.adminLink}
+          onPress={() => router.push('/adminWeb')}
         >
-          <Image source={type.image} style={styles.image} />
-          <Text style={styles.label}>{type.label}</Text>
+          <Text style={styles.adminLinkText}>Open as Admin</Text>
         </TouchableOpacity>
-      ))}
 
-      <TouchableOpacity
-        style={styles.adminLink}
-        onPress={() => router.push('/adminWeb')}
-      >
-        <Text style={styles.adminLinkText}>Open as Admin</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.deleteAccountLink}
-        onPress={() => router.push('/auth/AccountRequest')}
-      >
-        <Text style={styles.deleteAccountText}>Account request</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.deleteAccountLink}
+          onPress={() => router.push('/auth/AccountRequest')}
+        >
+          <Text style={styles.deleteAccountText}>Account request</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E1F5FF', padding: 24 },
-  title: { fontSize: 28, fontWeight: '700', marginBottom: 32, color: '#1E293B', letterSpacing: 0.5 },
+  loading: {
+    flex: 1,
+    backgroundColor: '#E1F5FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  screen: {
+    flex: 1,
+    backgroundColor: '#E1F5FF',
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: '#E1F5FF',
+  },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  headerWrap: {
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    backgroundColor: '#E1F5FF',
+  },
+  headerContainer: {
+    position: 'relative',
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
+  },
+  title: { fontSize: 28, fontWeight: '700', marginBottom: 24, marginTop: 12, color: '#1E293B', letterSpacing: 0.5 },
   card: {
     width: '90%',
+    maxWidth: 420,
     backgroundColor: '#fff',
     borderRadius: 24,
     alignItems: 'center',
     padding: 24,
-    marginBottom: 20,
+    marginBottom: 16,
     shadowColor: '#4db5ff',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 5,
   },
+  cardCompact: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
   image: { width: 120, height: 100, resizeMode: 'contain', marginBottom: 12 },
+  imageCompact: { width: 96, height: 80, marginBottom: 8 },
   label: { fontSize: 18, fontWeight: '700', color: '#1E293B' },
   adminLink: { marginTop: 8, paddingVertical: 8 },
   adminLinkText: {

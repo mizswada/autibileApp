@@ -26,6 +26,7 @@ export default function RootLayout() {
       <AndroidHardwareBack />
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="sponsor" options={{ headerShown: false }} />
         <Stack.Screen name="userType" options={{ headerShown: false }} />
         <Stack.Screen name="adminWeb" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

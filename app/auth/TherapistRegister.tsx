@@ -171,6 +171,9 @@ export default function TherapistRegister() {
       if (response.statusCode === 200 && response.data) {
         setShowSuccessModal(true); 
       } else {
+        if (response.statusCode === 409) {
+          setErrors(prev => ({ ...prev, email: response.message }));
+        }
         alert(response.message || 'Registration failed');
       }      
     } catch (error) {

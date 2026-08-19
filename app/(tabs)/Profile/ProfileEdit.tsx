@@ -66,9 +66,9 @@ export default function ProfileEdit() {
         <Divider />
         <MenuItem icon="📞" label="Contact Us" onPress={() => handleMenuPress('contact')} />
         <Divider />
-        <MenuItem icon="👥" label="Delete Account" danger onPress={() => handleMenuPress('delete')} />
-        <Divider />
         <MenuItem icon="↩️" label="Log Out" danger onPress={() => handleMenuPress('logout')} />
+        <Divider />
+        <MenuItem icon="👥" label="Request Delete" danger onPress={() => handleMenuPress('delete')} />
       </View>
     </ScrollView>
   );
