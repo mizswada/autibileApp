@@ -2,9 +2,9 @@ import { AuthLogo } from '@/components/AuthLogo';
 import { ScreenBackButton } from '@/components/ScreenHeader';
 import { useScreenInsets } from '@/hooks/useScreenInsets';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -120,20 +120,22 @@ export default function UserTypeSelect() {
     checkUserType();
   }, []);
 
-  const goBackToSponsor = () => {
+  const goBackToSponsor = useCallback(() => {
     router.replace('/sponsor');
-  };
+  }, [router]);
 
-  useEffect(() => {
-    if (Platform.OS !== 'android' || loading) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'android' || loading) return;
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      goBackToSponsor();
-      return true;
-    });
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        goBackToSponsor();
+        return true;
+      });
 
-    return () => subscription.remove();
-  }, [loading, router]);
+      return () => subscription.remove();
+    }, [loading, goBackToSponsor]),
+  );
 
   if (loading) {
     return (
