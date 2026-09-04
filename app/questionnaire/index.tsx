@@ -500,7 +500,7 @@ export default function QuestionnaireIndex() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4db5ff" />
-        <Text style={styles.loadingText}>Loading autism screening...</Text>
+        <Text style={styles.loadingText}>Loading screening...</Text>
       </View>
     );
   }
@@ -510,7 +510,7 @@ export default function QuestionnaireIndex() {
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4db5ff" />
         <Text style={styles.loadingText}>
-          Preparing autism screening data...
+          Preparing screening data...
         </Text>
       </View>
     );
@@ -598,7 +598,7 @@ export default function QuestionnaireIndex() {
       if (!mchatResponse) {
         Alert.alert(
           "No M-CHAT-R Data",
-          `No autism screening found for ${child.name}.`,
+          `No screening found for ${child.name}.`,
         );
         setGeneratingReport(false);
         return;
@@ -748,7 +748,7 @@ export default function QuestionnaireIndex() {
 
   return (
     <View style={styles.mainContainer}>
-      <ScreenHeader title="Autism Screening" />
+      <ScreenHeader title="Screening" />
 
       {/* Tabs */}
       <View style={styles.topTabs}>
@@ -860,8 +860,8 @@ export default function QuestionnaireIndex() {
                   // Show quick summary for completed questionnaire
                   const response = q;
                   Alert.alert(
-                    "Autism Screening Summary",
-                    `Autism Screening: ${response.questionnaire_title}\nPatient: ${response.patient_name}\nScore: ${response.total_score}\nCompleted: ${formatDateString(response.created_at)}\n\nTap "View" to see detailed answers.`,
+                    "Screening Summary",
+                    `Screening: ${response.questionnaire_title}\nPatient: ${response.patient_name}\nScore: ${response.total_score}\nCompleted: ${formatDateString(response.created_at)}\n\nTap "View" to see detailed answers.`,
                     [{ text: "OK" }],
                   );
                 }
@@ -957,7 +957,7 @@ export default function QuestionnaireIndex() {
           <View style={styles.centered}>
             <Text style={styles.noDataText}>
               No{" "}
-              {activeTab === "current" ? "current autism screening" : "history"}{" "}
+              {activeTab === "current" ? "current screening" : "history"}{" "}
               found.
             </Text>
           </View>
@@ -994,7 +994,7 @@ export default function QuestionnaireIndex() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
                 {selectedResponse?.questionnaire_title ||
-                  "Autism Screening Answers"}
+                  "Screening Answers"}
               </Text>
               <TouchableOpacity onPress={() => setShowDetailedAnswers(false)}>
                 <Ionicons name="close" size={24} color="#666" />
@@ -1189,7 +1189,7 @@ export default function QuestionnaireIndex() {
                 })()
               ) : (
                 <Text style={styles.noAnswersText}>
-                  No answers found for this autism screening.
+                  No answers found for this screening.
                 </Text>
               )}
             </ScrollView>
@@ -1213,7 +1213,7 @@ export default function QuestionnaireIndex() {
 
             <View style={styles.modalBody}>
               <Text style={styles.modalMessage}>
-                Please select which child you want to take the autism screening
+                Please select which child you want to take the screening
                 for:
               </Text>
 

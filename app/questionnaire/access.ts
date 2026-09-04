@@ -81,9 +81,9 @@ export function getQuestionnaireLockInfo(
   if (questionnaireId === 1) {
     return {
       badge: "✓ Already completed",
-      alertTitle: "Autism Screening Completed",
+      alertTitle: "Screening Completed",
       alertMessage:
-        "This autism screening has already been completed for this patient.",
+        "This screening has already been completed for this patient.",
     };
   }
 
