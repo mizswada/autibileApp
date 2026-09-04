@@ -611,6 +611,7 @@ export default function ChildProfile() {
                      maximumDate={new Date()}
                      containerStyle={styles.dateInput}
                      inputStyle={styles.dateInputText}
+                     presentation="inline"
                    />
                  </View>
 
@@ -634,6 +635,7 @@ export default function ChildProfile() {
                      maximumDate={new Date()}
                      containerStyle={styles.dateInput}
                      inputStyle={styles.dateInputText}
+                     presentation="inline"
                    />
                  </View>
 
@@ -811,6 +813,7 @@ export default function ChildProfile() {
                    maximumDate={new Date()}
                    containerStyle={styles.dateInput}
                    inputStyle={styles.dateInputText}
+                   presentation="inline"
                  />
                </View>
 
@@ -834,6 +837,7 @@ export default function ChildProfile() {
                    maximumDate={new Date()}
                    containerStyle={styles.dateInput}
                    inputStyle={styles.dateInputText}
+                   presentation="inline"
                  />
                </View>
 
