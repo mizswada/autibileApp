@@ -80,7 +80,7 @@ export default function HomeScreen() {
             style={[styles.featureBtn, f.key === 'mchat' && styles.mchatBtn]}
             onPress={
               f.key === 'appointment'
-                ? () => router.push('/Home/Appoinment' as any)
+                ? () => router.push('/appointment/parentsAppointment')
                 : f.key === 'mchat'
                 ? () => router.push('/Mchat/MChatR' as any)
                 : f.key === 'therapy'
