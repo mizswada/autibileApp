@@ -404,7 +404,7 @@ export function buildMchatDetailedHtml(mchatScore: string | number): string {
 
   return `
     <div class="domain-section">
-      <h3>Autism Screening (M-CHAT-R) [Score: ${escapeHtml(String(mchatScore))} / 20]</h3>
+      <h3>Screening (M-CHAT-R) [Score: ${escapeHtml(String(mchatScore))} / 20]</h3>
       <ul>${items}</ul>
     </div>`;
 }
