@@ -359,7 +359,7 @@ export default function ChildProfile() {
   const handleCreateNewChild = async () => {
     // Validate required fields
     if (!newChildData.fullname || !newChildData.nickname || !newChildData.gender || 
-        !newChildData.dateOfBirth || !newChildData.autismDiagnose || !newChildData.diagnosedDate) {
+        !newChildData.dateOfBirth) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -818,7 +818,7 @@ export default function ChildProfile() {
                </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Autism Diagnosis *</Text>
+                <Text style={styles.label}>Autism Diagnosis</Text>
                 <TextInput
                   style={styles.input}
                   value={newChildData.autismDiagnose}
@@ -828,7 +828,7 @@ export default function ChildProfile() {
               </View>
 
                              <View style={styles.inputGroup}>
-                 <Text style={styles.label}>Diagnosed Date *</Text>
+                 <Text style={styles.label}>Diagnosed Date</Text>
                  <DateInputField
                    value={newChildData.diagnosedDate}
                    onChange={(date) =>
