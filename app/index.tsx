@@ -18,7 +18,14 @@ export default function AppSplashScreen() {
     const timer = setTimeout(async () => {
       if (cancelled) return;
 
-      const storedData = await AsyncStorage.getItem('userData');
+      // This screen has no tappable way forward, so a read failure here would
+      // strand the user on the logo permanently. Treat it as "no session".
+      let storedData = null;
+      try {
+        storedData = await AsyncStorage.getItem('userData');
+      } catch (error) {
+        console.error('Error reading stored session:', error);
+      }
       if (cancelled) return;
 
       if (storedData) {
