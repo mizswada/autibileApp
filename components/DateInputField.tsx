@@ -28,6 +28,7 @@ type DateInputFieldProps = {
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
   editable?: boolean;
+  presentation?: "modal" | "inline";
 };
 
 export function DateInputField({
@@ -39,6 +40,7 @@ export function DateInputField({
   containerStyle,
   inputStyle,
   editable = true,
+  presentation = "modal",
 }: DateInputFieldProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [text, setText] = useState(() => formatDateString(value));
@@ -125,6 +127,7 @@ export function DateInputField({
         onClose={() => setShowPicker(false)}
         maximumDate={maximumDate}
         minimumDate={minimumDate}
+        presentation={presentation}
       />
     </>
   );

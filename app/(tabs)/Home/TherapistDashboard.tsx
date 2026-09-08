@@ -60,7 +60,7 @@ export default function TherapistDashboard() {
             style={styles.featureBtn}
             onPress={
               f.key === 'appointment'
-                ? () => router.push('/Home/Appoinment' as any)
+                ? () => router.push('/appointment/practitionerAppointment')
                 : f.key === 'therapy'
                 ? () => router.push('/TherapyActivityPlans' as any)
                 : f.key === 'progress'

@@ -19,6 +19,7 @@ type DatePickerFieldProps = {
   onClose: () => void;
   maximumDate?: Date;
   minimumDate?: Date;
+  presentation?: "modal" | "inline";
 };
 
 export function DatePickerField({
@@ -28,6 +29,7 @@ export function DatePickerField({
   onClose,
   maximumDate,
   minimumDate,
+  presentation = "modal",
 }: DatePickerFieldProps) {
   const [pendingDate, setPendingDate] = useState(
     () => parseAnyLocalDate(value) ?? new Date(),
@@ -59,6 +61,31 @@ export function DatePickerField({
   if (!visible) return null;
 
   if (Platform.OS === "ios") {
+    const sheet = (
+      <View style={styles.sheet}>
+        <View style={styles.toolbar}>
+          <TouchableOpacity onPress={onClose} hitSlop={8}>
+            <Text style={styles.cancel}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleDone} hitSlop={8}>
+            <Text style={styles.done}>Done</Text>
+          </TouchableOpacity>
+        </View>
+        <DateTimePicker
+          value={pendingDate}
+          mode="date"
+          display="spinner"
+          onChange={handleChange}
+          maximumDate={maximumDate}
+          minimumDate={minimumDate}
+        />
+      </View>
+    );
+
+    if (presentation === "inline") {
+      return sheet;
+    }
+
     return (
       <Modal
         transparent
@@ -67,26 +94,7 @@ export function DatePickerField({
         visible={visible}
         onRequestClose={onClose}
       >
-        <View style={styles.overlay}>
-          <View style={styles.sheet}>
-            <View style={styles.toolbar}>
-              <TouchableOpacity onPress={onClose} hitSlop={8}>
-                <Text style={styles.cancel}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleDone} hitSlop={8}>
-                <Text style={styles.done}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            <DateTimePicker
-              value={pendingDate}
-              mode="date"
-              display="spinner"
-              onChange={handleChange}
-              maximumDate={maximumDate}
-              minimumDate={minimumDate}
-            />
-          </View>
-        </View>
+        <View style={styles.overlay}>{sheet}</View>
       </Modal>
     );
   }

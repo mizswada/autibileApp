@@ -75,7 +75,7 @@ export default function DoctorDashboard() {
             style={styles.featureBtn}
             onPress={
               f.key === 'appointment'
-                ? () => router.push('/Home/Appoinment' as any)
+                ? () => router.push('/appointment/practitionerAppointment')
                 : f.key === 'progress'
                 ? () => router.push('/Home/ProgressReport' as any)
                 : undefined

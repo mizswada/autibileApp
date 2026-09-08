@@ -298,7 +298,14 @@ export default function ParentsAppointment() {
         <Text style={styles.appointmentListTitle}>Your Appointments</Text>
         {appointments.length > 0 ? (
           appointments.map((appt) => (
-            <View key={appt.id} style={styles.appointmentRow}>
+            <TouchableOpacity
+              key={appt.id}
+              style={styles.appointmentRow}
+              onPress={() => router.push({ 
+                pathname: '/appointment/appointmentDetail', 
+                params: { id: String(appt.id) } 
+              })}
+            >
               <View style={styles.dateBox}>
                 <Text style={styles.dateText}>{formatDate(appt.start)}</Text>
               </View>
@@ -307,13 +314,8 @@ export default function ParentsAppointment() {
                 <Text style={styles.time}>{formatTime(appt.start, appt.end)}</Text>
                 <Text style={styles.practitioner}>{appt.extendedProps.practitioner_name}</Text>
               </View>
-              <TouchableOpacity onPress={() => router.push({ 
-                pathname: '/appointment/appointmentDetail', 
-                params: { id: String(appt.id) } 
-              })}>
-                <Ionicons name="ellipsis-vertical" size={20} color="#888" />
-              </TouchableOpacity>
-            </View>
+              <Ionicons name="chevron-forward" size={20} color="#888" />
+            </TouchableOpacity>
           ))
         ) : (
           <View style={styles.emptyContainer}>
