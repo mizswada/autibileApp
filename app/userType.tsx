@@ -79,42 +79,52 @@ export default function UserTypeSelect() {
   useEffect(() => {
     const checkUserType = async () => {
       setLoading(true);
-      const storedData = await AsyncStorage.getItem('userData');
-      const data = storedData ? JSON.parse(storedData) : null;
-
-      if (data && data.accessToken) {
+      try {
+        // A corrupt or unreadable session must not leave the spinner up
+        // forever: fall through to the user-type screen instead.
+        let data = null;
         try {
-          const role = data.roles?.[0];
-          const endpoint = getValidationEndpoint(role);
-
-          let result = await API(`apps/auth/${endpoint}`, {}, 'GET', true, data.accessToken);
-          if (__DEV__ && result.statusCode === 200) {
-            console.log('[Auth] startup validated with existing access token');
-          }
-
-          if (result.statusCode !== 200) {
-            const refreshedData = await refreshAccessToken(data);
-            if (refreshedData?.accessToken) {
-              result = await API(`apps/auth/${endpoint}`, {}, 'GET', true, refreshedData.accessToken);
-              if (__DEV__ && result.statusCode === 200) {
-                console.log('[Auth] startup validated after refresh');
-              }
-            } else {
-              await AsyncStorage.removeItem('userData');
-            }
-          }
-
-          if (result.statusCode === 200) {
-            navigateByRole(role);
-          } else {
-            console.log('User validation failed');
-          }
+          const storedData = await AsyncStorage.getItem('userData');
+          data = storedData ? JSON.parse(storedData) : null;
         } catch (error) {
-          console.error('Error checking user type:', error);
+          console.error('Error reading stored session:', error);
+          await AsyncStorage.removeItem('userData').catch(() => {});
         }
-      }
 
-      setLoading(false);
+        if (data && data.accessToken) {
+          try {
+            const role = data.roles?.[0];
+            const endpoint = getValidationEndpoint(role);
+
+            let result = await API(`apps/auth/${endpoint}`, {}, 'GET', true, data.accessToken);
+            if (__DEV__ && result.statusCode === 200) {
+              console.log('[Auth] startup validated with existing access token');
+            }
+
+            if (result.statusCode !== 200) {
+              const refreshedData = await refreshAccessToken(data);
+              if (refreshedData?.accessToken) {
+                result = await API(`apps/auth/${endpoint}`, {}, 'GET', true, refreshedData.accessToken);
+                if (__DEV__ && result.statusCode === 200) {
+                  console.log('[Auth] startup validated after refresh');
+                }
+              } else {
+                await AsyncStorage.removeItem('userData');
+              }
+            }
+
+            if (result.statusCode === 200) {
+              navigateByRole(role);
+            } else {
+              console.log('User validation failed');
+            }
+          } catch (error) {
+            console.error('Error checking user type:', error);
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkUserType();

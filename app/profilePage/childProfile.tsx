@@ -695,7 +695,10 @@ export default function ChildProfile() {
         animationType="slide"
         onRequestClose={closeAddChildModal}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Child</Text>
@@ -732,7 +735,7 @@ export default function ChildProfile() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* New Child Data Modal */}
