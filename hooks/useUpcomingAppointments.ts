@@ -133,9 +133,13 @@ export function useUpcomingAppointments(
     fetchAppointments();
   }, [fetchAppointments, mode, childIds, children.length]);
 
+  // Re-fetch whenever this screen regains focus, not just on mount — Expo
+  // Router keeps tab screens alive in the background, so without this the
+  // Home card can keep showing a stale appointment time (e.g. before a
+  // reschedule) even after the Appointment tab already reflects the update.
   useFocusEffect(
     useCallback(() => {
-      if (mode === "practitioner") {
+      if (mode === "practitioner" || mode === "parent") {
         fetchAppointments();
       }
     }, [fetchAppointments, mode]),
