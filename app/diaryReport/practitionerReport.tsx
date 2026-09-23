@@ -22,14 +22,12 @@ interface DiaryReport {
   patient: {
     patient_id: number;
     fullname: string;
-    nickname: string;
   } | null;
 }
 
 interface PatientSummary {
   patient_id: number;
   fullname: string;
-  nickname: string;
   reportCount: number;
 }
 
@@ -92,7 +90,6 @@ export default function PractitionerReport() {
       map.set(id, {
         patient_id: id,
         fullname: entry.patient?.fullname || `Patient ${id}`,
-        nickname: entry.patient?.nickname || "",
         reportCount: 1,
       });
     });
@@ -108,8 +105,7 @@ export default function PractitionerReport() {
 
     return patients.filter(
       (patient) =>
-        patient.fullname.toLowerCase().includes(query) ||
-        patient.nickname.toLowerCase().includes(query),
+        patient.fullname.toLowerCase().includes(query),
     );
   }, [patients, searchQuery]);
 
@@ -119,7 +115,6 @@ export default function PractitionerReport() {
       params: {
         patientId: String(patient.patient_id),
         patientName: patient.fullname,
-        patientNickname: patient.nickname,
       },
     });
   };
@@ -165,7 +160,7 @@ export default function PractitionerReport() {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name or nickname..."
+            placeholder="Search by name..."
             placeholderTextColor="#94A3B8"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -208,11 +203,6 @@ export default function PractitionerReport() {
               </View>
               <View style={styles.patientInfo}>
                 <Text style={styles.patientName}>{patient.fullname}</Text>
-                {patient.nickname ? (
-                  <Text style={styles.patientNickname}>
-                    {patient.nickname}
-                  </Text>
-                ) : null}
                 <Text style={styles.reportCount}>
                   {patient.reportCount} report
                   {patient.reportCount === 1 ? "" : "s"}

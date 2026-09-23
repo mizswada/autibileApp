@@ -25,7 +25,6 @@ type Option = { key: string; label: string; value: string };
 interface ChildData {
   childID: string;
   fullname: string;
-  nickname: string;
   icNumber: string;
   gender: string;
   dateOfBirth: string;
@@ -50,7 +49,6 @@ export default function ChildProfile() {
   const [showNewChildDataModal, setShowNewChildDataModal] = useState(false);
   const [newChildData, setNewChildData] = useState({
     fullname: '',
-    nickname: '',
     gender: '',
     dateOfBirth: '',
     autismDiagnose: '',
@@ -230,7 +228,6 @@ export default function ChildProfile() {
             const childrenData = data.patientIds.map((child: any) => ({
               childID: child.patient_id,
               fullname: child.fullname || '',
-              nickname: child.nickname || '',
               icNumber: child.patient_ic || '',
               gender: child.gender || '',
               dateOfBirth: child.dob || '',
@@ -269,7 +266,6 @@ export default function ChildProfile() {
       const response = await API('apps/children/updateDetails', {
         patientID: selectedChild.childID,
         fullname: selectedChild.fullname,
-        nickname: selectedChild.nickname,
         gender: selectedChild.gender,
         dateOfBirth: selectedChild.dateOfBirth,
         autismDiagnose: selectedChild.autismDiagnose,
@@ -321,7 +317,6 @@ export default function ChildProfile() {
           parentID: data.parentId,
           userID: data.userID,
           fullname: existingChild.fullname,
-          nickname: existingChild.nickname,
           gender: existingChild.gender,
           icNumber: existingChild.icNumber,
           dateOfBirth: existingChild.dateOfBirth,
@@ -358,7 +353,7 @@ export default function ChildProfile() {
 
   const handleCreateNewChild = async () => {
     // Validate required fields
-    if (!newChildData.fullname || !newChildData.nickname || !newChildData.gender || 
+    if (!newChildData.fullname || !newChildData.gender ||
         !newChildData.dateOfBirth) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -373,7 +368,6 @@ export default function ChildProfile() {
         parentID: data.parentId,
         userID: data.userID,
         fullname: newChildData.fullname,
-        nickname: newChildData.nickname,
         gender: newChildData.gender,
         icNumber: newChildIC.replace(/\D/g, ''),
         dateOfBirth: newChildData.dateOfBirth,
@@ -391,7 +385,6 @@ export default function ChildProfile() {
         setNewChildIC('');
         setNewChildData({
           fullname: '',
-          nickname: '',
           gender: '',
           dateOfBirth: '',
           autismDiagnose: '',
@@ -500,7 +493,6 @@ export default function ChildProfile() {
               <View style={styles.childInfo}>
                 <Text style={styles.childName}>{child.fullname}</Text>
                 <Text style={styles.childDetails}>
-                  {child.nickname && `(${child.nickname}) `}
                   {child.gender || 'Gender not set'} • {formatDate(child.dateOfBirth) || 'DOB not set'}
                 </Text>
                 <Text style={styles.childStatus}>
@@ -559,16 +551,6 @@ export default function ChildProfile() {
                     value={selectedChild.fullname}
                     onChangeText={(text) => setSelectedChild({...selectedChild, fullname: text})}
                     placeholder="Enter child's full name"
-                  />
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nickname</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={selectedChild.nickname}
-                    onChangeText={(text) => setSelectedChild({...selectedChild, nickname: text})}
-                    placeholder="Enter nickname"
                   />
                 </View>
 
@@ -774,16 +756,6 @@ export default function ChildProfile() {
                   value={newChildData.fullname}
                   onChangeText={(text) => setNewChildData({...newChildData, fullname: text})}
                   placeholder="Enter child's full name"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nickname *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={newChildData.nickname}
-                  onChangeText={(text) => setNewChildData({...newChildData, nickname: text})}
-                  placeholder="Enter nickname"
                 />
               </View>
 

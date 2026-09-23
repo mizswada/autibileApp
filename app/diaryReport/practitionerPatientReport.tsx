@@ -19,7 +19,7 @@ import {
   DIARY_CATEGORIES,
   isLegacyDiaryEntry,
   OPTIONAL_NOTES_LABEL,
-} from "./constants";
+} from "./_constants";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -41,7 +41,6 @@ interface DiaryReport {
   patient: {
     patient_id: number;
     fullname: string;
-    nickname: string;
   } | null;
 }
 
@@ -98,7 +97,6 @@ export default function PractitionerPatientReport() {
   const params = useLocalSearchParams<{
     patientId?: string;
     patientName?: string;
-    patientNickname?: string;
   }>();
 
   const patientId = Array.isArray(params.patientId)
@@ -107,9 +105,6 @@ export default function PractitionerPatientReport() {
   const patientName = Array.isArray(params.patientName)
     ? params.patientName[0]
     : params.patientName || "Patient";
-  const patientNickname = Array.isArray(params.patientNickname)
-    ? params.patientNickname[0]
-    : params.patientNickname || "";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -233,11 +228,6 @@ export default function PractitionerPatientReport() {
         </View>
         <View style={styles.patientBannerText}>
           <Text style={styles.patientBannerName}>{patientName}</Text>
-          {patientNickname ? (
-            <Text style={styles.patientBannerNickname}>
-              Nickname: {patientNickname}
-            </Text>
-          ) : null}
           <Text style={styles.patientBannerMeta}>
             {entries.length} diary report{entries.length === 1 ? "" : "s"}
           </Text>

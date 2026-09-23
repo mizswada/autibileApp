@@ -18,7 +18,6 @@ export default function Register() {
   const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
 
-  const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [ic, setIC] = useState("");
@@ -30,7 +29,6 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errors, setErrors] = useState({
-    username: "",
     fullName: "",
     email: "",
     ic: "",
@@ -44,7 +42,6 @@ export default function Register() {
 
   useEffect(() => {
     const validateAll = () => {
-      const usernameValid = username.trim() !== "";
       const fullNameValid = fullName.trim() !== "";
       const emailValid = email.trim() !== "" && isValidEmail(email);
       const icValid = ic.trim() !== "";
@@ -55,7 +52,6 @@ export default function Register() {
       const termsValid = acceptTerms;
 
       return (
-        usernameValid &&
         fullNameValid &&
         emailValid &&
         icValid &&
@@ -68,7 +64,6 @@ export default function Register() {
 
     setIsFormValid(validateAll());
   }, [
-    username,
     fullName,
     email,
     ic,
@@ -83,9 +78,6 @@ export default function Register() {
   const validateField = (field: string, value: string) => {
     let message = "";
     switch (field) {
-      case "username":
-        if (!value.trim()) message = "Username is required";
-        break;
       case "fullName":
         if (!value.trim()) message = "Full name is required";
         break;
@@ -95,7 +87,7 @@ export default function Register() {
         break;
       case "ic":
         if (!value.trim() || value.length < 12 || value.length > 12)
-          message = "IC / MyKid / Passport is required and valid";
+          message = "MyKad is required and must be 12 digits";
         break;
       case "phone":
         if (!value.trim() || value.length < 10 || value.length > 11)
@@ -117,7 +109,6 @@ export default function Register() {
 
   const validateForm = () => {
     const fields = [
-      "username",
       "fullName",
       "email",
       "ic",
@@ -147,7 +138,6 @@ export default function Register() {
     try {
       console.log("Calling API...");
       const response = await API("apps/registration/registerParents", {
-        username,
         fullname: fullName,
         email,
         ic,
@@ -224,21 +214,6 @@ export default function Register() {
         <Text style={styles.create}>Create New Account</Text>
       </View>
 
-      {/** Username */}
-      <Text style={styles.label}>Username</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Your Username"
-        value={username}
-        onChangeText={(text) => {
-          setUsername(text);
-          validateField("username", text);
-        }}
-      />
-      {errors.username ? (
-        <Text style={styles.errorText}>{errors.username}</Text>
-      ) : null}
-
       {/** Full Name */}
       <Text style={styles.label}>Full Name</Text>
       <TextInput
@@ -271,7 +246,7 @@ export default function Register() {
       ) : null}
 
       {/** IC */}
-      <Text style={styles.label}>IC / MyKid / Passport</Text>
+      <Text style={styles.label}>MyKad</Text>
       <TextInput
         style={styles.input}
         placeholder="Example: 123456789012"

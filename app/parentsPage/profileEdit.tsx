@@ -93,14 +93,14 @@ export default function ProfileEdit() {
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {userData?.username
-                ? userData.username.charAt(0).toUpperCase()
+              {userData?.fullName
+                ? userData.fullName.charAt(0).toUpperCase()
                 : "U"}
             </Text>
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit>
-              {userData?.username ? userData.username.toUpperCase() : "USER"}
+              {userData?.fullName || userData?.fullname || "USER"}
             </Text>
             <Text style={styles.role}>Parent</Text>
           </View>

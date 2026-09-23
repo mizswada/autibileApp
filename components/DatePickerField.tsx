@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import { formatApiDate, parseAnyLocalDate } from "@/utils/formatLocalDate";
 
@@ -31,6 +32,16 @@ export function DatePickerField({
   minimumDate,
   presentation = "modal",
 }: DatePickerFieldProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = {
+    background: isDark ? '#1C1C1E' : '#FFFFFF',
+    text: isDark ? '#FFFFFF' : '#333333',
+    subtext: isDark ? '#AEAEB2' : '#666666',
+    border: isDark ? '#3A3A3C' : '#E0E0E0',
+    accent: '#24A8FF',
+  };
+
   const [pendingDate, setPendingDate] = useState(
     () => parseAnyLocalDate(value) ?? new Date(),
   );
@@ -62,13 +73,13 @@ export function DatePickerField({
 
   if (Platform.OS === "ios") {
     const sheet = (
-      <View style={styles.sheet}>
-        <View style={styles.toolbar}>
+      <View style={[styles.sheet, { backgroundColor: colors.background }]}>
+        <View style={[styles.toolbar, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} hitSlop={8}>
-            <Text style={styles.cancel}>Cancel</Text>
+            <Text style={[styles.cancel, { color: colors.subtext }]}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleDone} hitSlop={8}>
-            <Text style={styles.done}>Done</Text>
+            <Text style={[styles.done, { color: colors.accent }]}>Done</Text>
           </TouchableOpacity>
         </View>
         <DateTimePicker
@@ -78,6 +89,7 @@ export function DatePickerField({
           onChange={handleChange}
           maximumDate={maximumDate}
           minimumDate={minimumDate}
+          textColor={colors.text}
         />
       </View>
     );
@@ -118,7 +130,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   sheet: {
-    backgroundColor: "#fff",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingBottom: 24,
@@ -130,15 +141,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
   },
   cancel: {
     fontSize: 16,
-    color: "#666",
   },
   done: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#24A8FF",
   },
 });

@@ -34,7 +34,7 @@ export default function addFeed() {
       }
 
       const userData = JSON.parse(storedData);
-      const communityAuthor = userData.fullName || userData.fullname || userData.username || 'Unknown Author';
+      const communityAuthor = userData.fullName || userData.fullname || 'Unknown Author';
 
       const response = await API('apps/community/add', {
         community_author: communityAuthor,

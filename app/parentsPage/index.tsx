@@ -64,7 +64,7 @@ export default function HomeScreen() {
         const userData = await AsyncStorage.getItem("userData");
         if (userData) {
           const parsedData = JSON.parse(userData);
-          setUserName(parsedData.username || "Parent");
+          setUserName(parsedData.fullName || parsedData.fullname || "Parent");
         }
       } catch (error) {
         console.error("Error fetching user name:", error);

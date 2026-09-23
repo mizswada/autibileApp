@@ -19,7 +19,6 @@ import API from '../../api';
 interface PractitionerData {
   practitionerID: string;
   userID: string;
-  username: string;
   fullName: string;
   email: string;
   type: string;
@@ -140,7 +139,6 @@ export default function PractitionerProfile() {
           const fallbackPractitioner = {
             practitionerID: data.practitionerId || '',
             userID: data.userID || '',
-            username: data.username || '',
             fullName: data.fullName || '',
             email: data.email || '',
             type: data.type || '',

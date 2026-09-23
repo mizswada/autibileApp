@@ -26,7 +26,7 @@ import { getLogoBase64 } from "../../utils/getLogoBase64";
 import {
   buildDiaryReportFilename,
   buildDiaryReportHtml,
-} from "./diaryReportTemplate";
+} from "./_diaryReportTemplate";
 import {
   DIARY_CATEGORIES,
   EMPTY_CATEGORIES,
@@ -35,7 +35,7 @@ import {
   OPTIONAL_NOTES_LABEL,
   type DiaryCategoryKey,
   type DiaryEntryData,
-} from "./constants";
+} from "./_constants";
 import { formatDateString } from "@/utils/formatLocalDate";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -388,12 +388,10 @@ export default function ParentsReport() {
         selectedChild?.patientName ||
         selectedChild?.name ||
         undefined;
-      const childNickname = selectedChild?.nickname || undefined;
 
       const html = buildDiaryReportHtml({
         title,
         childName,
-        childNickname,
         entries: entriesToProcess,
         logoUri,
         reportScope: forAllEntries ? "all" : "date",

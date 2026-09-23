@@ -4,7 +4,7 @@ import {
   formatDiaryEntryLines,
   isLegacyDiaryEntry,
   type DiaryEntryData,
-} from "./constants";
+} from "./_constants";
 import { formatAppDateFromDate, formatDateString } from "@/utils/formatLocalDate";
 
 const THEME = {

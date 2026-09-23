@@ -82,12 +82,12 @@ export default function ProfileEdit() {
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {userData?.username ? userData.username.charAt(0).toUpperCase() : 'T'}
+              {userData?.fullName ? userData.fullName.charAt(0).toUpperCase() : 'T'}
             </Text>
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.name} numberOfLines={1} adjustsFontSizeToFit>
-              {userData?.username}
+              {userData?.fullName || userData?.fullname}
             </Text>
             <Text style={styles.role}>Therapist</Text>
           </View>

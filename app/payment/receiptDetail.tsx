@@ -14,9 +14,9 @@ import {
 import API from "../../api";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
 import PaymentHeader from "./components/PaymentHeader";
-import { buildReceiptHtml } from "./receiptTemplate";
-import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./constants";
-import { paymentStyles } from "./styles";
+import { buildReceiptHtml } from "./_receiptTemplate";
+import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./_constants";
+import { paymentStyles } from "./_styles";
 
 export default function ReceiptDetail() {
   const { paymentId } = useLocalSearchParams<{ paymentId: string }>();

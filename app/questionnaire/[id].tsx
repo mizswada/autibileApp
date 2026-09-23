@@ -17,13 +17,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { getAgeWarningInfo, getQuestionnaireLockInfo } from "./access";
+import { getAgeWarningInfo, getQuestionnaireLockInfo } from "./_access";
 import {
   getNumberAnswerDefaults,
   getNumberConfig,
   isNumberAnswerSet,
   isNumberQuestion,
-} from "./numberConfig";
+} from "./_numberConfig";
 import API from "../../api";
 import { MchatImportanceNoteModal } from "../../components/MchatImportanceNoteModal";
 import { HtmlContent } from "../../components/HtmlContent";

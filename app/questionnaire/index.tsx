@@ -26,7 +26,7 @@ import {
   buildScreenDetailedHtml,
   buildSleepDetailedHtml,
 } from "../../utils/screeningReportTemplate";
-import { getQuestionnaireLockInfo } from "./access";
+import { getQuestionnaireLockInfo } from "./_access";
 import { formatDateString, parseAnyLocalDate } from "@/utils/formatLocalDate";
 
 function getNumericAnswerValue(answer: any): string | null {

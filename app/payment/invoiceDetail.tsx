@@ -9,8 +9,8 @@ import {
   formatInvoiceId,
   formatPrice,
   INVOICE_STATUS_COLORS,
-} from "./constants";
-import { paymentStyles } from "./styles";
+} from "./_constants";
+import { paymentStyles } from "./_styles";
 
 export default function InvoiceDetail() {
   const { invoiceId } = useLocalSearchParams<{ invoiceId: string }>();

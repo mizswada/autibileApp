@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -42,6 +43,16 @@ export function DateInputField({
   editable = true,
   presentation = "modal",
 }: DateInputFieldProps) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = {
+    background: isDark ? '#1C1C1E' : '#FFFFFF',
+    text: isDark ? '#FFFFFF' : '#333333',
+    subtext: isDark ? '#AEAEB2' : '#666666',
+    border: isDark ? '#3A3A3C' : '#E0E0E0',
+    accent: '#24A8FF',
+  };
+
   const [showPicker, setShowPicker] = useState(false);
   const [text, setText] = useState(() => formatDateString(value));
   const [error, setError] = useState<string | null>(null);
@@ -94,14 +105,14 @@ export function DateInputField({
 
   return (
     <>
-      <View style={[styles.container, containerStyle]}>
+      <View style={[styles.container, { backgroundColor: colors.background, borderColor: colors.border }, containerStyle]}>
         <TextInput
-          style={[styles.input, inputStyle, !editable && styles.inputDisabled]}
+          style={[styles.input, { color: colors.text }, inputStyle, !editable && [styles.inputDisabled, { color: colors.subtext }]]}
           value={text}
           onChangeText={handleChangeText}
           onBlur={() => commitText(text)}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.subtext}
           keyboardType="numbers-and-punctuation"
           maxLength={10}
           editable={editable}
@@ -115,7 +126,7 @@ export function DateInputField({
             hitSlop={8}
             accessibilityLabel="Open calendar"
           >
-            <Ionicons name="calendar-outline" size={22} color="#666" />
+            <Ionicons name="calendar-outline" size={22} color={colors.subtext} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -139,21 +150,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     borderWidth: 1,
-    borderColor: "#E0E0E0",
     borderRadius: 8,
     paddingRight: 8,
-    backgroundColor: "#fff",
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  inputDisabled: {
-    color: "#666",
-  },
+  inputDisabled: {},
   calendarButton: {
     padding: 4,
   },

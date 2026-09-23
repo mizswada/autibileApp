@@ -18,8 +18,8 @@ import {
   formatPrice,
   INVOICE_FILTERS,
   INVOICE_STATUS_COLORS,
-} from "../payment/constants";
-import { paymentStyles } from "../payment/styles";
+} from "../payment/_constants";
+import { paymentStyles } from "../payment/_styles";
 
 export default function PaymentsTab() {
   const router = useRouter();

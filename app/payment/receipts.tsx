@@ -12,8 +12,8 @@ import {
 import { useRouter } from "expo-router";
 import API from "../../api";
 import PaymentHeader from "./components/PaymentHeader";
-import { formatDate, formatPaymentId, formatPrice } from "./constants";
-import { paymentStyles } from "./styles";
+import { formatDate, formatPaymentId, formatPrice } from "./_constants";
+import { paymentStyles } from "./_styles";
 
 export default function Receipts() {
   const router = useRouter();

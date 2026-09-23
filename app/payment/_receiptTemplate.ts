@@ -1,4 +1,4 @@
-import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./constants";
+import { formatDate, formatInvoiceId, formatPaymentId, formatPrice } from "./_constants";
 import { formatAppDateFromDate } from "@/utils/formatLocalDate";
 
 // Theme colours derived from the NeuroSpa Therapy logo.

@@ -12,7 +12,6 @@ export default function TherapistRegister() {
   const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
 
-  const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [ic, setIC] = useState('');
@@ -27,7 +26,6 @@ export default function TherapistRegister() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errors, setErrors] = useState({
-    username: '',
     fullName: '',
     email: '',
     ic: '',
@@ -47,7 +45,6 @@ export default function TherapistRegister() {
 
   useEffect(() => {
     const validateAll = () => {
-      const usernameValid = username ? username.trim() !== '' : false;
       const fullNameValid = fullName ? fullName.trim() !== '' : false;
       const emailValid = email ? email.trim() !== '' && isValidEmail(email) : false;
       const icValid = ic ? ic.trim() !== '' : false;
@@ -59,7 +56,6 @@ export default function TherapistRegister() {
       const termsValid = acceptTerms;
 
       return (
-        usernameValid &&
         fullNameValid &&
         emailValid &&
         icValid &&
@@ -73,7 +69,7 @@ export default function TherapistRegister() {
     };
 
     setIsFormValid(validateAll());
-  }, [username, fullName, email, ic, phone, password, confirmPassword, workplace, department, acceptTerms]);
+  }, [fullName, email, ic, phone, password, confirmPassword, workplace, department, acceptTerms]);
 
 
   const isValidEmail = (email: string) => /^\S+@\S+\.\S+$/.test(email);
@@ -100,9 +96,6 @@ export default function TherapistRegister() {
     const trimmedValue = stringValue ? stringValue.trim() : '';
     
     switch (field) {
-      case 'username':
-        if (!trimmedValue) message = 'Username is required';
-        break;
       case 'fullName':
         if (!trimmedValue) message = 'Full name is required';
         break;
@@ -111,7 +104,7 @@ export default function TherapistRegister() {
         else if (!isValidEmail(stringValue)) message = 'Invalid email format';
         break;
       case 'ic':
-        if (!trimmedValue || stringValue.length < 12 || stringValue.length > 12) message = 'IC / MyKid / Passport is required and valid';
+        if (!trimmedValue || stringValue.length < 12 || stringValue.length > 12) message = 'MyKad is required and must be 12 digits';
         break;
       case 'phone':
         if (!trimmedValue || stringValue.length < 10 || stringValue.length > 11) message = 'Phone number must be valid';
@@ -136,7 +129,7 @@ export default function TherapistRegister() {
   };
 
   const validateForm = () => {
-    const fields = ['username', 'fullName', 'email', 'ic', 'phone', 'password', 'confirmPassword', 'workplace', 'department'];
+    const fields = ['fullName', 'email', 'ic', 'phone', 'password', 'confirmPassword', 'workplace', 'department'];
     let valid = true;
     fields.forEach(field => {
       const value = eval(field);
@@ -156,13 +149,12 @@ export default function TherapistRegister() {
     try {
       console.log("Calling API...");
       const response = await API("apps/registration/registerPractitioner", {
-        username,
         fullname: fullName,
         email,
         ic,
         password,
         phone,
-        role: "3", 
+        role: "3",
         type: "Therapist",
         workplace,
         department
@@ -233,19 +225,6 @@ export default function TherapistRegister() {
         <Text style={styles.create}>Create New Account</Text>
       </View>
 
-      {/** Username */}
-      <Text style={styles.label}>Username</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Your Username"
-        value={username}
-        onChangeText={(text) => {
-          setUsername(text);
-          validateField('username', text);
-        }}
-      />
-      {errors.username ? <Text style={styles.errorText}>{errors.username}</Text> : null}
-
       {/** Full Name */}
       <Text style={styles.label}>Full Name</Text>
       <TextInput
@@ -274,7 +253,7 @@ export default function TherapistRegister() {
       {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
 
       {/** IC */}
-      <Text style={styles.label}>IC / MyKid / Passport</Text>
+      <Text style={styles.label}>MyKad</Text>
       <TextInput
         style={styles.input}
         placeholder="Example: 123456789012"

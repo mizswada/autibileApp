@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import API from "../../api";
 import PaymentHeader from "./components/PaymentHeader";
-import { formatInvoiceId, formatPrice, PAYMENT_METHODS } from "./constants";
-import { paymentStyles } from "./styles";
+import { formatInvoiceId, formatPrice, PAYMENT_METHODS } from "./_constants";
+import { paymentStyles } from "./_styles";
 
 export default function PaymentForm() {
   const { invoiceId } = useLocalSearchParams<{ invoiceId: string }>();

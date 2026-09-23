@@ -21,7 +21,6 @@ type Option = { key: string; label: string; value: string };
 interface ParentData {
   parentID: string;
   userID: string;
-  username: string;
   fullName: string;
   email: string;
   phone: string;
@@ -175,7 +174,6 @@ export default function ParentsProfile() {
           const fallbackParent = {
             parentID: data.parentId,
             userID: data.userId || '',
-            username: data.username || '',
             fullName: data.fullname || data.fullName || '',
             email: data.email || '',
             phone: data.phone || '',
