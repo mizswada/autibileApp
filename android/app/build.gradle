@@ -81,9 +81,6 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
-def appVersionCode = Integer.parseInt((rootProject.findProperty('APP_VERSION_CODE') ?: '1').toString())
-def appVersionName = (rootProject.findProperty('APP_VERSION_NAME') ?: '1.0.0').toString()
-
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -95,8 +92,8 @@ android {
         applicationId 'my.autibile.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode appVersionCode
-        versionName appVersionName
+        versionCode 15
+        versionName "1.0.13"
     }
     signingConfigs {
         debug {
@@ -105,32 +102,15 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release {
-            // Loaded from android/keystore.properties (do not commit).
-            def keystorePropertiesFile = rootProject.file("keystore.properties")
-            if (keystorePropertiesFile.exists()) {
-                def keystoreProperties = new Properties()
-                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-            }
-        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Play Store requires a release-signed AAB/APK (not the debug keystore).
-            if (signingConfigs.release.storeFile != null) {
-                signingConfig signingConfigs.release
-            } else {
-                throw new GradleException(
-                    "Missing android/keystore.properties. Create a release keystore before building for Play Store."
-                )
-            }
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
+            signingConfig signingConfigs.debug
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
