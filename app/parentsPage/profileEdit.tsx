@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useScreenInsets } from "@/hooks/useScreenInsets";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { cancelAppointmentNotifications } from "@/utils/appointmentNotifications";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -71,6 +72,7 @@ export default function ProfileEdit() {
             style: "destructive",
             onPress: () => {
               AsyncStorage.removeItem("userData");
+              cancelAppointmentNotifications();
               router.push("/auth/LoginParents");
             },
           },

@@ -8,6 +8,7 @@ import { AndroidHardwareBack } from '../components/AndroidHardwareBack';
 import { UpdatePrompt } from '../components/UpdatePrompt';
 import { useAppUpdate } from '../hooks/useAppUpdate';
 import { useColorScheme } from '../hooks/useColorScheme';
+import '../utils/appointmentNotifications';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

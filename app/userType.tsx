@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../api';
+import { cancelAppointmentNotifications } from '../utils/appointmentNotifications';
 
 const userTypes = [
   { label: 'Parents', image: require('../assets/parents.png'), route: '/auth/LoginParents' },
@@ -89,6 +90,7 @@ export default function UserTypeSelect() {
         } catch (error) {
           console.error('Error reading stored session:', error);
           await AsyncStorage.removeItem('userData').catch(() => {});
+          cancelAppointmentNotifications();
         }
 
         if (data && data.accessToken) {
@@ -110,6 +112,7 @@ export default function UserTypeSelect() {
                 }
               } else {
                 await AsyncStorage.removeItem('userData');
+                cancelAppointmentNotifications();
               }
             }
 

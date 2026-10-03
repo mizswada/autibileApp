@@ -51,11 +51,13 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [showChildSelectorModal, setShowChildSelectorModal] = useState(false);
   const [children, setChildren] = useState<any[]>([]);
+  const [childrenLoaded, setChildrenLoaded] = useState(false);
   const [selectedChild, setSelectedChild] = useState<any>(null);
   const [userName, setUserName] = useState("Parent");
   const { appointments } = useUpcomingAppointments({
     mode: "parent",
     children,
+    childrenLoaded,
   });
 
   useEffect(() => {
@@ -114,6 +116,9 @@ export default function HomeScreen() {
 
             // Set children state
             setChildren(childrenData);
+            setChildrenLoaded(
+              response?.statusCode === 200 && Boolean(response.data),
+            );
 
             // Update stored user data with fresh children data
             if (childrenData.length > 0) {
