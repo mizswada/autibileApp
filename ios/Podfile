@@ -74,5 +74,22 @@ target 'autibile' do
         File.write(fmt_base_header, patched)
       end
     end
+
+    # Some pods still declare very old iOS targets (9.0, 13.4), which newer
+    # Xcode versions reject (supported range starts at 15.0). Raise them to
+    # React Native 0.79's minimum.
+    min_ios_target = Gem::Version.new('15.1')
+    raise_target = lambda do |configs|
+      configs.each do |config|
+        current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if current && Gem::Version.new(current.to_s) < min_ios_target
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_target.to_s
+        end
+      end
+    end
+    raise_target.call(installer.pods_project.build_configurations)
+    installer.pods_project.targets.each do |target|
+      raise_target.call(target.build_configurations)
+    end
   end
 end
