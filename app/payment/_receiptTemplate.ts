@@ -93,14 +93,6 @@ export function buildReceiptHtml(payment: any, logoUri: string | null): string {
     )
     .join("");
 
-  const terms = [
-    "This receipt confirms that payment has been received in full.",
-    "Please retain this receipt for your records.",
-    "This is a computer generated receipt.",
-  ]
-    .map((term, i) => `<li>${i + 1}. ${term}</li>`)
-    .join("");
-
   return `
     <!DOCTYPE html>
     <html>
@@ -253,20 +245,9 @@ export function buildReceiptHtml(payment: any, logoUri: string | null): string {
           font-size: 12px;
           color: ${THEME.muted};
         }
-        .terms { margin-top: 34px; border-top: 1px solid ${THEME.border}; padding-top: 14px; }
-        .terms-title {
-          font-size: 11px;
-          font-weight: 700;
-          color: ${accentColor};
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 6px;
-        }
-        .terms ul { margin: 0; padding: 0; list-style: none; }
-        .terms li { font-size: 10.5px; color: ${THEME.muted}; margin: 2px 0; }
         .footer {
           text-align: center;
-          margin-top: 22px;
+          margin-top: 40px;
           padding-top: 12px;
           border-top: 2px solid ${accentColor};
           font-size: 11px;
@@ -345,11 +326,6 @@ export function buildReceiptHtml(payment: any, logoUri: string | null): string {
             <div class="remark-title">Remark</div>
             <div class="remark-box">Payment received with thanks. No signature required.</div>
           </div>
-        </div>
-
-        <div class="terms">
-          <div class="terms-title">Terms &amp; Conditions</div>
-          <ul>${terms}</ul>
         </div>
 
         <div class="footer">
