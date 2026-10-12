@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+import { getAccessToken } from "@/utils/getAccessToken";
 import { formatDateString } from "@/utils/formatLocalDate";
 import {
   DIARY_CATEGORIES,
@@ -135,7 +136,8 @@ export default function PractitionerPatientReport() {
           offset: 0,
         },
         "GET",
-        false,
+        true,
+        await getAccessToken(),
       );
 
       if (response.statusCode === 200 && Array.isArray(response.data)) {

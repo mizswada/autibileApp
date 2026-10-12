@@ -14,7 +14,9 @@ import {
   View
 } from 'react-native';
 import API from '../../api';
+import { getAccessToken } from '@/utils/getAccessToken';
 import { formatDateString } from '@/utils/formatLocalDate';
+import { getStatusColor, getStatusText } from './_constants';
 
 interface AppointmentDetail {
   id: number;
@@ -57,23 +59,6 @@ function formatTime(startTime: string, endTime: string): string {
   return `${start} – ${end}`;
 }
 
-const statusMapping = {
-  36: { label: 'Booked', color: '#FCD34D' }, // Yellow
-  37: { label: 'Cancelled', color: '#EF4444' }, // Red
-  38: { label: 'Start', color: '#3B82F6' }, // Blue
-  39: { label: 'Confirm Start', color: '#10B981' }, // Green
-  40: { label: 'Finish', color: '#8B5CF6' }, // Purple
-  41: { label: 'Completed', color: '#6366F1' }, // Indigo
-};
-
-function getStatusText(status: number): string {
-  return statusMapping[status as keyof typeof statusMapping]?.label || 'Unknown';
-}
-
-function getStatusColor(status: number): string {
-  return statusMapping[status as keyof typeof statusMapping]?.color || '#666';
-}
-
 export default function AppointmentDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -103,7 +88,7 @@ export default function AppointmentDetail() {
         // Get all children for this parent first
         const childrenResponse = await API('apps/children/listChildren', {
           parentID: parentId
-        }, 'GET', false);
+        }, 'GET', true, await getAccessToken());
 
         let allAppointments: AppointmentDetail[] = [];
 
@@ -115,7 +100,7 @@ export default function AppointmentDetail() {
             const patientId = child.patient_id;
             const appointmentResponse = await API('apps/appointment/childAppointment', {
               patient_id: patientId
-            }, 'GET', false);
+            }, 'GET', true, await getAccessToken());
 
             if (appointmentResponse && appointmentResponse.data && Array.isArray(appointmentResponse.data)) {
               allAppointments = [...allAppointments, ...appointmentResponse.data];
@@ -172,7 +157,7 @@ export default function AppointmentDetail() {
         appointment_id: appointment.id,
         parent_rate: rating > 0 ? rating : undefined,
         parent_comment: feedback.trim() || undefined
-      }, 'POST');
+      }, 'POST', true, await getAccessToken());
 
       if (response && (response as any).success === true) {
         const updatedData = (response as any).data;

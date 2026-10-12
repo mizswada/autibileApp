@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import API from '../../api';
 
+import { getAccessToken } from '@/utils/getAccessToken';
 export default function editFeed() {
   const params = useLocalSearchParams();
   const [title, setTitle] = useState(typeof params.title === 'string' ? params.title : '');
@@ -38,7 +39,7 @@ export default function editFeed() {
         community_title: title.trim(),
         community_content: content.trim(),
         community_url: url.trim() || null,
-      }, 'PUT');
+      }, 'PUT', true, await getAccessToken());
 
       if (response.statusCode === 200) {
         Alert.alert('Success!', 'Your post has been updated successfully.');

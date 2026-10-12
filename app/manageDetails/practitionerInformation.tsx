@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import API from '../../api';
 
+import { getAccessToken } from '@/utils/getAccessToken';
 export default function PractitionerInformation() {
   const { authPaddingTop } = useScreenInsets();
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function PractitionerInformation() {
         qualification,
         experience,
         signature,
-      }, 'POST', false);
+      }, 'POST', true, await getAccessToken());
 
       if (response.statusCode === 200) {
         Alert.alert('Success', 'Practitioner details saved successfully');

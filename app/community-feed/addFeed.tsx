@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import API from '../../api';
 
+import { getAccessToken } from '@/utils/getAccessToken';
 export default function addFeed() {
   const params = useLocalSearchParams();
   const [title, setTitle] = useState('');
@@ -41,7 +42,7 @@ export default function addFeed() {
         community_title: title.trim(),
         community_content: content.trim(),
         community_url: url.trim() || null,
-      }, 'POST');
+      }, 'POST', true, await getAccessToken());
 
              if (response.statusCode === 200) {
          Alert.alert('Success!', 'Your post has been created successfully.');

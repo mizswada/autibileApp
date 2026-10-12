@@ -22,6 +22,7 @@ import {
 } from "react-native";
 // @ts-ignore
 import API from "../../api";
+import { getAccessToken } from "@/utils/getAccessToken";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
 import {
   buildDiaryReportFilename,
@@ -214,7 +215,8 @@ export default function ParentsReport() {
         "apps/diaryReport/listDiary",
         { patientID: patientId },
         "GET",
-        false,
+        true,
+        await getAccessToken(),
       );
 
       if (response.statusCode === 200 && Array.isArray(response.data)) {
@@ -270,7 +272,7 @@ export default function ParentsReport() {
         socialisation_self_confidence: categories.socialisation_self_confidence,
         description: optionalNotes,
         date: new Date().toISOString(),
-      });
+      }, "POST", true, await getAccessToken());
 
       if (response.statusCode === 200) {
         const newEntry: DiaryEntry = {

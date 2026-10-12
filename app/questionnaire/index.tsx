@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
+import { getAccessToken } from "@/utils/getAccessToken";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
 import {
   buildBambiDetailedHtml,
@@ -309,7 +310,8 @@ export default function QuestionnaireIndex() {
             "apps/questionnaire/response",
             { parentId: userData.parentId },
             "GET",
-            false,
+            true,
+            await getAccessToken(),
           );
 
           let completedQuestionnaireIds: number[] = [];
@@ -386,7 +388,8 @@ export default function QuestionnaireIndex() {
           "apps/questionnaire/response",
           params,
           "GET",
-          false,
+          true,
+          await getAccessToken(),
         );
 
         if (response.statusCode === 200 && response.data) {
@@ -542,7 +545,8 @@ export default function QuestionnaireIndex() {
         "apps/questionnaire/response",
         { parentId },
         "GET",
-        false,
+        true,
+        await getAccessToken(),
       );
       const allResponses = responsesData?.data || [];
 

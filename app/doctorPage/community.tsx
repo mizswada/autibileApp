@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, FlatList, Linking, Modal, Pressable, RefreshC
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../api';
 
+import { getAccessToken } from '@/utils/getAccessToken';
 interface CommunityPost {
   id: number;
   author: string;
@@ -116,7 +117,7 @@ export default function CommunityFeed() {
             style: 'destructive',
             onPress: async () => {
               try {
-                const response = await API(`apps/community/delete?id=${selectedPostId}`, {}, 'DELETE');
+                const response = await API(`apps/community/delete?id=${selectedPostId}`, {}, 'DELETE', true, await getAccessToken());
                 
                 if (response.statusCode === 200) {
                   Alert.alert('Success', 'Post deleted successfully');

@@ -19,6 +19,7 @@ import {
 import ModalSelector from 'react-native-modal-selector';
 import IcNumberInput from '@/components/IcNumberInput';
 import API from '../../api';
+import { getAccessToken } from '@/utils/getAccessToken';
 
 type Option = { key: string; label: string; value: string };
 
@@ -272,7 +273,7 @@ export default function ChildProfile() {
         diagnosedDate: selectedChild.diagnosedDate,
         okuCard: getValueFromLabel(selectedChild.okuCard, okuCardOptions),
         treatmentType: getValueFromLabel(selectedChild.treatmentType, treatmentTypeOptions)
-      }, 'PUT');
+      }, 'PUT', true, await getAccessToken());
 
       if (response.statusCode === 200) {
         Alert.alert('Success', 'Child information updated successfully');
@@ -432,7 +433,7 @@ export default function ChildProfile() {
                 parentID: data.parentId  // Use parentId (lowercase 'd')
               };
               
-              const response = await API('apps/children/deleteChild', requestData, 'DELETE');
+              const response = await API('apps/children/deleteChild', requestData, 'DELETE', true, data.accessToken || (await getAccessToken()));
 
               if (response.statusCode === 200) {
                 Alert.alert('Success', 'Child removed from your account successfully');

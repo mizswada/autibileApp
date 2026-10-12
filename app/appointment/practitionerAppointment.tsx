@@ -16,6 +16,7 @@ import {
   View
 } from 'react-native';
 import API from '../../api';
+import { getAccessToken } from '@/utils/getAccessToken';
 import { formatApiDate, formatDateString } from '@/utils/formatLocalDate';
 import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 
@@ -109,7 +110,7 @@ export default function PractitionerAppointment() {
         // Fetch all appointments for this practitioner using the same API as parents
         const appointmentResponse = await API('apps/appointment/childAppointment', {
           practitioner_id: practitionerId
-        }, 'GET', false);
+        }, 'GET', true, await getAccessToken());
 
         let allAppointments: Appointment[] = [];
 

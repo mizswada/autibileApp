@@ -19,6 +19,14 @@ import ModalSelector from 'react-native-modal-selector';
 import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 import API from '../../api';
 import { formatDateString } from '@/utils/formatLocalDate';
+import { getAccessToken } from '@/utils/getAccessToken';
+import {
+  STATUS_BUTTON_ORDER,
+  STATUS_INFO,
+  getStatusColor,
+  getStatusText,
+  normalizeAppointmentStatus,
+} from './_constants';
 
 interface AppointmentDetail {
   id: number;
@@ -59,23 +67,6 @@ function formatTime(startTime: string, endTime: string): string {
     hour12: true 
   });
   return `${start} – ${end}`;
-}
-
-const statusMapping = {
-  36: { label: 'Booked', color: '#FCD34D' }, // Yellow
-  37: { label: 'Cancelled', color: '#EF4444' }, // Red
-  38: { label: 'Start', color: '#3B82F6' }, // Blue
-  39: { label: 'Confirm Start', color: '#10B981' }, // Green
-  40: { label: 'Finish', color: '#8B5CF6' }, // Purple
-  41: { label: 'Completed', color: '#6366F1' }, // Indigo
-};
-
-function getStatusText(status: number): string {
-  return statusMapping[status as keyof typeof statusMapping]?.label || 'Unknown';
-}
-
-function getStatusColor(status: number): string {
-  return statusMapping[status as keyof typeof statusMapping]?.color || '#666';
 }
 
 interface ServiceOption {
@@ -147,7 +138,7 @@ export default function TherapistAppDetail() {
         // Fetch all appointments for this practitioner
         const appointmentResponse = await API('apps/appointment/childAppointment', {
           practitioner_id: practitionerIdValue
-        }, 'GET', false);
+        }, 'GET', true, await getAccessToken());
 
         let allAppointments: AppointmentDetail[] = [];
 
@@ -207,7 +198,7 @@ export default function TherapistAppDetail() {
         appointment_id: appointment.id,
         service_id: nextServiceId,
         practitioner_id: practitionerId,
-      }, 'POST');
+      }, 'POST', true, await getAccessToken());
 
       if (response && (response as any).success === true) {
         const updatedService = (response as any).data;
@@ -261,7 +252,7 @@ export default function TherapistAppDetail() {
       const response = await API('apps/appointment/updateFeedback', {
         appointment_id: appointment.id,
         therapist_doctor_comment: practitionerComment.trim()
-      }, 'POST');
+      }, 'POST', true, await getAccessToken());
 
       if (response && (response as any).success === true) {
         setSubmitted(true);
@@ -299,7 +290,7 @@ export default function TherapistAppDetail() {
       const response = await API('apps/appointment/updateAppointmentStatus', {
         appointment_id: appointment.id,
         status: newStatus
-      }, 'POST');
+      }, 'POST', true, await getAccessToken());
 
       if (response && (response as any).success === true) {
         Alert.alert('Success', 'Appointment status updated successfully!');
@@ -471,26 +462,30 @@ export default function TherapistAppDetail() {
         <View style={styles.statusSection}>
           <Text style={styles.sectionTitle}>Update Status</Text>
           <View style={styles.statusButtons}>
-            {Object.entries(statusMapping).map(([statusId, statusInfo]) => (
-              <TouchableOpacity
-                key={statusId}
-                style={[
-                  styles.statusButton,
-                  appointment.extendedProps.status === parseInt(statusId) && styles.statusButtonActive,
-                  { borderColor: statusInfo.color }
-                ]}
-                onPress={() => handleUpdateStatus(parseInt(statusId))}
-                disabled={submitting}
-              >
-                <Text style={[
-                  styles.statusButtonText,
-                  appointment.extendedProps.status === parseInt(statusId) && styles.statusButtonTextActive,
-                  { color: statusInfo.color }
-                ]}>
-                  {statusInfo.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {STATUS_BUTTON_ORDER.map((statusId) => {
+              const statusInfo = STATUS_INFO[statusId];
+              const isActive = normalizeAppointmentStatus(appointment.extendedProps.status) === statusId;
+              return (
+                <TouchableOpacity
+                  key={statusId}
+                  style={[
+                    styles.statusButton,
+                    isActive && styles.statusButtonActive,
+                    { borderColor: statusInfo.color }
+                  ]}
+                  onPress={() => handleUpdateStatus(statusId)}
+                  disabled={submitting}
+                >
+                  <Text style={[
+                    styles.statusButtonText,
+                    isActive && styles.statusButtonTextActive,
+                    { color: statusInfo.color }
+                  ]}>
+                    {statusInfo.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
