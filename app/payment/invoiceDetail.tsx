@@ -1,9 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import * as Print from "expo-print";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import API from "../../api";
+import { getLogoBase64 } from "../../utils/getLogoBase64";
+import { sharePdfDocument } from "../../utils/sharePdfDocument";
 import PaymentHeader from "./components/PaymentHeader";
+import { buildInvoiceHtml } from "./_receiptTemplate";
 import {
   formatDate,
   formatInvoiceId,
@@ -17,6 +21,7 @@ export default function InvoiceDetail() {
   const router = useRouter();
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -40,6 +45,32 @@ export default function InvoiceDetail() {
     };
     load();
   }, [invoiceId]);
+
+  // Same document as the website invoice (items table, Sales Date, no due date / terms).
+  const printInvoice = async () => {
+    if (!invoice) return;
+    setPrinting(true);
+    try {
+      let logoUri: string | null = null;
+      try {
+        logoUri = await getLogoBase64();
+      } catch (logoError) {
+        console.warn("Logo loading error:", logoError);
+      }
+
+      const html = buildInvoiceHtml(invoice, logoUri);
+      const { uri } = await Print.printToFileAsync({ html });
+      await sharePdfDocument(uri, {
+        dialogTitle: "Share invoice",
+        fileName: `Invoice_${formatInvoiceId(invoice.invoice_id)}`,
+        unavailableMessage: "Your invoice PDF was created, but sharing is not available on this device.",
+      });
+    } catch (error) {
+      Alert.alert("Error", "Failed to generate invoice");
+    } finally {
+      setPrinting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -79,10 +110,24 @@ export default function InvoiceDetail() {
           <Text style={paymentStyles.detailLabel}>Description</Text>
           <Text style={paymentStyles.detailValue}>{invoice.description}</Text>
 
+          {Array.isArray(invoice.items) && invoice.items.length > 0 && (
+            <>
+              <Text style={paymentStyles.detailLabel}>Items</Text>
+              {invoice.items.map((item: any) => (
+                <Text key={item.item_id} style={paymentStyles.detailValue}>
+                  {item.name}
+                  {item.description ? ` - ${item.description}` : ""}
+                  {"\n"}
+                  {item.qty} x RM {formatPrice(item.unit_price)} = RM {formatPrice(item.subtotal)}
+                </Text>
+              ))}
+            </>
+          )}
+
           <Text style={paymentStyles.detailLabel}>Patient</Text>
           <Text style={paymentStyles.detailValue}>{invoice.patient_name || "N/A"}</Text>
 
-          <Text style={paymentStyles.detailLabel}>Invoice Date</Text>
+          <Text style={paymentStyles.detailLabel}>Sales Date</Text>
           <Text style={paymentStyles.detailValue}>{formatDate(invoice.date)}</Text>
 
           <Text style={paymentStyles.detailLabel}>Amount</Text>
@@ -105,6 +150,16 @@ export default function InvoiceDetail() {
             </Text>
           )}
         </View>
+
+        <TouchableOpacity
+          style={[paymentStyles.primaryButton, printing && { opacity: 0.7 }, canPay && { marginBottom: 12 }]}
+          onPress={printInvoice}
+          disabled={printing}
+        >
+          <Text style={paymentStyles.primaryButtonText}>
+            {printing ? "Generating..." : "Print / Share Invoice"}
+          </Text>
+        </TouchableOpacity>
 
         {canPay && (
           <TouchableOpacity

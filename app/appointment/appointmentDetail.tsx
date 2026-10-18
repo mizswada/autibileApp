@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import API from '../../api';
 import { formatDateString } from '@/utils/formatLocalDate';
+import { getStatusColor, getStatusText } from './_constants';
 
 interface AppointmentDetail {
   id: number;
@@ -55,23 +56,6 @@ function formatTime(startTime: string, endTime: string): string {
     hour12: true 
   });
   return `${start} – ${end}`;
-}
-
-const statusMapping = {
-  36: { label: 'Booked', color: '#FCD34D' }, // Yellow
-  37: { label: 'Cancelled', color: '#EF4444' }, // Red
-  38: { label: 'Start', color: '#3B82F6' }, // Blue
-  39: { label: 'Confirm Start', color: '#10B981' }, // Green
-  40: { label: 'Finish', color: '#8B5CF6' }, // Purple
-  41: { label: 'Completed', color: '#6366F1' }, // Indigo
-};
-
-function getStatusText(status: number): string {
-  return statusMapping[status as keyof typeof statusMapping]?.label || 'Unknown';
-}
-
-function getStatusColor(status: number): string {
-  return statusMapping[status as keyof typeof statusMapping]?.color || '#666';
 }
 
 export default function AppointmentDetail() {

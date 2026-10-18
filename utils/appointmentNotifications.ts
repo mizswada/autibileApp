@@ -13,8 +13,8 @@ const CHANNEL_ID = "appointments";
 // always prefer the soonest ones. Later reminders are added on later app opens.
 const MAX_NOTIFICATIONS = 60;
 const MIN_LEAD_MS = 10_000;
-// Cancelled, started, confirmed-start, finished and completed appointments
-// (statuses 37 to 41) no longer need a reminder; only Booked (36) does.
+// Cancelled (37) and completed (41) appointments no longer need a reminder;
+// only Booked (36) does. 38 to 40 are retired statuses that older rows may still carry.
 const NO_REMINDER_STATUSES = new Set([37, 38, 39, 40, 41]);
 const HOUR_MS = 60 * 60 * 1000;
 
