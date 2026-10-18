@@ -110,8 +110,24 @@ export default function ReceiptDetail() {
           <Text style={paymentStyles.detailLabel}>Invoice</Text>
           <Text style={paymentStyles.detailValue}>{formatInvoiceId(payment.invoice_id)}</Text>
 
-          <Text style={paymentStyles.detailLabel}>Description</Text>
-          <Text style={paymentStyles.detailValue}>{payment.invoice?.description || "N/A"}</Text>
+          {Array.isArray(payment.invoice?.invoice_item) && payment.invoice.invoice_item.length > 0 ? (
+            <>
+              <Text style={paymentStyles.detailLabel}>Items</Text>
+              {payment.invoice.invoice_item.map((item: any) => (
+                <Text key={item.item_id} style={paymentStyles.detailValue}>
+                  {item.name}
+                  {item.description ? ` - ${item.description}` : ""}
+                  {"\n"}
+                  {item.qty} x RM {formatPrice(item.unit_price)} = RM {formatPrice(item.subtotal)}
+                </Text>
+              ))}
+            </>
+          ) : (
+            <>
+              <Text style={paymentStyles.detailLabel}>Description</Text>
+              <Text style={paymentStyles.detailValue}>{payment.invoice?.description || "N/A"}</Text>
+            </>
+          )}
 
           <Text style={paymentStyles.detailLabel}>Amount</Text>
           <Text style={[paymentStyles.detailValue, { color: "#4db5ff", fontSize: 20 }]}>

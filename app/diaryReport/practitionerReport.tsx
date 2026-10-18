@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 import API from "../../api";
-import { getAccessToken } from "@/utils/getAccessToken";
 
 interface DiaryReport {
   diary_id: number;
@@ -61,8 +60,7 @@ export default function PractitionerReport() {
           offset: 0,
         },
         "GET",
-        true,
-        await getAccessToken(),
+        false,
       );
 
       if (response.statusCode === 200 && response.data) {

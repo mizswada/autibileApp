@@ -17,7 +17,6 @@ import {
 import ModalSelector from 'react-native-modal-selector';
 import API from '../../api';
 
-import { getAccessToken } from '@/utils/getAccessToken';
 type Option = { key: string; label: string; value: string };
 
 export default function ParentsInformation() {
@@ -195,7 +194,7 @@ export default function ParentsInformation() {
         city,
         postcode,
         status,
-      }, "POST", true, await getAccessToken());
+      }, "POST", false);
 
       if (response.statusCode === 200) {
         Alert.alert('Success', 'Parent details saved');

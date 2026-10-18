@@ -18,7 +18,6 @@ import {
 import { formatApiDate, formatDateString } from '@/utils/formatLocalDate';
 import API from '../../api';
 
-import { getAccessToken } from '@/utils/getAccessToken';
 interface Appointment {
   id: number;
   title: string;
@@ -115,7 +114,7 @@ export default function ParentsAppointment() {
         try {
           const patientsResponse = await API('apps/children/listChildren', {
             parentID: parentId
-          }, 'GET', true, await getAccessToken());
+          }, 'GET', false);
 
 
 
@@ -139,7 +138,7 @@ export default function ParentsAppointment() {
              try {
                const appointmentResponse = await API('apps/appointment/childAppointment', {
                  patient_id: patientId
-               }, 'GET', true, await getAccessToken());
+               }, 'GET', false);
 
  
 

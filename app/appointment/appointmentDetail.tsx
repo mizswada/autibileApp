@@ -14,7 +14,6 @@ import {
   View
 } from 'react-native';
 import API from '../../api';
-import { getAccessToken } from '@/utils/getAccessToken';
 import { formatDateString } from '@/utils/formatLocalDate';
 import { getStatusColor, getStatusText } from './_constants';
 
@@ -88,7 +87,7 @@ export default function AppointmentDetail() {
         // Get all children for this parent first
         const childrenResponse = await API('apps/children/listChildren', {
           parentID: parentId
-        }, 'GET', true, await getAccessToken());
+        }, 'GET', false);
 
         let allAppointments: AppointmentDetail[] = [];
 
@@ -100,7 +99,7 @@ export default function AppointmentDetail() {
             const patientId = child.patient_id;
             const appointmentResponse = await API('apps/appointment/childAppointment', {
               patient_id: patientId
-            }, 'GET', true, await getAccessToken());
+            }, 'GET', false);
 
             if (appointmentResponse && appointmentResponse.data && Array.isArray(appointmentResponse.data)) {
               allAppointments = [...allAppointments, ...appointmentResponse.data];
@@ -157,7 +156,7 @@ export default function AppointmentDetail() {
         appointment_id: appointment.id,
         parent_rate: rating > 0 ? rating : undefined,
         parent_comment: feedback.trim() || undefined
-      }, 'POST', true, await getAccessToken());
+      }, 'POST');
 
       if (response && (response as any).success === true) {
         const updatedData = (response as any).data;

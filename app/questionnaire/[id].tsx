@@ -25,7 +25,6 @@ import {
   isNumberQuestion,
 } from "./_numberConfig";
 import API from "../../api";
-import { getAccessToken } from "@/utils/getAccessToken";
 import { MchatImportanceNoteModal } from "../../components/MchatImportanceNoteModal";
 import { HtmlContent } from "../../components/HtmlContent";
 import { getLogoBase64 } from "../../utils/getLogoBase64";
@@ -135,8 +134,7 @@ export default function QuestionnaireForm() {
               patientID: selectedChild.patientId,
             },
             "GET",
-            true,
-            await getAccessToken(),
+            false,
           );
 
           if (response.statusCode === 200 && response.data) {
@@ -663,8 +661,8 @@ export default function QuestionnaireForm() {
               answers: formattedAnswers,
             },
             "POST",
-            true,
-            await getAccessToken(),
+            false,
+            null,
             90000,
           );
 
@@ -1557,8 +1555,7 @@ export default function QuestionnaireForm() {
                           patientID: child.patientId,
                         },
                         "GET",
-                        true,
-                        await getAccessToken(),
+                        false,
                       );
 
                       if (

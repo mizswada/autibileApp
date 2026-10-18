@@ -19,7 +19,6 @@ import ModalSelector from 'react-native-modal-selector';
 import ParentFeedbackDisplay from '@/components/ParentFeedbackDisplay';
 import API from '../../api';
 import { formatDateString } from '@/utils/formatLocalDate';
-import { getAccessToken } from '@/utils/getAccessToken';
 import {
   STATUS_BUTTON_ORDER,
   STATUS_INFO,
@@ -138,7 +137,7 @@ export default function TherapistAppDetail() {
         // Fetch all appointments for this practitioner
         const appointmentResponse = await API('apps/appointment/childAppointment', {
           practitioner_id: practitionerIdValue
-        }, 'GET', true, await getAccessToken());
+        }, 'GET', false);
 
         let allAppointments: AppointmentDetail[] = [];
 
@@ -198,7 +197,7 @@ export default function TherapistAppDetail() {
         appointment_id: appointment.id,
         service_id: nextServiceId,
         practitioner_id: practitionerId,
-      }, 'POST', true, await getAccessToken());
+      }, 'POST');
 
       if (response && (response as any).success === true) {
         const updatedService = (response as any).data;
@@ -252,7 +251,7 @@ export default function TherapistAppDetail() {
       const response = await API('apps/appointment/updateFeedback', {
         appointment_id: appointment.id,
         therapist_doctor_comment: practitionerComment.trim()
-      }, 'POST', true, await getAccessToken());
+      }, 'POST');
 
       if (response && (response as any).success === true) {
         setSubmitted(true);
@@ -290,7 +289,7 @@ export default function TherapistAppDetail() {
       const response = await API('apps/appointment/updateAppointmentStatus', {
         appointment_id: appointment.id,
         status: newStatus
-      }, 'POST', true, await getAccessToken());
+      }, 'POST');
 
       if (response && (response as any).success === true) {
         Alert.alert('Success', 'Appointment status updated successfully!');

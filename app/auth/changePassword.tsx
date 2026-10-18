@@ -15,7 +15,6 @@ import {
     View,
 } from 'react-native';
 import API from '../../api';
-import { getAccessToken } from '@/utils/getAccessToken';
 
 export default function ChangePassword() {
   const [email, setEmail] = useState('');
@@ -121,7 +120,7 @@ export default function ChangePassword() {
         email, 
         password, 
         confirmPassword 
-      }, "POST", true, await getAccessToken());
+      }, "POST", false);
 
       if (result.status === 200) {
         Alert.alert('Success', result.message || 'Password changed successfully', [
